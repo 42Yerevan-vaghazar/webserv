@@ -260,6 +260,26 @@
 #include <unistd.h>
 #include <string.h>
 #include <iostream>
+#include<signal.h>
+
+void  INThandler(int sig)
+{
+    //  char  c;
+
+    //  signal(sig, SIG_IGN);
+    //  printf("OUCH, did you hit Ctrl-C?\n"
+    //         "Do you really want to quit? [y/n] ");
+    //  c = getchar();
+    //  if (c == 'y' || c == 'Y')
+    //       exit(0);
+    //  else
+    //       signal(SIGINT, INThandler);
+    //  getchar(); // Get new line character
+    // shutdown(clientSocket, SHUT_RDWR);
+    // close(clientSocket);
+    // shutdown(serverSocket, SHUT_RDWR);
+    // close(serverSocket);
+}
 
 int main() {
 
@@ -274,23 +294,54 @@ int main() {
     if (bind(serverSocket, (sockaddr *)&addr, sizeof(addr)) == -1) {
         perror("bind: ");
     }
-    if (listen(serverSocket, 0) == -1) {
-        perror("listen: ");
-    };
-    struct sockaddr_in addrClient;
-    socklen_t len = 100;
-    memset(&addrClient , 0 , sizeof(struct sockaddr_in));
-    int clientSocket = accept(serverSocket, (sockaddr *)&addrClient, &len);
-    if (clientSocket == -1) {
-        perror("accept: ");
+    int clientSocket = 0;
+    signal(SIGINT, INThandler);
+    while(true) {
+        if (listen(serverSocket, 0) == -1) {
+            perror("listen: ");
+        };
+        struct sockaddr_in addrClient;
+        socklen_t len = 100;
+        memset(&addrClient , 0 , sizeof(struct sockaddr_in));
+        clientSocket = accept(serverSocket, (sockaddr *)&addrClient, &len);
+        std::cout << "addrClient.sin_port = " << addrClient.sin_port << std::endl;
+        std::cout << "addrClient.sin_addr.s_addr = " << addrClient.sin_addr.s_addr << std::endl;
+        if (clientSocket == -1) {
+            perror("accept: ");
+        }
+        char buf[2044];
+        if (recv(clientSocket, buf, sizeof(buf), 0) == -1) {
+            perror("recv :");
+        }
+
+        const char* reply =
+            "HTTP/1.1 201 OK\n"
+            "Content-Type: text/html\n"
+            "Content-Length: 2000\n"
+            "Keep - Alive: timeout=1, max=1\n"
+            "Accept-Ranges: 2000\n"
+            "Connection: keep-alive\n\n"
+            "<!DOCTYPE html><html><head>  <title>Title of the document</title></head><body>  <h1>This is a heading</h1>  <p>This is a paragraph.</p></body></html>\n";
+
+        std::cout << buf << std::endl;
+        if (send(clientSocket, reply, strlen(reply), 0) == -1)
+        {
+            perror("send :");
+        }
     }
-    char buf[2044];
-    if (recv(clientSocket, buf, sizeof(buf), 0) == -1) {
-        perror("recv :");
-    }
-    std::cout << buf << std::endl;
     shutdown(clientSocket, SHUT_RDWR);
     close(clientSocket);
     shutdown(serverSocket, SHUT_RDWR);
     close(serverSocket);
 }
+
+
+
+// const char* reply =
+//         "HTTP/1.1 201 OK\n"
+//         "Content-Type: application/json\n"
+//         "Content-Length: 2000\n"
+//         "Keep - Alive: timeout=1, max=1\n"
+//         "Accept-Ranges: 2000\n"
+//         "Connection: keep-alive\n\n"
+//         "data: {'mode':'global'}\n";

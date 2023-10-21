@@ -52,8 +52,7 @@ int main() {
         const char* reply =
             "HTTP/1.1 200 OK\r\n"
             "Content-Type: text/html\r\n"
-            "Content-Length: 3000\r\n"
-            "Accept-Ranges: 3000\r\n"
+            "Content-Length: 150\r\n"
             "Connection: keep-alive\r\n"
             "Server : webserv\r\n"
             "\r\n"

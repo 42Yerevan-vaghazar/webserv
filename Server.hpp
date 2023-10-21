@@ -1,8 +1,5 @@
 #pragma once
 #include "Client.hpp"
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
 #include <iostream>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -10,12 +7,12 @@
 #include <unistd.h>
 #include <string.h>
 #include <iostream>
-#include <signal.h>
 #include <errno.h>
 
 
 #include <iostream>
 #include <fstream>
+#include <unordered_map>
 
 const int _clientLimit = 1000;
 const int _serverLimit = 1000;
@@ -71,9 +68,11 @@ class Server
                     perror("recv :");
                     exit(1);
                 }
-                std::cout << buf << std::endl;
-                const char *response = get("./ind.html");
-                if (send(clientSocket, response, strlen(response), 0) == -1)
+                // std::cout << buf << std::endl;
+                // TODO parser should be parser here
+                std::string response = get("./index.html");
+
+                if (send(clientSocket, response.c_str(), strlen(response.c_str()), 0) == -1)
                 {
                     perror("send :");
                     exit(1);
@@ -82,44 +81,66 @@ class Server
             }
         };
 
-        const char *get(std::string request) {
+        std::string get(std::string file) {
+            std::unordered_map<std::string, std::string> headerContent; // TODO unordered_map
             std::string response;
             int statusCode = 200;
-            std::string status = "OK\r\n";
-            std::string contentType = "Content-Type: text/html\r\n";
-
+            std::string status = " OK";
+            headerContent["Content-Type"] = "text/html";
             response += "HTTP/1.1 ";
 
-            if (access(request.c_str(), F_OK) == 0) {   // TODO check permission to read
+            if (access(file.c_str(), F_OK) == 0) {   // TODO check permission to read
                 std::string fileContent;
-                std::ifstream ifs(request);
+                std::ifstream ifs(file);
                 if (ifs.is_open() == false) {
                     throw std::logic_error("can not open file");
                 }
                 std::getline(ifs, fileContent, '\0');
+                headerContent["Content-Length"] = std::to_string(fileContent.size());
+                // TODO if not html cgi works here to generate fileContent
                 response += std::to_string(statusCode);
                 response +=  status;
-                response +=  contentType;
-                response +=  "Content-Length: " + std::to_string(fileContent.size());
-                response +=  "\n\n";
+                response +=  "\r\n";
+
+
+                for (std::unordered_map<std::string, std::string>::iterator it = headerContent.begin();
+                    it != headerContent.end(); ++it) {
+                        response += it->first;
+                        response += ": ";
+                        response += it->second;
+                        response += "\r\n";
+                }
+                response +=  "\n";
                 response +=  fileContent;
             } else {
+                // TODO automate it
                 std::string fileContent;
                 std::ifstream ifs("./error_pages/404.html");
                 if (ifs.is_open() == false) {
                     throw std::logic_error("can not open file");
                 }
                 std::getline(ifs, fileContent, '\0');
+                headerContent["Content-Length"] = std::to_string(fileContent.size());
                 response += std::to_string(404);
-                response +=   "not found";
-                response +=  contentType;
-                response +=  "Content-Length: " + std::to_string(fileContent.size());
-                response +=  "\n\n";
+                response += "not found";
+                response += "\r\n";
+
+                for (std::unordered_map<std::string, std::string>::iterator it = headerContent.begin();
+                    it != headerContent.end(); ++it) {
+                        response += it->first;
+                        response += ": ";
+                        response += it->second;
+                        response += "\r\n";
+                }
+                response +=  "\n";
                 response +=  fileContent;
             }
-            return (response.c_str());
+            return (response);
         };
-        bool post();
+        bool post() {
+
+            return (true);
+        };
         bool del();
     private:
         std::string _ipAddress;

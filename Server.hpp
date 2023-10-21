@@ -10,6 +10,7 @@
 #include <errno.h>
 
 
+#include <cstdio>
 #include <iostream>
 #include <fstream>
 #include <unordered_map>
@@ -62,26 +63,48 @@ class Server
                     perror("accept: ");
                     exit(1);
                 }
-                char buf[2044];
+                char buf[4000];
 
                 if (recv(clientSocket, buf, sizeof(buf), 0) == -1) {
                     perror("recv :");
                     exit(1);
                 }
-                // std::cout << buf << std::endl;
+                std::cout << buf << std::endl;
                 // TODO parser should be parser here
-                std::string response = get("./index.html");
-
-                if (send(clientSocket, response.c_str(), strlen(response.c_str()), 0) == -1)
-                {
-                    perror("send :");
-                    exit(1);
+                if (buf[0] == 'P') {
+                    char buf[4000];
+                    if (recv(clientSocket, buf, sizeof(buf), 0) == -1) {
+                        perror("recv :");
+                        exit(1);
+                    }
+                    std::cout << buf << std::endl;
+                    std::string response = post("./test.json", buf);
+                    if (send(clientSocket, response.c_str(), strlen(response.c_str()), 0) == -1)
+                    {
+                        perror("send :");
+                        exit(1);
+                    }
+                } else if (buf[0] == 'G') {
+                    std::string response = get("./index.html");
+                    if (send(clientSocket, response.c_str(), strlen(response.c_str()), 0) == -1)
+                    {
+                        perror("send :");
+                        exit(1);
+                    }
+                } else if (buf[0] == 'D') {
+                    std::string response = del("./test.json");
+                    if (send(clientSocket, response.c_str(), strlen(response.c_str()), 0) == -1)
+                    {
+                        perror("send :");
+                        exit(1);
+                    }
                 }
+
                 close(clientSocket);
             }
         };
 
-        std::string get(std::string file) {
+        std::string get(const std::string &fileName) {
             std::unordered_map<std::string, std::string> headerContent; // TODO unordered_map
             std::string response;
             int statusCode = 200;
@@ -89,9 +112,9 @@ class Server
             headerContent["Content-Type"] = "text/html";
             response += "HTTP/1.1 ";
 
-            if (access(file.c_str(), F_OK) == 0) {   // TODO check permission to read
+            if (access(fileName.c_str(), F_OK) == 0) {   // TODO check permission to read
                 std::string fileContent;
-                std::ifstream ifs(file);
+                std::ifstream ifs(fileName);
                 if (ifs.is_open() == false) {
                     throw std::logic_error("can not open file");
                 }
@@ -137,11 +160,28 @@ class Server
             }
             return (response);
         };
-        bool post() {
+        std::string post(const std::string &fileName, const std::string &body) {
+            std::string response;
+            std::ofstream ofs(fileName);
 
-            return (true);
+            response += "HTTP/1.1 ";
+            response += "200 ";
+            response += "OK";
+            // int fd = open(fileName, O_CREAT | O_TRUNC | O_WRONLY, 0664);
+            // std::cout << body << std::endl;
+            ofs << body;
+            return (response);
         };
-        bool del();
+
+        std::string del(const std::string &fileName) {
+            std::string response;
+            response += "HTTP/1.1 ";
+            response += "200 ";
+            response += "OK";
+            std::remove(fileName.c_str());
+            return (response);
+        };
+
     private:
         std::string _ipAddress;
         int _port;

@@ -9,11 +9,13 @@
 
 #include "Server.hpp"
 
-#include "utils.hpp"
 
-int main() {
-    Server server("127.0.0.1", 3000);
-    server.start();
+#include "Cgi.hpp"
+
+int main(int ac, char **av, char **env) {
+    // Server server("127.0.0.1", 3000);
+    // server.start();
+    Cgi::execute("index.php", "php", env);
     // std::cout << server.get("/index.html") << std::endl;
 }
 

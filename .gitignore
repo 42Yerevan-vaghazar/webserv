@@ -1,3 +1,6 @@
 .vscode
 webserver
 *.o
+.DS_Store
+*.json
+Cgi.hpp

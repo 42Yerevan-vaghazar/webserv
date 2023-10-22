@@ -15,13 +15,26 @@
 #include <fstream>
 #include <unordered_map>
 
+#include <fcntl.h>
+
+#include "utils.hpp"
+#include <vector>
+#include <sstream>
+
+#define PROTOCOL "HTTP/1.1"
+
 const int _clientLimit = 1000;
 const int _serverLimit = 1000;
+
+
+// std::string appendFile(const std::string &str, const std::string &file) {
+
+// }
 
 class Server
 {
     public:
-        Server(const std::string &ipAddress, int port) 
+        Server(const std::string &ipAddress, int port)
             : _port(port), _ipAddress(ipAddress) {};
         ~Server() {};
         bool start() {
@@ -63,63 +76,90 @@ class Server
                     perror("accept: ");
                     exit(1);
                 }
-                char buf[4000];
+
+                char buf[2000];
 
                 if (recv(clientSocket, buf, sizeof(buf), 0) == -1) {
                     perror("recv :");
                     exit(1);
                 }
-                std::cout << buf << std::endl;
                 // TODO parser should be parser here
+                std::cout << buf << std::endl;
+                std::string strBuf(buf);
+                size_t pos = strBuf.find(' ');
+                pos += 1;
                 if (buf[0] == 'P') {
-                    char buf[4000];
+                    char buf[5000];
+                    std::cout << "stex" << std::endl;
+                    // read(0, buf, sizeof(buf));
                     if (recv(clientSocket, buf, sizeof(buf), 0) == -1) {
                         perror("recv :");
                         exit(1);
                     }
                     std::cout << buf << std::endl;
-                    std::string response = post("./test.json", buf);
-                    if (send(clientSocket, response.c_str(), strlen(response.c_str()), 0) == -1)
-                    {
+                    std::string response = post(strBuf.substr(pos, strBuf.find(' ', pos) - pos), buf);
+                    if (send(clientSocket, response.c_str(), strlen(response.c_str()), 0) == -1) {
                         perror("send :");
                         exit(1);
                     }
                 } else if (buf[0] == 'G') {
-                    std::string response = get("./index.html");
-                    if (send(clientSocket, response.c_str(), strlen(response.c_str()), 0) == -1)
+                    std::string response;
+                    std::string filePath = strBuf.substr(pos, strBuf.find(' ', pos) - pos);
+                    filePath = "." + filePath;
+                    size_t contentTypePos = filePath.rfind(".");
+                    std::string contentType = filePath.substr(contentTypePos + 1);
+                    std::cout << "file = " << filePath << std::endl;
+                    if (filePath == "./") {
+                        response = get("index.html", contentType);
+                    } else {
+                        response = get(filePath, contentType);
+                    }
+                    if (send(clientSocket, response.c_str(), response.size(), 0) == -1)
                     {
                         perror("send :");
                         exit(1);
                     }
                 } else if (buf[0] == 'D') {
-                    std::string response = del("./test.json");
-                    if (send(clientSocket, response.c_str(), strlen(response.c_str()), 0) == -1)
-                    {
+                    std::string response = del(strBuf.substr(pos, strBuf.find(' ', pos) - pos));
+                    if (send(clientSocket, response.c_str(), strlen(response.c_str()), 0) == -1) {
                         perror("send :");
                         exit(1);
                     }
                 }
-
                 close(clientSocket);
             }
         };
 
-        std::string get(const std::string &fileName) {
-            std::unordered_map<std::string, std::string> headerContent; // TODO unordered_map
+        std::string get(const std::string &fileName, const std::string  &contentType) {
+            std::unordered_map<std::string, std::string> headerContent;
             std::string response;
             int statusCode = 200;
             std::string status = " OK";
-            headerContent["Content-Type"] = "text/html";
+            std::cout << "contentType = " <<  contentType << std::endl;
+            if (contentType == "png"){
+                headerContent["Content-Type"] = "image/png";
+            } else {
+                headerContent["Content-Type"] = "text/html";
+            }
             response += "HTTP/1.1 ";
-
+            std::cout << "fileName = " << fileName << std::endl;
             if (access(fileName.c_str(), F_OK) == 0) {   // TODO check permission to read
                 std::string fileContent;
-                std::ifstream ifs(fileName);
+                std::stringstream buffer;
+                std::ostringstream stream;
+                std::ifstream ifs(fileName, std::ios::binary);
                 if (ifs.is_open() == false) {
                     throw std::logic_error("can not open file");
                 }
-                std::getline(ifs, fileContent, '\0');
+                stream << ifs.rdbuf();
+                fileContent = stream.str();
                 headerContent["Content-Length"] = std::to_string(fileContent.size());
+                std::ofstream ofs("test.png");
+                if (ofs.is_open() == false) {
+                    perror("is_open");
+                    exit(1);
+                }
+                ofs << fileContent;
                 // TODO if not html cgi works here to generate fileContent
                 response += std::to_string(statusCode);
                 response +=  status;
@@ -162,14 +202,11 @@ class Server
         };
         std::string post(const std::string &fileName, const std::string &body) {
             std::string response;
-            std::ofstream ofs(fileName);
-
-            response += "HTTP/1.1 ";
-            response += "200 ";
+            response += PROTOCOL;
+            response += " 200 ";
             response += "OK";
-            // int fd = open(fileName, O_CREAT | O_TRUNC | O_WRONLY, 0664);
-            // std::cout << body << std::endl;
-            ofs << body;
+            _data.push_back(body);
+            // ofs << body;
             return (response);
         };
 
@@ -186,4 +223,5 @@ class Server
         std::string _ipAddress;
         int _port;
         int _serverSockets[_serverLimit];
+        std::vector<std::string> _data;
 };

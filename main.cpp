@@ -4,10 +4,12 @@
 #include <unistd.h>
 #include <string.h>
 #include <iostream>
-#include<signal.h>
+#include <signal.h>
 #include <errno.h>
 
 #include "Server.hpp"
+
+#include "utils.hpp"
 
 int main() {
     Server server("127.0.0.1", 3000);

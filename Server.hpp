@@ -31,7 +31,7 @@
 
 #define PROTOCOL "HTTP/1.1"
 
-
+#include "DefaultSetup.hpp"
 const int HEADER_SIZE = 1000;
 const int CLIENT_LIMIT = 1000;
 const int SERVER_LIMIT = 1000;
@@ -80,8 +80,10 @@ class Server
                         throw std::runtime_error(std::string("accept: ") + strerror(errno));
                     }
                     client.setFd(clientSocket);
+                    // if (!_clients.find(client.getAddr())) {
                     _clients.insert(client);
                     EvManager::addEvent(clientSocket, EvManager::read);
+                    // }
                 } else if (event.first == EvManager::eof) {
                     std::cout << "\nEV_EOF\n" << std::endl;
                     EvManager::delEvent(event.second, event.first);

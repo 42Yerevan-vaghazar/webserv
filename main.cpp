@@ -8,14 +8,27 @@
 #include <errno.h>
 
 #include "Server.hpp"
+#include "Server_tmp.hpp"
+#include "Client.hpp"
 
 
+
+#include "EvManager.hpp"
 #include "Cgi.hpp"
 
 int main(int ac, char **av, char **env) {
-    // Server server("127.0.0.1", 3000);
-    // server.start();
-    Cgi::execute("index.php", "php", env);
+    try
+    {
+        Server server("127.0.0.1", 3000);
+        server.start();
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
+    }
+    
+    // Client test;
+    // Cgi::execute("index.php", "php", env);
     // std::cout << server.get("/index.html") << std::endl;
 }
 

@@ -3,19 +3,47 @@
 class Client
 {
     public:
-        Client(socklen_t len = 100) 
-            : _len(len) {
+        Client() 
+            : _len(sizeof(struct sockaddr_in)){
             memset(&_addrClient , 0 , sizeof(struct sockaddr_in));
         };
-        int getClinetSocket(const int clinetSocket) const {
-            return (_clinetSocket);
+
+        bool operator<(const Client& rhs) const
+        {
+            return _fd < rhs._fd;
         }
-        void setClinetSocket(const int clinetSocket) {
-            _clinetSocket = clinetSocket;
+
+        int getFd(const int fd) const {
+            return (_fd);
         }
+
+        void setFd(const int fd) {
+            _fd = fd;
+        }
+
+        struct sockaddr &getAddr() {
+            return (_addrClient);
+        }
+
+        socklen_t &getAddrLen() {
+            return (_len);
+        }
+
+        void setAddr(const struct sockaddr &addrClient) {
+            _addrClient = addrClient;
+        }
+
+        void setAddrLen(const socklen_t &len) {
+            _len = len;
+        }
+
+        bool operator==(int fd) {
+            return(_fd == fd);
+        }
+
         ~Client() {};
     private:
-        struct sockaddr_in _addrClient;
-        const socklen_t _len;
-        int _clinetSocket;
+        struct sockaddr _addrClient;
+        socklen_t _len;
+        int _fd;
 };

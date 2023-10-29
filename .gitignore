@@ -4,3 +4,4 @@ webserver
 .DS_Store
 *.json
 tmp
+Server_tmp.hpp

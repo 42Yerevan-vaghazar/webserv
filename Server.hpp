@@ -18,6 +18,8 @@
 #include <fcntl.h>
 
 #include <set>
+// #include <unordered_set>
+#include <map>
 #include <vector>
 #include <sstream>
 
@@ -51,6 +53,8 @@ class Server
             if (setsockopt(_serverSocket, SOL_SOCKET, SO_REUSEADDR, &a, sizeof(int)) < 0) {
                 std::cerr << "setsockopt(SO_REUSEADDR) failed" << std::endl;
             }
+            // std::cout << "sockaddr_in = " << sizeof(struct sockaddr_in) << std::endl;
+            // std::cout << "sockaddr_storage = " << sizeof(struct sockaddr_storage) << std::endl;
             // fcntl(_serverSocket, F_SETFL, O_NONBLOCK, FD_CLOEXEC);
             struct sockaddr_in addr; // TODO sockaddr_storage
             memset(&addr , 0 , sizeof(struct sockaddr_in));
@@ -70,39 +74,57 @@ class Server
             EvManager::start();
             EvManager::addEvent(_serverSocket, EvManager::read);
             while(true) {
-                std::pair<int, int> event = EvManager::listen();
+                std::pair<EvManager::Flag, int> event = EvManager::listen();
                 if (event.second == _serverSocket) {
                     std::cout << "\n_serverSocket\n" << std::endl;
                     Client client;
-                    int clientSocket = accept(_serverSocket, &client.getAddr(), &client.getAddrLen());
-                    std::cout << "clientSocket = "  << clientSocket << std::endl;
-                    if (clientSocket == -1) {
+                    client.setFd(accept(_serverSocket, (struct sockaddr *)&client.getAddr(), &client.getAddrLen()));
+                    // std::cout << "addr.sin_port = " << client.getAddr().sin_port << std::endl;
+                    // std::cout << "addr.sin_addr.s_addr = " << client.getAddr().sin_addr.s_addr << std::endl;
+                    // std::cout << "clientSocket = "  << clientSocket << std::endl;
+                    if (client.getFd() == -1) {
                         throw std::runtime_error(std::string("accept: ") + strerror(errno));
                     }
-                    client.setFd(clientSocket);
-                    // if (!_clients.find(client.getAddr())) {
-                    _clients.insert(client);
-                    EvManager::addEvent(clientSocket, EvManager::read);
-                    // }
+                    fcntl(client.getFd(), F_SETFL, O_NONBLOCK, FD_CLOEXEC);
+                    EvManager::addEvent(client.getFd(), EvManager::read);
+                    _clients[client.getFd()] = client;
                 } else if (event.first == EvManager::eof) {
                     std::cout << "\nEV_EOF\n" << std::endl;
                     EvManager::delEvent(event.second, event.first);
-                } else if (event.first == EvManager::read) {
-                    std::cout << "\nEVFILT_READ\n" << std::endl;
-                    // std::cout << "\evList[i].ident = " << evList[i].ident << std::endl;
-                    std::cout << "event.first = " << event.first << std::endl;
-                    std::cout << "event.second = " << event.second << std::endl;
-                    std::string request = receiveMessage(event.second);
-                    // std::cout << "request = " << request << std::endl;
-                    size_t pos = request.find(' ');
-                    pos += 1;
-                    // parse request
-
-                    sendMessage(event.second, request, pos);
+                    _clients.erase(event.second);
+                } else {
+                    std::map<int, Client>::iterator itClient = _clients.find(event.second);
+                    if (itClient == _clients.end()) {
+                        throw std::runtime_error(std::string("find: client is not found") + strerror(errno));  // is it true?
+                    }
+                    Client &client = itClient->second;
+                    if (event.first == EvManager::read) {
+                        std::cout << "\nEVFILT_READ\n" << std::endl;
+                        // std::cout << "\evList[i].ident = " << evList[i].ident << std::endl;
+                        std::cout << "event.first = " << event.first << std::endl;
+                        std::cout << "event.second = " << event.second << std::endl;
+                        client.receiveMessage();
+                        EvManager::addEvent(client.getFd(), EvManager::write);
+                        // std::cout << "request = " << request << std::endl;
+                    } else if (event.first == EvManager::write) {
+                        std::cout << "\nEVFILT_WRITE\n" << std::endl;
+                        std::cout << "event.first = " << event.first << std::endl;
+                        std::cout << "event.second = " << event.second << std::endl;
+                        std::string request =  client.getRequestLine();
+                        size_t pos = request.find(' ');
+                        pos += 1;
+                        // parse request
+                        sendMessage(event.second, request, pos);
+                        EvManager::delEvent(event.second, event.first);
+                    } else {
+                        client.receiveMessage();
+                    }
                 }
             }
         };
 
+
+        //
         // void run_event_loop(int kq, int fd) {
 
         // }
@@ -232,18 +254,18 @@ class Server
             }
         }
 
-        std::string receiveMessage(int fd) {
-            char buf[MAX_MSG_SIZE];
-            int rdSize = recv(fd, buf, sizeof(buf), 0);
+        // std::string receiveMessage(int fd) {
+        //     char buf[MAX_MSG_SIZE];
+        //     int rdSize = recv(fd, buf, sizeof(buf), 0);
 
-            if (rdSize == -1) {
-                perror("recv");
-                exit(1);
-            }
-            std::cout << "rdSize = " << rdSize << std::endl;
-            buf[rdSize] = '\0';
-            return (buf);
-        }
+        //     if (rdSize == -1) {
+        //         perror("recv");
+        //         exit(1);
+        //     }
+        //     std::cout << "rdSize = " << rdSize << std::endl;
+        //     buf[rdSize] = '\0';
+        //     return (buf);
+        // }
 
     private:
         std::string _ipAddress;
@@ -251,5 +273,5 @@ class Server
         int _serverSocket;
         int _clientSockets[CLIENT_LIMIT];
         std::vector<std::string> _data;
-        std::set<Client> _clients;
+        std::map<int, Client> _clients;
 };

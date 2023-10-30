@@ -6,9 +6,6 @@ int EvManager::_numEvents = 0;
 const int EvManager::CLIENT_LIMIT;
 int EvManager::_kq = 0;
 struct kevent EvManager::_evList[1000];
-const int EvManager::read;
-const int EvManager::write;
-const int EvManager::error;
 
 bool EvManager::start() {
     if (_kq == 0) {
@@ -20,28 +17,36 @@ bool EvManager::start() {
     return (true);
 }
 
-bool EvManager::addEvent(int fd, int flag) {
-    struct kevent evSet;
-    EV_SET(&evSet, fd, EVFILT_READ, EV_ADD, 0, 0, NULL);
+bool EvManager::addEvent(int fd, Flag flag) {
+    if (_kq != 0) {
+        int evFlag = getFlag(flag);
+        struct kevent evSet;
+        EV_SET(&evSet, fd, evFlag, EV_ADD, 0, 0, NULL);
 
-    if (kevent(_kq, &evSet, 1, NULL, 0, NULL) == -1) {
-        throw std::runtime_error(std::string("kevent: ") + strerror(errno));
-    };
-    return (true);
+        if (kevent(_kq, &evSet, 1, NULL, 0, NULL) == -1) {
+            throw std::runtime_error(std::string("kevent: ") + strerror(errno));
+        };
+        return (true);
+    }
+    return (false);
 }
 
-bool EvManager::delEvent(int fd, int flag) {
-    std::cout << "\ndelEvent" << std::endl;
-    struct kevent evSet;
-    EV_SET(&evSet, fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
-    if (kevent(_kq, &evSet, 1, NULL, 0, NULL) == -1) {
-        throw std::runtime_error(std::string("kevent: ") + strerror(errno));
-    };
-    close(fd);
-    return (true);
+bool EvManager::delEvent(int fd, Flag flag) {
+    if (_kq != 0) {
+        std::cout << "\ndelEvent" << std::endl;
+        int evFlag = getFlag(flag);
+        struct kevent evSet;
+        EV_SET(&evSet, fd, evFlag, EV_DELETE, 0, 0, NULL);
+        if (kevent(_kq, &evSet, 1, NULL, 0, NULL) == -1) {
+            throw std::runtime_error(std::string("kevent: ") + strerror(errno));
+        };
+        close(fd);
+        return (true);
+    }
+    return (false);
 }
 
-std::pair<int, int> EvManager::listen() {
+std::pair<EvManager::Flag, int> EvManager::listen() {
     while (_numEvents == 0) {
         _numEvents = kevent(_kq, NULL, 0, _evList, CLIENT_LIMIT, NULL);
     }
@@ -52,12 +57,33 @@ std::pair<int, int> EvManager::listen() {
     if (_evList[_numEvents - 1].flags == EV_ERROR) {
         throw std::runtime_error(std::string("event: ") + strerror(errno));
     }
-    std::pair<int, int> result;
+    EvManager::Flag flag = error;
+
     if (_evList[_numEvents - 1].flags & EV_EOF) {
-        result = std::make_pair<int, int>(EV_EOF, _evList[_numEvents - 1].ident);
+        flag = eof;
     } else if (_evList[_numEvents - 1].filter == EVFILT_READ) {
-        result = std::make_pair<int, int>(_evList[_numEvents - 1].filter, _evList[_numEvents - 1].ident);
+        flag = read;
+    } else if (_evList[_numEvents - 1].filter == EVFILT_WRITE) {
+        flag = write;
     }
+    std::pair<EvManager::Flag, int> result = std::make_pair<EvManager::Flag, int>(flag, _evList[_numEvents - 1].ident);
     --_numEvents;
     return (result);
 }
+
+int EvManager::getFlag(Flag flag) {
+    switch (flag)
+    {
+    case read :
+        return (EVFILT_READ);
+    case write :
+        return (EVFILT_WRITE);
+    case eof :
+        return (EV_EOF);
+    case error :
+        return (EV_ERROR);
+    default :
+        return (def);
+    }
+    return (def);
+};

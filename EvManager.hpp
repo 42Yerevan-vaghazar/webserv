@@ -16,18 +16,23 @@ class EvManager
     
 
     public:
-        static const int read = EVFILT_READ;
-        static const int write = EVFILT_WRITE;
-        static const int eof = EV_EOF;
-        static const int error = EV_ERROR;
+        enum Flag {
+            read,
+            write,
+            eof,
+            error,
+            def
+        };
 
         static bool start();
 
-        static bool addEvent(int fd, int flag);
+        static int getFlag(Flag flag);
 
-        static bool delEvent(int fd, int flag);
+        static bool addEvent(int fd, Flag flag);
 
-        static std::pair<int, int> listen();
+        static bool delEvent(int fd, Flag flag);
+
+        static std::pair<Flag, int> listen();
 
     private:
         static int _i;

@@ -8,7 +8,8 @@
 class Client
 {
     public:
-        Client() : _fd(0), bodySize(BODY_LIMIT), _isRequestReady(false) {
+        Client() : _fd(0), bodySize(BODY_LIMIT), _isRequestReady(false), _isHeaderReady(false),
+            _isBodyReady(false), _isOpenConnection(true) {
             memset(&_addrClient , 0 , sizeof(struct sockaddr));
         };
         ~Client() {};
@@ -58,21 +59,34 @@ class Client
             return (_sockLen);
         }
 
-        std::string receiveMessage() {
+        void receiveMessage() {
             char buf[READ_BUFFER];
             int rdSize = recv(_fd, buf, sizeof(buf), 0);
 
             std::cout << "rdSize = " << rdSize << std::endl;
             if (rdSize == -1 && !(errno == EAGAIN || errno == EWOULDBLOCK)) {
                 throw std::runtime_error(std::string("recv: ") + strerror(errno));
-            } else if (rdSize == 0) {  // TODO close tab. send response?
-                _isRequestReady = true;
-                return (_requestLine);
+            } if (rdSize == 0) {  // TODO close tab. send response?
+                _isOpenConnection = false;
             }
             buf[rdSize] = '\0';
-            _requestLine += buf;
-            // std::cout << "_requestLine = " << _requestLine << std::endl;
-            return (_requestLine);
+            if (_isHeaderReady == false) {
+                _requestLine += buf;
+                size_t headerEndPos = _requestLine.find("\n\r\n");
+
+                if (headerEndPos == std::string::npos) {
+                    return ;
+                }
+                _isHeaderReady = true;
+                _body = _requestLine.erase(headerEndPos);
+                return ;
+            }
+            if (rdSize == -1) {   // TODO check body length to do so
+                _isBodyReady = true;
+                _isRequestReady = true;
+                return ;
+            }
+            _body += buf;
         }
 
         bool isRequestReady() {
@@ -85,7 +99,10 @@ class Client
         std::string _httpRequest;
         std::string _requestLine;
         std::string _body;
+        bool _isHeaderReady;
+        bool _isBodyReady;
         bool _isRequestReady;
+        bool _isOpenConnection;
     private:
         unsigned long int bodySize;
         std::map<std::string, std::string> httpHeaders;

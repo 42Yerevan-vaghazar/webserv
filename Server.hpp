@@ -106,7 +106,7 @@ class Server
                         client.receiveMessage();
                         EvManager::addEvent(client.getFd(), EvManager::write);
                         // std::cout << "request = " << request << std::endl;
-                    } else if (event.first == EvManager::write) {
+                    } else if (client.isRequestReady() && event.first == EvManager::write) {
                         std::cout << "\nEVFILT_WRITE\n" << std::endl;
                         std::cout << "event.first = " << event.first << std::endl;
                         std::cout << "event.second = " << event.second << std::endl;

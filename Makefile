@@ -13,6 +13,7 @@ OBJS = $(patsubst %.cpp, ./$(TMP)/%.o, $(SRCS))
 RM = rm -fr
 
 HEADER = $(wildcard *.hpp)
+HEADER += $(wildcard includes/*.hpp)
 
 all: $(NAME)
 

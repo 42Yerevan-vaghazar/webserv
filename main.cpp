@@ -15,10 +15,13 @@
 
 #include "EvManager.hpp"
 #include "Cgi.hpp"
+#include "utils.hpp"
 
 int main(int ac, char **av, char **env) {
     try
     {
+        // std::string str = "EvManager";
+        // std::cout << "appendFile = " << appendFile(str, "./index.php") << std::endl;
         Server server("127.0.0.1", 3000);
         server.start();
     }
@@ -28,7 +31,7 @@ int main(int ac, char **av, char **env) {
     }
     
     // Client test;
-    // Cgi::execute("index.php", "php", env);
+    // Cgi::execute("index.php", "php", 5, env);
     // std::cout << server.get("/index.html") << std::endl;
 }
 

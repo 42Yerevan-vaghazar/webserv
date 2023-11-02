@@ -37,25 +37,26 @@ bool EvManager::delEvent(int fd, Flag flag) {
         int evFlag = getFlag(flag);
         struct kevent evSet;
         EV_SET(&evSet, fd, evFlag, EV_DELETE, 0, 0, NULL);
-        if (kevent(_kq, &evSet, 1, NULL, 0, NULL) == -1) {
-            throw std::runtime_error(std::string("kevent: ") + strerror(errno));
-        };
-        close(fd);
+        int res = kevent(_kq, &evSet, 1, NULL, 0, NULL);
+        // if (res == -1) {
+        //     throw std::runtime_error(std::string("kevent: ") + strerror(errno));
+        // };
+        // close(fd);
         return (true);
     }
     return (false);
 }
 
 std::pair<EvManager::Flag, int> EvManager::listen() {
-    while (_numEvents == 0) {
-        _numEvents = kevent(_kq, NULL, 0, _evList, CLIENT_LIMIT, NULL);
+    if (_numEvents == 0) {
+        memset(_evList, 0, CLIENT_LIMIT);
+        while (_numEvents == 0) {
+            _numEvents = kevent(_kq, NULL, 0, _evList, CLIENT_LIMIT, NULL);
+        }
     }
-    std::cout << "_numEvents = " << _numEvents << std::endl;
-    if (_numEvents == -1) {
+    std::cout << "\n\n_numEvents = " << _numEvents << std::endl;
+    if (_numEvents == -1 || _evList[_numEvents - 1].flags == EV_ERROR) {
         throw std::runtime_error(std::string("kevent: ") + strerror(errno));
-    }
-    if (_evList[_numEvents - 1].flags == EV_ERROR) {
-        throw std::runtime_error(std::string("event: ") + strerror(errno));
     }
     EvManager::Flag flag = error;
 

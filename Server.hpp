@@ -1,17 +1,13 @@
 #pragma once
-#include "Client.hpp"
 #include <iostream>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <string.h>
-#include <iostream>
 #include <errno.h>
 
-
 #include <cstdio>
-#include <iostream>
 #include <fstream>
 #include <unordered_map>
 
@@ -75,55 +71,97 @@ class Server
             EvManager::addEvent(_serverSocket, EvManager::read);
             while(true) {
                 std::pair<EvManager::Flag, int> event = EvManager::listen();
+                std::cout << "event.first = " << event.first << std::endl;
+                std::cout << "event.second = " << event.second << std::endl;
                 if (event.second == _serverSocket) {
                     std::cout << "\n_serverSocket\n" << std::endl;
                     Client client;
                     client.setFd(accept(_serverSocket, (struct sockaddr *)&client.getAddr(), &client.getAddrLen()));
-                    // std::cout << "addr.sin_port = " << client.getAddr().sin_port << std::endl;
-                    // std::cout << "addr.sin_addr.s_addr = " << client.getAddr().sin_addr.s_addr << std::endl;
-                    // std::cout << "clientSocket = "  << clientSocket << std::endl;
                     if (client.getFd() == -1) {
                         throw std::runtime_error(std::string("accept: ") + strerror(errno));
                     }
                     fcntl(client.getFd(), F_SETFL, O_NONBLOCK, FD_CLOEXEC);
                     EvManager::addEvent(client.getFd(), EvManager::read);
                     _clients[client.getFd()] = client;
-                } else if (event.first == EvManager::eof) {
-                    std::cout << "\nEV_EOF\n" << std::endl;
-                    EvManager::delEvent(event.second, event.first);
-                    _clients.erase(event.second);
                 } else {
+                    std::cout << "else\n";
                     std::map<int, Client>::iterator itClient = _clients.find(event.second);
                     if (itClient == _clients.end()) {
-                        throw std::runtime_error(std::string("find: client is not found") + strerror(errno));  // is it true?
+                        std::cout << "\n\n\n\n\n\ncontinue\n\n\n\n\\n\n" << std::endl;
+                        // EvManager::delEvent(event.second, EvManager::read);
+                        // EvManager::delEvent(event.second, EvManager::write);
+                        continue ;
+                        // throw std::runtime_error(std::string("find: client is not found") + strerror(errno));  // is it true?
                     }
                     Client &client = itClient->second;
-                    if (event.first == EvManager::read) {
+
+                    if (event.first == EvManager::eof) {
+                        std::cout << "\nEV_EOF\n" << std::endl;
+                        EvManager::delEvent(event.second, EvManager::read);
+                        std::map<int, Client>::iterator itClient = _clients.find(event.second); 
+                        Client &client = itClient->second;
+                        client.closeFd();
+                        _clients.erase(event.second);
+                    } else if (event.first == EvManager::read) {
                         std::cout << "\nEVFILT_READ\n" << std::endl;
                         // std::cout << "\evList[i].ident = " << evList[i].ident << std::endl;
-                        std::cout << "event.first = " << event.first << std::endl;
-                        std::cout << "event.second = " << event.second << std::endl;
+                        // std::cout << "event.first = " << event.first << std::endl;
+                        // std::cout << "event.second = " << event.second << std::endl;
                         client.receiveMessage();
-                        EvManager::addEvent(client.getFd(), EvManager::write);
-                        // std::cout << "request = " << request << std::endl;
-                    } else if (client.isRequestReady() && event.first == EvManager::write) {
+                        if (client.isRequestReady()) {
+                            EvManager::addEvent(client.getFd(), EvManager::write);
+                            client.setResponse(generateResponse(client.getHttpRequest(), client.getBody()));
+                        }
+                    } else if (client.isResponseReady()) {
                         std::cout << "\nEVFILT_WRITE\n" << std::endl;
-                        std::cout << "event.first = " << event.first << std::endl;
-                        std::cout << "event.second = " << event.second << std::endl;
-                        std::string request =  client.getRequestLine();
-                        size_t pos = request.find(' ');
-                        pos += 1;
-                        // parse request
-                        sendMessage(event.second, request, pos);
-                        EvManager::delEvent(event.second, event.first);
+                        // std::cout << "event.first = " << event.first << std::endl;
+                        // std::cout << "event.second = " << event.second << std::endl;
+                        // std::cout << "response = " << response << std::endl;
+                        // TODO send response little by little
+                        client.sendMessage();
+                        EvManager::delEvent(event.second, EvManager::read);
+                        client.closeFd();
+                        _clients.erase(event.second);
+                        
+                        // EvManager::delEvent(event.second, event.first);
                     } else {
                         client.receiveMessage();
+                        if (client.isRequestReady()) {
+                            EvManager::addEvent(client.getFd(), EvManager::write);
+                            client.setResponse(generateResponse(client.getHttpRequest(), client.getBody()));
+                        }
                     }
                 }
             }
         };
 
 
+
+        std::string generateResponse(const std::string &httpRequest, const std::string &body) {
+            size_t pos = httpRequest.find(' ');
+            pos += 1;
+            // std::cout << "httpRequest = " << httpRequest << std::endl;
+            std::string response;
+            if (httpRequest[0] == 'P') {
+                response = post(httpRequest.substr(pos, httpRequest.find(' ', pos) - pos), body);
+            } else if (httpRequest[0] == 'G') {
+                std::string filePath = httpRequest.substr(pos, httpRequest.find(' ', pos) - pos);
+                filePath = "." + filePath;
+                size_t contentTypePos = filePath.rfind(".");
+                std::string contentType = filePath.substr(contentTypePos + 1);
+                if (filePath == "./") {
+                    response = get("index.html", contentType);
+                } else {
+                    response = get(filePath, contentType);
+                }
+            } else if (httpRequest[0] == 'D') {
+                response = del(httpRequest.substr(pos, httpRequest.find(' ', pos) - pos));
+            }
+            // std::cout << "response = " << response << std::endl;
+            // TODO send response little by little
+            return (response);
+            // EvManager::delEvent(event.second, event.first);
+        }
         //
         // void run_event_loop(int kq, int fd) {
 
@@ -216,15 +254,9 @@ class Server
             return (response);
         };
 
-        void sendMessage(int clientSocket, const std::string &request, int pos) {
+        void sendMessage(int clientSocket, const std::string &request, int pos, const std::string &body ) {
             if (request[0] == 'P') {
-                char buf[5000];
-                if (recv(clientSocket, buf, sizeof(buf), 0) == -1) {
-                    perror("recv :");
-                    exit(1);
-                }
-                std::cout << buf << std::endl;
-                std::string response = post(request.substr(pos, request.find(' ', pos) - pos), buf);
+                std::string response = post(request.substr(pos, request.find(' ', pos) - pos), body);
                 if (send(clientSocket, response.c_str(), strlen(response.c_str()), 0) == -1) {
                     perror("send :");
                     exit(1);
@@ -240,10 +272,13 @@ class Server
                 } else {
                     response = get(filePath, contentType);
                 }
-                if (send(clientSocket, response.c_str(), response.size(), 0) == -1)
+                // std::cout << "barev\n";
+                // std::cout << "response = " << response << std::endl;
+                // std::cout << "clientSocket = " << clientSocket << std::endl;
+                if (write(clientSocket, response.c_str(), response.size()) == -1)
                 {
                     perror("send :");
-                    exit(1);
+                    // exit(1);
                 }
             } else if (request[0] == 'D') {
                 std::string response = del(request.substr(pos, request.find(' ', pos) - pos));

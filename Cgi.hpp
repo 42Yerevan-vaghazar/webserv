@@ -7,7 +7,7 @@
 class Cgi
 {
     public:
-        static std::string execute(const std::string &filePath, const std::string &progName, char **env) {
+        static std::string execute(const std::string &filePath, const std::string &progName, int fd, char **env) {
             std::string progPath = "/usr/bin/" + progName;
             std::string htmlFilePath = "./tmp/index.html";
             char **argv = new char *[3];
@@ -20,10 +20,6 @@ class Cgi
                 throw std::runtime_error(std::string("fork: fork failed") + strerror(errno));
             }
             if (pid == 0) {
-                int fd = open(htmlFilePath.c_str(), O_CREAT | O_TRUNC | O_RDWR, 0664);
-                if (fd == -1) {
-                    throw std::runtime_error("open: can not open");
-                }
                 dup2(fd, 1);
                 close(fd);
                 if (progName == "php" || progName == "python") {

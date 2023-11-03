@@ -1,9 +1,10 @@
 #pragma once
 
+#include <cstdlib>
 #include <unistd.h>
 #include <errno.h>
 #include <fcntl.h>
-
+#include <sys/wait.h>
 class Cgi
 {
     public:

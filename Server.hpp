@@ -24,12 +24,14 @@
 #include <sstream>
 
 #include	<sys/types.h>
-#include	<sys/event.h>
+// #include	<sys/event.h>
 #include	<sys/time.h>
 
 
 #include "Client.hpp"
 #include "EvManager.hpp"
+
+#include <stdlib.h>
 
 #define PROTOCOL "HTTP/1.1"
 
@@ -75,10 +77,14 @@ class Server
             EvManager::addEvent(_serverSocket, EvManager::read);
             while(true) {
                 std::pair<EvManager::Flag, int> event = EvManager::listen();
+                std::cout << "event.second = " << event.second << std::endl;
+                std::cout << "event.first = " << event.first << std::endl;
                 if (event.second == _serverSocket) {
                     std::cout << "\n_serverSocket\n" << std::endl;
                     Client client;
-                    client.setFd(accept(_serverSocket, (struct sockaddr *)&client.getAddr(), &client.getAddrLen()));
+                    // client.setFd(accept(_serverSocket, (struct sockaddr *)&client.getAddr(), &client.getAddrLen()));
+                    client.setFd(accept(_serverSocket, 0, 0));
+                    std::cout << _serverSocket << std::endl;
                     // std::cout << "addr.sin_port = " << client.getAddr().sin_port << std::endl;
                     // std::cout << "addr.sin_addr.s_addr = " << client.getAddr().sin_addr.s_addr << std::endl;
                     // std::cout << "clientSocket = "  << clientSocket << std::endl;

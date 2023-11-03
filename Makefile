@@ -1,10 +1,16 @@
 NAME = webserver
 
+UNAME := $(shell uname)
+
 TMP = objs
 
-CXX = c++
+ifeq ($(UNAME), Linux)
+CXX = c++ -std=c++0x
+else
+CXX = c++ -std=c++98
+endif
 
-CXXFLAGS = -I./includes -std=c++98 #-Wall -Wextra #-Werror
+CXXFLAGS = -I./includes  #-Wall -Wextra #-Werror
 
 SRCS = $(wildcard *.cpp)
 

@@ -118,12 +118,15 @@ class Server
                     } else if (client.isResponseReady() && event.first == EvManager::write) {
                         std::cout << "\nEVFILT_WRITE\n" << std::endl;
                         // TODO send response little by little
-                        client.sendMessage(); 
                         EvManager::delEvent(event.second, EvManager::read);
-                        EvManager::delEvent(event.second, EvManager::write);
-                        client.closeFd();
-                        _clients.erase(event.second);
-                    } else {
+                        // std::cout << "false" << std::endl;
+                        if (client.sendMessage() == true) {
+                            // std::cout << "true" << std::endl;
+                            EvManager::delEvent(event.second, EvManager::write);
+                            client.closeFd();
+                            _clients.erase(event.second);
+                        }
+                    } else if (client.isResponseReady() == false) {
                         client.receiveMessage();
                         if (client.isRequestReady()) {
                             client.setResponse(generateResponse(client.getHttpRequest(), client.getBody()));

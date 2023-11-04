@@ -104,13 +104,16 @@ class Client
             _body += buf;
         }
 
-        void sendMessage() {
-            if (send(_fd, _response.c_str(), _response.size(), 0) == -1) {
+        bool sendMessage() {
+            size_t sendSize = WRITE_BUFFER < _response.size() ? WRITE_BUFFER : _response.size();
+            if (send(_fd, _response.c_str(), sendSize, 0) == -1) {
                 perror("send :");
                 exit(1);
             }
-            _response.clear();
-            _isResponseReady = false;
+            _response.erase(0, sendSize);
+            // _response.clear();
+            // _isResponseReady = false;
+            return (_response.empty());
         }
 
         bool isRequestReady() {

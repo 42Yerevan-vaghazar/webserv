@@ -48,7 +48,9 @@ class EvManager
         static fd_set          _activeRfds;
         static fd_set          _activeWfds;
         static int _nfds;
-        static std::set<int>         _fdSet;
+        static std::set<int>         _fdRSet;
+        static std::set<int>         _fdWSet;
+        static std::set<int>         _fdActiveSet;
         static std::set<int>::iterator _itFds;
 // #else
         // static int _kq;

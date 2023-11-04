@@ -10,7 +10,9 @@ const int EvManager::CLIENT_LIMIT;
         fd_set          EvManager::_activeRfds;
         fd_set          EvManager::_activeWfds;
         int             EvManager::_nfds;
-        std::set<int>         EvManager::_fdSet;
+        std::set<int>         EvManager::_fdRSet;
+        std::set<int>         EvManager::_fdWSet;
+        std::set<int>         EvManager::_fdActiveSet;
         std::set<int>::iterator EvManager::_itFds;
 // #else
         // int EvManager::_kq = 0;
@@ -21,7 +23,7 @@ bool EvManager::start() {
     FD_ZERO(&_rfds);
     FD_ZERO(&_wfds);
     _nfds = 0;
-    _itFds = _fdSet.end();
+    _itFds = _fdActiveSet.end();
 
     // if (_kq == 0) {
     //     _kq = kqueue();
@@ -34,13 +36,13 @@ bool EvManager::start() {
 
 bool EvManager::addEvent(int fd, Flag flag) {
     if (flag == read) {
-        _fdSet.insert(fd);
+        _fdRSet.insert(fd);
         FD_SET(fd, &_rfds);
         if (_nfds <= fd) {
             _nfds = fd + 1;
         }
     } else if (flag == write) {
-        _fdSet.insert(fd);
+        _fdWSet.insert(fd);
         FD_SET(fd, &_wfds);
         if (_nfds <= fd) {
             _nfds = fd + 1;
@@ -62,9 +64,8 @@ bool EvManager::addEvent(int fd, Flag flag) {
 bool EvManager::delEvent(int fd, Flag flag) {
     if (flag == read) {
         FD_CLR(fd, &_rfds);
-        FD_CLR(fd, &_wfds);
-        _fdSet.erase(fd);
-        if (fd == _nfds - 1) {
+        _fdRSet.erase(fd);
+        if (fd == _nfds - 1 && _fdWSet.find(fd) == _fdWSet.end()) {
             for (int maxFd = _nfds; maxFd >= 0; maxFd--) {
                 if (FD_ISSET(maxFd, &_rfds)) {
                     _nfds = maxFd + 1;
@@ -73,10 +74,9 @@ bool EvManager::delEvent(int fd, Flag flag) {
             }
         }
     } else if (flag == write) {
-        FD_CLR(fd, &_rfds);
         FD_CLR(fd, &_wfds);
-        _fdSet.erase(fd);
-        if (fd == _nfds - 1) {
+        _fdWSet.erase(fd);
+        if (fd == _nfds - 1 && _fdRSet.find(fd) == _fdRSet.end()) {
             for (int maxFd = _nfds; maxFd >= 0; maxFd--) {
                 if (FD_ISSET(maxFd, &_rfds)) {
                     _nfds = maxFd + 1;
@@ -102,13 +102,25 @@ bool EvManager::delEvent(int fd, Flag flag) {
 std::pair<EvManager::Flag, int> EvManager::listen() {
     std::cout << "listen" << std::endl;
 label:
-    if (_itFds == _fdSet.end()) {
+    if (_itFds == _fdActiveSet.end()) {
         _activeRfds = _rfds;
         _activeWfds = _wfds;
         _numEvents = select(_nfds, &_activeRfds, &_activeWfds, NULL, NULL);
-        _itFds = _fdSet.begin();
+        for (std::set<int>::iterator it = _fdRSet.begin();
+            it != _fdRSet.end(); ++it) {
+            if (FD_ISSET(*it, &_activeRfds) || FD_ISSET(*it, &_activeWfds)) {
+                _fdActiveSet.insert(*it);
+            }
+        }
+        for (std::set<int>::iterator it = _fdWSet.begin();
+            it != _fdWSet.end(); ++it) {
+            if (FD_ISSET(*it, &_activeRfds) || FD_ISSET(*it, &_activeWfds)) {
+                _fdActiveSet.insert(*it);
+            }
+        }
+        _itFds = _fdActiveSet.begin();
     }
-    while (_itFds != _fdSet.end()) {
+    while (_itFds != _fdActiveSet.end()) {
         if (FD_ISSET(*_itFds, &_activeRfds)) {
             return (std::pair<EvManager::Flag, int>(EvManager::read, *(_itFds++)));
         } else if (FD_ISSET(*_itFds, &_activeWfds)) {

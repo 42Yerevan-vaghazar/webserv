@@ -4,7 +4,7 @@
 int EvManager::_i = 0;
 int EvManager::_numEvents = 0;
 const int EvManager::CLIENT_LIMIT;
-#ifdef __linux__
+// #ifdef __linux__
         fd_set          EvManager::_rfds;
         fd_set          EvManager::_wfds;
         fd_set          EvManager::_activeRfds;
@@ -12,10 +12,10 @@ const int EvManager::CLIENT_LIMIT;
         int             EvManager::_nfds;
         std::set<int>         EvManager::_fdSet;
         std::set<int>::iterator EvManager::_itFds;
-#else
-        int EvManager::_kq = 0;
-        struct kevent EvManager::_evList[1000];
-#endif
+// #else
+        // int EvManager::_kq = 0;
+        // struct kevent EvManager::_evList[1000];
+// #endif
 
 bool EvManager::start() {
     FD_ZERO(&_rfds);
@@ -101,18 +101,14 @@ bool EvManager::delEvent(int fd, Flag flag) {
 
 std::pair<EvManager::Flag, int> EvManager::listen() {
     std::cout << "listen" << std::endl;
-    std::cout << "EvManager_itFds = " <<*_itFds << std::endl;
+label:
     if (_itFds == _fdSet.end()) {
         _activeRfds = _rfds;
         _activeWfds = _wfds;
         _numEvents = select(_nfds, &_activeRfds, &_activeWfds, NULL, NULL);
-        std::cout << "_numEvents = " << _numEvents << std::endl;
-        std::cout << "_nfds = " << _nfds << std::endl;
-        std::cout << "_fdSetsize = " << _fdSet.size() << std::endl;
         _itFds = _fdSet.begin();
     }
     while (_itFds != _fdSet.end()) {
-        std::cout << "_itFds = " <<*_itFds << std::endl;
         if (FD_ISSET(*_itFds, &_activeRfds)) {
             return (std::pair<EvManager::Flag, int>(EvManager::read, *(_itFds++)));
         } else if (FD_ISSET(*_itFds, &_activeWfds)) {
@@ -120,6 +116,7 @@ std::pair<EvManager::Flag, int> EvManager::listen() {
         }
         _itFds++;
     }
+    goto label;
     return (std::pair<EvManager::Flag, int>(EvManager::def, -1));
     // while (_numEvents == 0) {
     //     _numEvents = kevent(_kq, NULL, 0, _evList, CLIENT_LIMIT, NULL);
@@ -144,6 +141,7 @@ std::pair<EvManager::Flag, int> EvManager::listen() {
     // --_numEvents;
     // return (result);
 }
+
 
 int EvManager::getFlag(Flag flag) {
     // switch (flag)

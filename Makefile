@@ -4,11 +4,11 @@ UNAME := $(shell uname)
 
 TMP = objs
 
-ifeq ($(UNAME), Linux)
+# ifeq ($(UNAME), Linux)
 CXX = c++ -std=c++0x
-else
+# else
 CXX = c++ -std=c++98
-endif
+# endif
 
 CXXFLAGS = -I./includes  #-Wall -Wextra #-Werror
 

@@ -1,11 +1,11 @@
 #pragma once
 #include	<sys/types.h>
-#ifdef __linux__
+// #ifdef __linux__
 # include <sys/select.h>
 # include <set>
-#else
-# include	<sys/event.h>
-#endif
+// #else
+// # include	<sys/event.h>
+// #endif
 #include	<sys/time.h>
 #include    <utility>
 #include    <iostream>
@@ -42,7 +42,7 @@ class EvManager
         static int _i;
         static int _numEvents;
         static const int CLIENT_LIMIT = 1000;
-#ifdef __linux__
+// #ifdef __linux__
         static fd_set          _rfds;
         static fd_set          _wfds;
         static fd_set          _activeRfds;
@@ -50,10 +50,10 @@ class EvManager
         static int _nfds;
         static std::set<int>         _fdSet;
         static std::set<int>::iterator _itFds;
-#else
-        static int _kq;
-        static struct kevent _evList[CLIENT_LIMIT];
-#endif
+// #else
+        // static int _kq;
+        // static struct kevent _evList[CLIENT_LIMIT];
+// #endif
 
 };
 

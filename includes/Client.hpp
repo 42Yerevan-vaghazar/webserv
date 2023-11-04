@@ -2,6 +2,7 @@
 #include <map>
 #include <iostream>
 #include "DefaultSetup.hpp"
+#include "EvManager.hpp"
 
 #define BODY_LIMIT 3000
 
@@ -79,6 +80,8 @@ class Client
                 throw std::runtime_error(std::string("recv: ") + strerror(errno));
             } if (rdSize == 0) {  // TODO close tab. send response?
                 _isOpenConnection = false;
+                EvManager::delEvent(_fd, EvManager::read);
+                EvManager::delEvent(_fd, EvManager::write);
             }
             buf[rdSize] = '\0';
             if (_isHeaderReady == false) {

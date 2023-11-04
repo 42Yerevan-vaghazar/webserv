@@ -144,12 +144,14 @@ class Server
             if (httpRequest[0] == 'P') {
                 response = post(httpRequest.substr(pos, httpRequest.find(' ', pos) - pos), body);
             } else if (httpRequest[0] == 'G') {
-                std::string filePath = httpRequest.substr(pos, httpRequest.find(' ', pos) - pos);
-                filePath = "." + filePath;
+                std::string filePath;
+                filePath += httpRequest.substr(pos, httpRequest.find(' ', pos) - pos);
+                filePath = "./www" + filePath;
                 size_t contentTypePos = filePath.rfind(".");
                 std::string contentType = filePath.substr(contentTypePos + 1);
-                if (filePath == "./") {
-                    response = get("index.html", contentType);
+                std::cout << "filePath = " << filePath << std::endl;
+                if (filePath == "./www/") {
+                    response = get("www/index.html", contentType);
                 } else {
                     response = get(filePath, contentType);
                 }

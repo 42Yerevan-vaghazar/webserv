@@ -102,7 +102,7 @@ class Client
         }
 
         void sendMessage() {
-            if (send(_fd, _response.c_str(), strlen(_response.c_str()), 0) == -1) {
+            if (send(_fd, _response.c_str(), _response.size(), 0) == -1) {
                 perror("send :");
                 exit(1);
             }

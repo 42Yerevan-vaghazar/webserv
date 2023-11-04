@@ -1,14 +1,14 @@
 NAME = webserver
 
-TMP = objs
+TMP = src/objs
 
 CXX = c++
 
 CXXFLAGS = -I./includes -std=c++98 #-Wall -Wextra #-Werror
 
-SRCS = $(wildcard *.cpp)
+SRCS = $(wildcard src/*.cpp)
 
-OBJS = $(patsubst %.cpp, ./$(TMP)/%.o, $(SRCS))
+OBJS = $(patsubst src/%.cpp, ./$(TMP)/%.o, $(SRCS))
 
 RM = rm -fr
 
@@ -17,7 +17,7 @@ HEADER += $(wildcard includes/*.hpp)
 
 all: $(NAME)
 
-./$(TMP)/%.o: %.cpp $(HEADER) Makefile
+./$(TMP)/%.o: ./src/%.cpp $(HEADER) Makefile
 	$(CXX) $(CXXFLAGS) -o $@ -c $<
 
 $(NAME): $(TMP) $(OBJS)

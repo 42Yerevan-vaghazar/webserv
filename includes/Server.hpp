@@ -72,11 +72,12 @@ class Server
             while(true) {
                 std::pair<EvManager::Flag, int> event = EvManager::listen();
                 std::cout << "event.first = " << event.first << std::endl;
-                std::cout << "event.second = " << event.second << std::endl;
+                std::cout << "event.second = " << event.second << std::endl << std::endl;
                 if (event.second == _serverSocket) {
                     std::cout << "\n_serverSocket\n" << std::endl;
                     Client client;
                     client.setFd(accept(_serverSocket, (struct sockaddr *)&client.getAddr(), &client.getAddrLen()));
+                    std::cout << "client.getFd = " << client.getFd() << std::endl;
                     if (client.getFd() == -1) {
                         throw std::runtime_error(std::string("accept: ") + strerror(errno));
                     }
@@ -98,8 +99,7 @@ class Server
                     if (event.first == EvManager::eof) {
                         std::cout << "\nEV_EOF\n" << std::endl;
                         EvManager::delEvent(event.second, EvManager::read);
-                        std::map<int, Client>::iterator itClient = _clients.find(event.second); 
-                        Client &client = itClient->second;
+                        EvManager::delEvent(event.second, EvManager::write);
                         client.closeFd();
                         _clients.erase(event.second);
                     } else if (event.first == EvManager::read) {
@@ -108,26 +108,25 @@ class Server
                         // std::cout << "event.first = " << event.first << std::endl;
                         // std::cout << "event.second = " << event.second << std::endl;
                         client.receiveMessage();
+                        EvManager::addEvent(client.getFd(), EvManager::write);
                         if (client.isRequestReady()) {
-                            EvManager::addEvent(client.getFd(), EvManager::write);
                             client.setResponse(generateResponse(client.getHttpRequest(), client.getBody()));
                         }
-                    } else if (client.isResponseReady()) {
+                    } else if (client.isResponseReady() && event.first == EvManager::write) {
                         std::cout << "\nEVFILT_WRITE\n" << std::endl;
                         // std::cout << "event.first = " << event.first << std::endl;
                         // std::cout << "event.second = " << event.second << std::endl;
                         // std::cout << "response = " << response << std::endl;
                         // TODO send response little by little
-                        client.sendMessage();
+                        client.sendMessage(); 
                         EvManager::delEvent(event.second, EvManager::read);
+                        EvManager::delEvent(event.second, EvManager::write);
                         client.closeFd();
                         _clients.erase(event.second);
-                        
                         // EvManager::delEvent(event.second, event.first);
                     } else {
                         client.receiveMessage();
                         if (client.isRequestReady()) {
-                            EvManager::addEvent(client.getFd(), EvManager::write);
                             client.setResponse(generateResponse(client.getHttpRequest(), client.getBody()));
                         }
                     }

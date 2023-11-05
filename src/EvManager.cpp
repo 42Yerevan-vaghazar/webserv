@@ -144,10 +144,6 @@ bool EvManager::delEvent(int fd, Flag flag) {
         struct kevent evSet;
         EV_SET(&evSet, fd, evFlag, EV_DELETE, 0, 0, NULL);
 
-        if (kevent(_kq, &evSet, 1, NULL, 0, NULL) == -1) {
-            throw std::runtime_error(std::string("kevent: ") + strerror(errno));
-        };
-        close(fd);
         return (true);
     }
     return (false);

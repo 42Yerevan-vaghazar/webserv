@@ -1,6 +1,6 @@
 #include "Client.hpp"
 
-Client::Client() : _fd(0), bodySize(BODY_LIMIT), _isRequestReady(false), _isHeaderReady(false),
+Client::Client() : _fd(0), _bodySize(BODY_LIMIT), _isRequestReady(false), _isHeaderReady(false),
     _isBodyReady(false), _isOpenConnection(true), _isResponseReady(false) {
     memset(&_addrClient , 0 , sizeof(struct sockaddr));
 };
@@ -51,7 +51,7 @@ void Client::setResponse(const std::string &response) {
     _isResponseReady = true;
 }
 
-void Client::receiveMessage() {
+int Client::receiveMessage() {
     char buf[READ_BUFFER];
     int rdSize = recv(_fd, buf, sizeof(buf) - 1, 0);
 
@@ -60,9 +60,7 @@ void Client::receiveMessage() {
     //     return ;
     // }
      if (rdSize == 0) {  // TODO close tab. send response?
-        _isOpenConnection = false;
-        EvManager::delEvent(_fd, EvManager::read);
-        EvManager::delEvent(_fd, EvManager::write);
+        return (-1);
     }
     buf[rdSize] = '\0';
     if (_isHeaderReady == false) {
@@ -70,19 +68,29 @@ void Client::receiveMessage() {
         size_t headerEndPos = _httpRequest.find("\n\r\n");
 
         if (headerEndPos == std::string::npos) {
-            return ;
+            return 0;
         }
         _isHeaderReady = true;
-        _body = _httpRequest.erase(headerEndPos);
+        size_t pos = _httpRequest.find("Content-Length: ");
+        if (pos == std::string::npos) {
+            _bodySize = 0;
+        } else {
+            _bodySize = std::stoi(_httpRequest.substr(_httpRequest.find("Content-Length: ") + strlen("Content-Length: "), 10));  // TODO check this
+        }
+        std::string tmp = _httpRequest.erase(headerEndPos);
+        if (_bodySize != 0) {
+            _body = tmp;
+        }
         // TODO  parse header
-        return ;
+        return 0;
     }
-    if (rdSize == -1) {   // TODO check body length to do so
+    if (_bodySize == _body.size()) {   // TODO check body length to do so
         _isBodyReady = true;
         _isRequestReady = true;
-        return ;
+        return 0;
     }
     _body += buf;
+    return 0;
 }
 
 bool Client::sendMessage() {

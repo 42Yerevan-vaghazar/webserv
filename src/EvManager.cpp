@@ -127,11 +127,9 @@ bool EvManager::addEvent(int fd, Flag flag) {
     if (_kq != 0) {
         int evFlag = getFlag(flag);
         struct kevent evSet;
-        EV_SET(&evSet, fd, evFlag, EV_ADD, 0, 0, NULL);
 
-        if (kevent(_kq, &evSet, 1, NULL, 0, NULL) == -1) {
-            throw std::runtime_error(std::string("kevent: ") + strerror(errno));
-        };
+        EV_SET(&evSet, fd, evFlag, EV_ADD, 0, 0, NULL);
+        kevent(_kq, &evSet, 1, NULL, 0, NULL);
         return (true);
     }
     return (false);
@@ -139,11 +137,12 @@ bool EvManager::addEvent(int fd, Flag flag) {
 
 bool EvManager::delEvent(int fd, Flag flag) {
     if (_kq != 0) {
-        std::cout << "\ndelEvent" << std::endl;
+        // std::cout << "\ndelEvent" << std::endl;
         int evFlag = getFlag(flag);
         struct kevent evSet;
-        EV_SET(&evSet, fd, evFlag, EV_DELETE, 0, 0, NULL);
 
+        EV_SET(&evSet, fd, evFlag, EV_DELETE, 0, 0, NULL);
+        kevent(_kq, &evSet, 1, NULL, 0, NULL);
         return (true);
     }
     return (false);
@@ -154,7 +153,7 @@ std::pair<EvManager::Flag, int> EvManager::listen() {
         _numEvents = kevent(_kq, NULL, 0, _evList, CLIENT_LIMIT, NULL);
     }
 
-    std::cout << "_numEvents = " << _numEvents << std::endl;
+    // std::cout << "_numEvents = " << _numEvents << std::endl;
 
     if (_numEvents == -1) {
         throw std::runtime_error(std::string("kevent: ") + strerror(errno));

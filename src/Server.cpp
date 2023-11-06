@@ -36,59 +36,58 @@ bool Server::start() {
 
 void Server::eventLoop() {
     EvManager::start();
+    fcntl(_serverSocket, F_SETFL, O_NONBLOCK, FD_CLOEXEC);
     EvManager::addEvent(_serverSocket, EvManager::read);
     while(true) {
         std::pair<EvManager::Flag, int> event = EvManager::listen();
-        std::cout << "event.second = " << event.second << std::endl;
-        std::cout << "event.first = " << event.first << std::endl;
+        // std::cout << "event.second = " << event.second << std::endl;
+        // std::cout << "event.first = " << event.first << std::endl;
         if (event.second == _serverSocket) {
-            std::cout << "\n_serverSocket\n" << std::endl;
+            // std::cout << "\n_serverSocket\n" << std::endl;
             Client client;
             // client.setFd(accept(_serverSocket, (struct sockaddr *)&client.getAddr(), &client.getAddrLen()));
             client.setFd(accept(_serverSocket, 0, 0));
             std::cout << _serverSocket << std::endl;
-            if (client.getFd() == -1) {
-                throw std::runtime_error(std::string("accept: ") + strerror(errno));
-            }
+            // if (client.getFd() == -1) {  // TODO is it needed
+            //     throw std::runtime_error(std::string("accept: ") + strerror(errno));
+            // }
             fcntl(client.getFd(), F_SETFL, O_NONBLOCK, FD_CLOEXEC);
             EvManager::addEvent(client.getFd(), EvManager::read);
             _clients[client.getFd()] = client;
         } else {
-            std::cout << "else\n";
+            // std::cout << "else\n";
             std::map<int, Client>::iterator itClient = _clients.find(event.second);
             if (itClient == _clients.end()) {
-                std::cout << "\n\n\n\n\n\ncontinue\n\n\n\n\\n\n" << std::endl;
+                // std::cout << "\n\n\n\n\n\ncontinue\n\n\n\n\\n\n" << std::endl;
                 continue ;
                 // throw std::runtime_error(std::string("find: client is not found") + strerror(errno));  // is it true?
             }
             Client &client = itClient->second;
-            std::cout << client.getHttpRequest() << std::endl;;
+            // std::cout << client.getHttpRequest() << std::endl;;
             if (event.first == EvManager::eof) {
-                std::cout << "\nEV_EOF\n" << std::endl;
-                EvManager::delEvent(event.second, EvManager::read);
-                EvManager::delEvent(event.second, EvManager::write);
-                client.closeFd();
-                _clients.erase(event.second);
+                // std::cout << "\nEV_EOF\n" << std::endl;
+                closeConnetcion(client.getFd());
             } else if (event.first == EvManager::read) {
-                std::cout << "\nEVFILT_READ\n" << std::endl;
-                client.receiveMessage();
-                EvManager::addEvent(client.getFd(), EvManager::write);
+                // std::cout << "\nEVFILT_READ\n" << std::endl;
+                if (client.getHttpRequest().empty()) {
+                    EvManager::addEvent(client.getFd(), EvManager::write);
+                }
+                if (client.receiveMessage() == -1) {
+                    closeConnetcion(client.getFd());
+                }
                 if (client.isRequestReady()) {
                     client.setResponse(generateResponse(client.getHttpRequest(), client.getBody()));
                 }
             } else if (client.isResponseReady() && event.first == EvManager::write) {
-                std::cout << "\nEVFILT_WRITE\n" << std::endl;
+                // std::cout << "\nEVFILT_WRITE\n" << std::endl;
                 // TODO send response little by little
-                EvManager::delEvent(event.second, EvManager::read);
-                // std::cout << "false" << std::endl;
                 if (client.sendMessage() == true) {
-                    // std::cout << "true" << std::endl;
-                    EvManager::delEvent(event.second, EvManager::write);
-                    client.closeFd();
-                    _clients.erase(event.second);
+                    closeConnetcion(client.getFd());
                 }
             } else if (client.isResponseReady() == false) {
-                client.receiveMessage();
+                if (client.receiveMessage() == -1) {
+                    closeConnetcion(client.getFd());
+                }
                 if (client.isRequestReady()) {
                     client.setResponse(generateResponse(client.getHttpRequest(), client.getBody()));
                 }
@@ -137,7 +136,7 @@ std::string Server::get(const std::string &fileName, const std::string  &content
     }
     response += "HTTP/1.1 ";
     std::cout << "fileName = " << fileName << std::endl;
-    if (access(fileName.c_str(), F_OK) == 0) {   // TODO check permission to read
+    if (access(fileName.c_str(), R_OK) == 0) {   // TODO check permission to read
         std::string fileContent;
         std::ostringstream stream;
         std::ifstream ifs(fileName);
@@ -167,7 +166,7 @@ std::string Server::get(const std::string &fileName, const std::string  &content
         response +=  "\n";
         response +=  fileContent;
     } else {
-        // TODO automate it
+        // TODO automate it   404, 405, 411, 412, 413, 414, 431, 500, 501, 505, 503, 507, 508
         std::string fileContent;
         std::ifstream ifs("./error_pages/404.html");
         if (ifs.is_open() == false) {
@@ -209,4 +208,12 @@ std::string Server::del(const std::string &fileName) {
     response += "OK";
     std::remove(fileName.c_str());
     return (response);
+};
+
+bool Server::closeConnetcion(int fd) {
+    EvManager::delEvent(fd, EvManager::read);
+    EvManager::delEvent(fd, EvManager::write);
+    close(fd);
+    _clients.erase(fd);
+    return (true);
 };

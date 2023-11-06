@@ -51,6 +51,7 @@ class Server
         std::string del(const std::string &fileName);
 
     private:
+        bool closeConnetcion(int fd);
         std::string _ipAddress;
         int _port;
         int _serverSocket;

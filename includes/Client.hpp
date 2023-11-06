@@ -3,131 +3,53 @@
 #include <iostream>
 #include "DefaultSetup.hpp"
 #include "EvManager.hpp"
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <unistd.h>
+
 
 #define BODY_LIMIT 3000
 
 class Client
 {
     public:
-        Client() : _fd(0), bodySize(BODY_LIMIT), _isRequestReady(false), _isHeaderReady(false),
-            _isBodyReady(false), _isOpenConnection(true), _isResponseReady(false) {
-            memset(&_addrClient , 0 , sizeof(struct sockaddr));
-        };
-        ~Client() {
-            // close(_fd);
-        };
+        Client();
 
-        bool operator<(const Client& rhs) const
-        {
-            return _fd < rhs._fd;
-        }
+        ~Client();
 
-        // bool operator==(int fd) {
-        //     return(_fd == fd);
-        // }
+        bool operator<(const Client& rhs) const;
 
-        // bool operator==(const Client &rhs) {
-        //     return(_fd == rhs._fd);
-        // }
+        int getFd() const;
 
-        // bool operator==(const struct sockaddr_in &addrClient) {
-        //     return(!std::memcmp(&_addrClient, &addrClient, sizeof(sockaddr_in)));
-        // }
+        void setFd(const int fd);
 
-        int getFd() const {
-            return (_fd);
-        }
+        void closeFd() const;
 
-        void setFd(const int fd) {
-            _fd = fd;
-        }
+        struct sockaddr_in &getAddr();
 
-        void closeFd() const {
-            close(_fd);
-        }
+        void setAddr(const struct sockaddr_in &addrClient);
 
-        struct sockaddr_in &getAddr() {
-            return (_addrClient);
-        }
+        std::string getHttpRequest();
 
-        void setAddr(const struct sockaddr_in &addrClient) {
-            _addrClient = addrClient;
-        }
+        std::string getBody();
 
-        std::string getHttpRequest() {
-            return (_httpRequest);
-        }
+        socklen_t &getAddrLen();
 
-        std::string getBody() {
-            return (_body);
-        }
+        void setResponse(const std::string &response);
 
-        socklen_t &getAddrLen() {
-            return (_sockLen);
-        }
+        void receiveMessage();
 
-        void setResponse(const std::string &response) {
-            _response = response;
-            _isResponseReady = true;
-        }
+        bool sendMessage();
 
-        void receiveMessage() {
-            char buf[READ_BUFFER];
-            int rdSize = recv(_fd, buf, sizeof(buf) - 1, 0);
+        bool isRequestReady() const;
 
-            std::cout << "rdSize = " << rdSize << std::endl;
-            if (rdSize == -1 && !(errno == EAGAIN || errno == EWOULDBLOCK)) {  // TODO Checking the value of errno is strictly forbidden after a read or a write operation.
-                throw std::runtime_error(std::string("recv: ") + strerror(errno));
-            } if (rdSize == 0) {  // TODO close tab. send response?
-                _isOpenConnection = false;
-                EvManager::delEvent(_fd, EvManager::read);
-                EvManager::delEvent(_fd, EvManager::write);
-            }
-            buf[rdSize] = '\0';
-            if (_isHeaderReady == false) {
-                _httpRequest += buf;
-                size_t headerEndPos = _httpRequest.find("\n\r\n");
-
-                if (headerEndPos == std::string::npos) {
-                    return ;
-                }
-                _isHeaderReady = true;
-                _body = _httpRequest.erase(headerEndPos);
-                // TODO  parse header
-                return ;
-            }
-            if (rdSize == -1) {   // TODO check body length to do so
-                _isBodyReady = true;
-                _isRequestReady = true;
-                return ;
-            }
-            _body += buf;
-        }
-
-        bool sendMessage() {
-            size_t sendSize = WRITE_BUFFER < _response.size() ? WRITE_BUFFER : _response.size();
-            if (send(_fd, _response.c_str(), sendSize, 0) == -1) {
-                perror("send :");
-                exit(1);
-            }
-            _response.erase(0, sendSize);
-            // _response.clear();
-            // _isResponseReady = false;
-            return (_response.empty());
-        }
-
-        bool isRequestReady() {
-            return (_isRequestReady);
-        }
-        bool isResponseReady() {
-            return (_isResponseReady);
-        }
+        bool isResponseReady() const;
 
     private:
         int _fd;
         char _http[READ_BUFFER];
         std::string _httpRequest;
-        std::string _requestLine;
+        // std::string _requestLine;
         std::string _body;
         std::string _response;
         bool _isHeaderReady;
@@ -140,7 +62,7 @@ class Client
         std::map<std::string, std::string> httpHeaders;
         socklen_t _sockLen;
     private:
-        // struct sockaddr_in      _ClientInfo;
+        // struct sockaddr           _ClientInfo;
         struct sockaddr_in         _addrClient;
         // struct sockaddr_storage _addrClient;
 };

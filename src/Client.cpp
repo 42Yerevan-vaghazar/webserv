@@ -1,7 +1,7 @@
 #include "Client.hpp"
 
 Client::Client() : _fd(0), _bodySize(BODY_LIMIT), _isRequestReady(false), _isHeaderReady(false),
-    _isBodyReady(false), _isOpenConnection(true), _isResponseReady(false) {
+    _isBodyReady(false), _isOpenConnection(true), _isResponseReady(false), _maxSizeRequest(0) {
     memset(&_addrClient , 0 , sizeof(struct sockaddr));
 };
 
@@ -55,10 +55,13 @@ int Client::receiveMessage() {
     char buf[READ_BUFFER];
     int rdSize = recv(_fd, buf, sizeof(buf) - 1, 0);
 
-    std::cout << "rdSize = " << rdSize << std::endl;
-    // if (rdSize == -1) {  // TODO Checking the value of errno is strictly forbidden after a read or a write operation.
-    //     return ;
-    // }
+    // std::cout << "rdSize = " << rdSize << std::endl;
+    if (rdSize == -1) { // TODO Checking the value of errno is strictly forbidden after a read or a write operation.
+        if (_maxSizeRequest == 1000) { // TODO client request caused infinit loop  change with time
+            return -1;
+        }
+        _maxSizeRequest++;
+    }
      if (rdSize == 0) {  // TODO close tab. send response?
         return (-1);
     }
@@ -72,19 +75,24 @@ int Client::receiveMessage() {
         }
         _isHeaderReady = true;
         size_t pos = _httpRequest.find("Content-Length: ");
+        std::cout << "pos = " << pos << std::endl;
         if (pos == std::string::npos) {
             _bodySize = 0;
         } else {
             _bodySize = std::stoi(_httpRequest.substr(_httpRequest.find("Content-Length: ") + strlen("Content-Length: "), 10));  // TODO check this
         }
-        std::string tmp = _httpRequest.erase(headerEndPos);
+
+        std::string tmp = _httpRequest.substr(headerEndPos + 3);
+        _httpRequest.erase(headerEndPos);
         if (_bodySize != 0) {
             _body = tmp;
+            std::cout << "tmp = " << tmp << std::endl;
         }
         // TODO  parse header
         return 0;
     }
-    if (_bodySize == _body.size()) {   // TODO check body length to do so
+    if (_bodySize <= _body.size()) {   // TODO check body length to do so
+        _body.erase(_bodySize);
         _isBodyReady = true;
         _isRequestReady = true;
         return 0;

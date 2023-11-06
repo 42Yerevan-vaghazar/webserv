@@ -124,6 +124,7 @@ std::string Server::generateResponse(const std::string &httpRequest, const std::
 }
 
 std::string Server::get(const std::string &fileName, const std::string  &contentType) {
+    std::cout << "\nget\n" << std::endl;
     std::unordered_map<std::string, std::string> headerContent;
     std::string response;
     int statusCode = 200;
@@ -136,6 +137,12 @@ std::string Server::get(const std::string &fileName, const std::string  &content
     }
     response += "HTTP/1.1 ";
     std::cout << "fileName = " << fileName << std::endl;
+    // TODO check is method allowed. 405
+    // TODO Content-Length is not defined in case post method called 411
+    // TODO valid request line 412
+    // TODO body is large 413
+    // TODO The URI requested is long  414
+    // TODO header is large 431
     if (access(fileName.c_str(), R_OK) == 0) {   // TODO check permission to read
         std::string fileContent;
         std::ostringstream stream;
@@ -191,22 +198,45 @@ std::string Server::get(const std::string &fileName, const std::string  &content
     return (response);
 };
 
-std::string Server::post(const std::string &fileName, const std::string &body) {
+std::string Server::post(const std::string &filePath, const std::string &body) {
+    std::cout << "\npost\n" << std::endl;
+    std::string fileName;
+    size_t pos = filePath.rfind("/");
+    if (pos == std::string::npos) {
+        fileName = filePath;
+    } else {
+        fileName = filePath.substr(pos + 1);
+    }
+    std::ofstream ofs("./data/" + fileName);
+    if (ofs.is_open() == false) {
+        throw std::logic_error("can not open file"); // TODO change -> failed status in response
+    }
     std::string response;
     response += PROTOCOL;
     response += " 200 ";
     response += "OK";
-    _data.push_back(body);
-    // ofs << body;
+    // _data.push_back(body);
+    ofs << body;
     return (response);
 };
 
-std::string Server::del(const std::string &fileName) {
+std::string Server::del(const std::string &filePath) {
+    std::cout << "\ndel\n" << std::endl;
+    std::string fileName =  "./data/";
+    size_t pos = filePath.rfind("/");
+    if (pos == std::string::npos) {
+        fileName += filePath;
+    } else {
+        fileName += filePath.substr(pos + 1);
+    }
     std::string response;
     response += "HTTP/1.1 ";
     response += "200 ";
     response += "OK";
-    std::remove(fileName.c_str());
+    std::cout << "fileName = " << fileName << std::endl;
+    if (std::remove(fileName.c_str()) == -1) {
+        throw std::runtime_error(std::string("remove: ") + strerror(errno)); // TODO change failed status in response 
+    };
     return (response);
 };
 

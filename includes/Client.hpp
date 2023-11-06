@@ -58,6 +58,7 @@ class Client
         bool _isOpenConnection;
         bool _isResponseReady;
     private:
+        size_t _maxSizeRequest;
         unsigned long int _bodySize;
         std::map<std::string, std::string> httpHeaders;
         socklen_t _sockLen;

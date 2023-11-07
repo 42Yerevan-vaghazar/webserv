@@ -48,7 +48,8 @@ class Server
         bool start();
         void eventLoop();
         std::string generateResponse(const std::string &httpRequest, const std::string &body);
-        std::string get(const std::string &fileName, const std::string  &contentType);
+        std::string get(const std::string &fileName, const std::string  &contentType,
+            std::unordered_map<std::string, std::string> &headerContent);
         std::string post(const std::string &fileName, const std::string &body);
         std::string del(const std::string &fileName);
 
@@ -63,21 +64,25 @@ class Server
 
     class Error : public std::exception
     {
-        Error(int statusCode, const std::string &errMessage = "")
-            : _statusCode(statusCode), _errMessage(errMessage) {};
-        ~Error() throw() {};
-        
-        const char * what() const throw() {
-            return _errMessage;
-        }
+        public:
+            Error(int statusCode, const std::string &errMessage)
+                : _statusCode(statusCode), _errMessage(errMessage) {};
+            Error(const Error& rhs) {
+                _statusCode = rhs._statusCode;
+                _errMessage = rhs._errMessage;
+            };
+            ~Error() throw() {};
+            
+            const char * what() const throw() {
+                return _errMessage.c_str();
+            }
 
-        int getStatusCode() const {
-            return (_statusCode);
-        }
+            int getStatusCode() const {
+                return (_statusCode);
+            }
 
         private:
             Error() : _statusCode(0) {};
-            Error(const Error& rhs);
             Error& operator=(const Error& rhs);
         private:
             int _statusCode;

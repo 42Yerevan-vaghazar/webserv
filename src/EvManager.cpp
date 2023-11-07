@@ -173,7 +173,7 @@ std::pair<EvManager::Flag, int> EvManager::listen() {
         flag = write;
     }
 
-    std::pair<EvManager::Flag, int> result = std::make_pair<EvManager::Flag, int>(flag, _evList[_numEvents - 1].ident);
+    std::pair<EvManager::Flag, int> result(flag, _evList[_numEvents - 1].ident);
     --_numEvents;
     return (result);
 }

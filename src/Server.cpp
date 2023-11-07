@@ -96,93 +96,59 @@ void Server::eventLoop() {
     }
 }
 
+
+
 std::string Server::generateResponse(const std::string &httpRequest, const std::string &body) {
-    size_t pos = httpRequest.find(' ');
-    pos += 1;
-    // std::cout << "httpRequest = " << httpRequest << std::endl;
     std::string response;
-    if (httpRequest[0] == 'P') {
-        response = post(httpRequest.substr(pos, httpRequest.find(' ', pos) - pos), body);
-    } else if (httpRequest[0] == 'G') {
-        std::string filePath;
-        filePath += httpRequest.substr(pos, httpRequest.find(' ', pos) - pos);
-        filePath = "./www" + filePath;
-        size_t contentTypePos = filePath.rfind(".");
-        std::string contentType = filePath.substr(contentTypePos + 1);
-        std::cout << "filePath = " << filePath << std::endl;
-        if (filePath == "./www/") {
-            response = get("www/index.html", contentType);
-        } else {
-            response = get(filePath, contentType);
-        }
-    } else if (httpRequest[0] == 'D') {
-        response = del(httpRequest.substr(pos, httpRequest.find(' ', pos) - pos));
-    }
-    // std::cout << "response = " << response << std::endl;
-    // TODO send response little by little
-    return (response);
-}
-
-std::string Server::get(const std::string &fileName, const std::string  &contentType) {
-    std::cout << "\nget\n" << std::endl;
     std::unordered_map<std::string, std::string> headerContent;
-    std::string response;
-    int statusCode = 200;
-    std::string status = " OK";
-    std::cout << "contentType = " <<  contentType << std::endl;
-    if (contentType == "png"){
-        headerContent["Content-Type"] = "image/png";
-    } else {
-        headerContent["Content-Type"] = "text/html";
+    headerContent.insert(std::make_pair("server", "webserv"));
+    response = "HTTP/1.1 ";
+    response += "200 ";
+    response += "OK";
+    response += "\r\n";
+    try
+    {
+        size_t pos = httpRequest.find(' ');
+        pos += 1;
+        // std::cout << "httpRequest = " << httpRequest << std::endl;
+        if (httpRequest[0] == 'P') {
+            response += post(httpRequest.substr(pos, httpRequest.find(' ', pos) - pos), body);
+        } else if (httpRequest[0] == 'G') {
+            std::string filePath;
+            filePath += httpRequest.substr(pos, httpRequest.find(' ', pos) - pos);
+            filePath = "./www" + filePath;
+            size_t contentTypePos = filePath.rfind(".");
+            std::string contentType = filePath.substr(contentTypePos + 1);
+            std::cout << "filePath = " << filePath << std::endl;
+            if (filePath == "./www/") {
+                response += get("www/index.html", contentType, headerContent);
+            } else {
+                response += get(filePath, contentType, headerContent);
+            }
+        } else if (httpRequest[0] == 'D') {
+            response += del(httpRequest.substr(pos, httpRequest.find(' ', pos) - pos));
+        }
+        // std::cout << "response = " << response << std::endl;
+        // TODO send response little by little
     }
-    response += "HTTP/1.1 ";
-    std::cout << "fileName = " << fileName << std::endl;
-    // TODO check is method allowed. 405
-    // TODO Content-Length is not defined in case post method called 411
-    // TODO valid request line 412
-    // TODO body is large 413
-    // TODO The URI requested is long  414
-    // TODO header is large 431
-    if (access(fileName.c_str(), R_OK) == 0) {   // TODO check permission to read
-        std::string fileContent;
-        std::ostringstream stream;
-        std::ifstream ifs(fileName);
-        if (ifs.is_open() == false) {
-            throw std::logic_error("can not open file");
-        }
-        stream << ifs.rdbuf();
-        fileContent = stream.str();
-        headerContent["Content-Length"] = std::to_string(fileContent.size());
-        std::ofstream ofs("test.png");
-        if (ofs.is_open() == false) {
-            throw std::logic_error("Error opening file");
-        }
-        ofs << fileContent;
-        // TODO if not html cgi works here to generate fileContent
-        response += std::to_string(statusCode);
-        response +=  status;
-        response +=  "\r\n";
-
-        for (std::unordered_map<std::string, std::string>::iterator it = headerContent.begin();
-            it != headerContent.end(); ++it) {
-                response += it->first;
-                response += ": ";
-                response += it->second;
-                response += "\r\n";
-        }
-        response +=  "\n";
-        response +=  fileContent;
-    } else {
-        // TODO automate it   404, 405, 411, 412, 413, 414, 431, 500, 501, 505, 503, 507, 508
+    catch(const Server::Error& e)
+    {
+         // TODO automate it   404, 405, 411, 412, 413, 414, 431, 500, 501, 505, 503, 507, 508
         std::string fileContent;
         std::ifstream ifs("./error_pages/404.html");
         if (ifs.is_open() == false) {
             throw std::logic_error("can not open file");
         }
         std::getline(ifs, fileContent, '\0');
+        size_t pos = fileContent.find("statusCode");
+        if (pos != std::string::npos) {
+            fileContent.replace(pos, strlen("statusCode"), std::to_string(e.getStatusCode()) + " " + e.what());
+        } else {
+            fileContent = "Error" + std::to_string(e.getStatusCode());
+        };
         headerContent["Content-Length"] = std::to_string(fileContent.size());
-        response += std::to_string(404);
-        response += "not found";
+        response += std::to_string(e.getStatusCode());
+        response += e.what();
         response += "\r\n";
 
         for (std::unordered_map<std::string, std::string>::iterator it = headerContent.begin();
@@ -194,6 +160,64 @@ std::string Server::get(const std::string &fileName, const std::string  &content
         }
         response +=  "\n";
         response +=  fileContent;
+        std::cerr << e.what() << '\n';
+    }
+    return (response);
+}
+
+std::string Server::get(const std::string &fileName, const std::string  &contentType,
+        std::unordered_map<std::string, std::string> &headerContent) {
+    std::cout << "\nget\n" << std::endl;
+    std::string response;
+
+    std::cout << "contentType = " <<  contentType << std::endl;
+
+    if (contentType == "png"){
+        headerContent["Content-Type"] = "image/png";
+    } else {
+        headerContent["Content-Type"] = "text/html";
+    }
+    // response += "HTTP/1.1 ";
+    std::cout << "fileName = " << fileName << std::endl;
+    // TODO check is method allowed. 405
+    // TODO Content-Length is not defined in case post method called 411
+    // TODO valid request line 412
+    // TODO body is large 413
+    // TODO The URI requested is long  414
+    // TODO header is large 431
+
+    if (access(fileName.c_str(), R_OK) == 0) {   // TODO check permission to read
+        std::string fileContent;
+        std::ostringstream stream;
+        std::ifstream ifs(fileName);
+
+        if (ifs.is_open() == false) {
+            throw std::logic_error("can not open file");
+        }
+        stream << ifs.rdbuf();
+        fileContent = stream.str();
+        
+        headerContent["Content-Length"] = std::to_string(fileContent.size());
+        std::ofstream ofs("test.png");
+
+        if (ofs.is_open() == false) {
+            throw std::logic_error("Error opening file");
+        }
+        ofs << fileContent;
+
+        for (std::unordered_map<std::string, std::string>::iterator it = headerContent.begin();
+            it != headerContent.end(); ++it) {
+                response += it->first;
+                response += ": ";
+                response += it->second;
+                response += "\r\n";
+        }
+        response +=  "\n";
+        // TODO if not html cgi works here to generate fileContent
+        response +=  fileContent;
+    } else {
+        throw Error(404, "not found");
+        // TODO automate it   404, 405, 411, 412, 413, 414, 431, 500, 501, 505, 503, 507, 508
     }
     return (response);
 };
@@ -212,9 +236,9 @@ std::string Server::post(const std::string &filePath, const std::string &body) {
         throw std::logic_error("can not open file"); // TODO change -> failed status in response
     }
     std::string response;
-    response += PROTOCOL;
-    response += " 200 ";
-    response += "OK";
+    // response += PROTOCOL;
+    // response += " 200 ";
+    // response += "OK";
     // _data.push_back(body);
     ofs << body;
     return (response);
@@ -230,12 +254,14 @@ std::string Server::del(const std::string &filePath) {
         fileName += filePath.substr(pos + 1);
     }
     std::string response;
-    response += "HTTP/1.1 ";
-    response += "200 ";
-    response += "OK";
+    // response += "HTTP/1.1 ";
+    // response += "200 ";
+    // response += "OK";
     std::cout << "fileName = " << fileName << std::endl;
     if (std::remove(fileName.c_str()) == -1) {
-        throw std::runtime_error(std::string("remove: ") + strerror(errno)); // TODO change failed status in response 
+        std::cerr << (std::string("remove: ") + strerror(errno)) << std::endl;
+
+        // throw std::runtime_error(std::string("remove: ") + strerror(errno)); // TODO change failed status in response 
     };
     return (response);
 };

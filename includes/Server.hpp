@@ -32,6 +32,8 @@
 #define PROTOCOL "HTTP/1.1"
 
 #include "DefaultSetup.hpp"
+#include <exception>
+
 const int HEADER_SIZE = 1000;
 const int CLIENT_LIMIT = 1000;
 const int SERVER_LIMIT = 1000;
@@ -58,4 +60,27 @@ class Server
         int _clientSockets[CLIENT_LIMIT];
         std::vector<std::string> _data;
         std::map<int, Client> _clients;
+
+    class Error : public std::exception
+    {
+        Error(int statusCode, const std::string &errMessage = "")
+            : _statusCode(statusCode), _errMessage(errMessage) {};
+        ~Error() throw() {};
+        
+        const char * what() const throw() {
+            return _errMessage;
+        }
+
+        int getStatusCode() const {
+            return (_statusCode);
+        }
+
+        private:
+            Error() : _statusCode(0) {};
+            Error(const Error& rhs);
+            Error& operator=(const Error& rhs);
+        private:
+            int _statusCode;
+            std::string _errMessage;
+    };
 };

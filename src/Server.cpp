@@ -96,8 +96,6 @@ void Server::eventLoop() {
     }
 }
 
-
-
 std::string Server::generateResponse(const std::string &httpRequest, const std::string &body) {
     std::string response;
     std::unordered_map<std::string, std::string> headerContent;
@@ -133,6 +131,7 @@ std::string Server::generateResponse(const std::string &httpRequest, const std::
     }
     catch(const Server::Error& e)
     {
+        std::cout << "stex\n";
          // TODO automate it   404, 405, 411, 412, 413, 414, 431, 500, 501, 505, 503, 507, 508
         std::string fileContent;
         std::ifstream ifs("./error_pages/404.html");
@@ -146,9 +145,10 @@ std::string Server::generateResponse(const std::string &httpRequest, const std::
         } else {
             fileContent = "Error" + std::to_string(e.getStatusCode());
         };
+        response = "HTTP/1.1 ";
         headerContent["Content-Length"] = std::to_string(fileContent.size());
         response += std::to_string(e.getStatusCode());
-        response += e.what();
+        std::cout << response << std::endl;
         response += "\r\n";
 
         for (std::unordered_map<std::string, std::string>::iterator it = headerContent.begin();
@@ -160,7 +160,6 @@ std::string Server::generateResponse(const std::string &httpRequest, const std::
         }
         response +=  "\n";
         response +=  fileContent;
-        std::cerr << e.what() << '\n';
     }
     return (response);
 }
@@ -183,7 +182,7 @@ std::string Server::get(const std::string &fileName, const std::string  &content
     // TODO Content-Length is not defined in case post method called 411
     // TODO valid request line 412
     // TODO body is large 413
-    // TODO The URI requested is long  414
+    // TODO The URL requested is long  414
     // TODO header is large 431
 
     if (access(fileName.c_str(), R_OK) == 0) {   // TODO check permission to read
@@ -196,7 +195,7 @@ std::string Server::get(const std::string &fileName, const std::string  &content
         }
         stream << ifs.rdbuf();
         fileContent = stream.str();
-        
+
         headerContent["Content-Length"] = std::to_string(fileContent.size());
         std::ofstream ofs("test.png");
 
@@ -236,9 +235,6 @@ std::string Server::post(const std::string &filePath, const std::string &body) {
         throw std::logic_error("can not open file"); // TODO change -> failed status in response
     }
     std::string response;
-    // response += PROTOCOL;
-    // response += " 200 ";
-    // response += "OK";
     // _data.push_back(body);
     ofs << body;
     return (response);
@@ -254,9 +250,6 @@ std::string Server::del(const std::string &filePath) {
         fileName += filePath.substr(pos + 1);
     }
     std::string response;
-    // response += "HTTP/1.1 ";
-    // response += "200 ";
-    // response += "OK";
     std::cout << "fileName = " << fileName << std::endl;
     if (std::remove(fileName.c_str()) == -1) {
         std::cerr << (std::string("remove: ") + strerror(errno)) << std::endl;

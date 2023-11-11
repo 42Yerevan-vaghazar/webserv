@@ -110,6 +110,8 @@ std::string Server::generateResponse(const std::string &httpRequest, const std::
         pos += 1;
         // std::cout << "httpRequest = " << httpRequest << std::endl;
         if (httpRequest[0] == 'P') {
+            std::cout << "httpRequest = " << httpRequest << std::endl;
+            std::cout << "body = " << body << std::endl;
             response += post(httpRequest.substr(pos, httpRequest.find(' ', pos) - pos), body);
         } else if (httpRequest[0] == 'G') {
             std::string filePath;
@@ -182,7 +184,7 @@ std::string Server::get(const std::string &fileName, const std::string  &content
     // TODO Content-Length is not defined in case post method called 411
     // TODO valid request line 412
     // TODO body is large 413
-    // TODO The URL requested is long  414
+    // TODO The URI requested is long  414
     // TODO header is large 431
 
     if (access(fileName.c_str(), R_OK) == 0) {   // TODO check permission to read

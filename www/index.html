@@ -45,6 +45,14 @@
     <link rel="icon" href="data:,">
 </head>
 <body>
+    <h2>HTML Forms</h2>
+    <form action="/register" method="post">
+        <input type="text" id="name" name="name">
+        <input type="text" id="email" name="email">
+        <input type="submit" value="Submit">
+      </form>
+
+    <p>If you click the "Submit" button, the form-data will be sent to a page called "/action_page.php".</p>
     <h1>File Upload</h1>
     <form action="http://localhost:3000" method="post" enctype="multipart/form-data">
         <input type="file" name="file" id="fileInput">

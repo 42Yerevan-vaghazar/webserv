@@ -1,0 +1,52 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   ServerManager.hpp                                  :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: dmartiro <dmartiro@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2023/10/13 23:52:27 by dmartiro          #+#    #+#             */
+/*   Updated: 2023/11/24 23:03:41 by dmartiro         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+#ifndef SERVER_MANAGER
+#define SERVER_MANAGER
+#include "Libs.hpp"
+#include "Location.hpp"
+#include "HTTPServer.hpp"
+#include "Client.hpp"
+
+class Client;
+class HTTPServer;
+class ServerManager : public std::vector<HTTPServer>
+{
+    public:
+        ServerManager(std::string const &configFile);
+        ~ServerManager();
+    public:
+        int isServer(sock_t fd);
+        int isClient(sock_t fd);
+    public:
+        void printFds( void );
+    public:
+        HTTPServer  *getServerBySocket(sock_t fd); 
+        HTTPServer  *getServerByClientSocket(sock_t fd);  //Վերադարձնումա են սերվերը որի մեջ fd-ով client գոյություն ունի
+        sock_t findServerBySocket(sock_t issetfd);
+        sock_t findClientBySocket(sock_t issetfd);
+        sock_t getmax( void ) const;
+        int used(HTTPServer *srv) const;
+    public:
+        // void push(HTTPServer const &srv);
+    private:
+        std::vector<HTTPServer> srvs;
+        // std::vector<Client> clnt;
+    public:
+        // std::vector<Client> clnt;
+    public:
+        void start();
+    private:
+        bool closeConnetcion(sock_t fd);
+};
+
+#endif

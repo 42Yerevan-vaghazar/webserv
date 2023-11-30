@@ -1,69 +1,49 @@
-#pragma once
-#include <map>
-#include <iostream>
-#include "DefaultSetup.hpp"
-#include "EvManager.hpp"
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <unistd.h>
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   Client.hpp                                         :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: dmartiro <dmartiro@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2023/10/24 10:29:10 by dmartiro          #+#    #+#             */
+/*   Updated: 2023/11/26 01:29:31 by dmartiro         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
+#ifndef CLIENT_HPP
+#define CLIENT_HPP
+#include "Libs.hpp"
+#include "HTTPRequest.hpp"
+#include "ServerManager.hpp"
 
-#define BODY_LIMIT 3000
-
-class Client
+class HTTPServer;
+class Client : public HTTPRequest
 {
     public:
-        Client();
-
+        Client( void );
+        Client(sock_t clfd, sock_t srfd);
+        Client(sock_t clfd);
         ~Client();
-
-        bool operator<(const Client& rhs) const;
-
-        int getFd() const;
-
-        void setFd(const int fd);
-
-        void closeFd() const;
-
-        struct sockaddr_in &getAddr();
-
-        void setAddr(const struct sockaddr_in &addrClient);
-
-        std::string getHttpRequest();
-
-        std::string getBody();
-
-        socklen_t &getAddrLen();
-
-        void setResponse(const std::string &response);
-
-        int receiveMessage();
-
-        bool sendMessage();
-
-        bool isRequestReady() const;
-
-        bool isResponseReady() const;
-
+    public:
+        // void processing(HTTPServer &srv);
+        void appendRequest(HTTPServer &srv);
+    public:
+        sock_t getFd( void ) const;
+        sock_t getServerFd( void ) const;
     private:
-        int _fd;
-        char _http[READ_BUFFER];
-        std::string _httpRequest;
-        // std::string _requestLine;
-        std::string _body;
-        std::string _response;
-        bool _isHeaderReady;
-        bool _isBodyReady;
-        bool _isRequestReady;
-        bool _isOpenConnection;
-        bool _isResponseReady;
+        int rd;
+        sock_t fd;
+        sock_t serverFd;
+        // std::string _httpRequest;
+        // std::string _body;
+        // std::string _response;
+
+        HTTPRequest _request;
+        HTTPResponse _response;
     private:
-        size_t _maxSizeRequest;
-        unsigned long int _bodySize;
-        std::map<std::string, std::string> httpHeaders;
-        socklen_t _sockLen;
-    private:
-        // struct sockaddr           _ClientInfo;
-        struct sockaddr_in         _addrClient;
-        // struct sockaddr_storage _addrClient;
+        struct sockaddr_in ClientInfo;
+        struct sockaddr ClientAddress;
+        struct sockaddr_storage addressStorage;
 };
+
+#endif

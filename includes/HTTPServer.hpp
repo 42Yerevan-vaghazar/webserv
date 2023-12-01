@@ -66,6 +66,7 @@ class HTTPServer : public Tcp, public IListener, public ServerCore
         std::string delet(Client &client);
     private:
         std::map<std::string, std::string (HTTPServer::*)(Client&)> methodsMap;
+#include "Error.hpp"
 };
 
 #endif

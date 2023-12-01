@@ -17,7 +17,7 @@
 #include "ServerManager.hpp"
 
 class HTTPServer;
-class Client : public HTTPRequest
+class Client : public HTTPRequest, public HTTPResponse
 {
     public:
         Client( void );
@@ -30,16 +30,19 @@ class Client : public HTTPRequest
     public:
         sock_t getFd( void ) const;
         sock_t getServerFd( void ) const;
+        // const HTTPRequest &getRequest() const;
+        // HTTPResponse &getResponse();
+        int receiveRequest();
     private:
         int rd;
         sock_t fd;
         sock_t serverFd;
         // std::string _httpRequest;
         // std::string _body;
-        // std::string _response;
+        std::string _response;
 
-        HTTPRequest _request;
-        HTTPResponse _response;
+        // HTTPRequest _request;
+        // HTTPResponse _response;
     private:
         struct sockaddr_in ClientInfo;
         struct sockaddr ClientAddress;

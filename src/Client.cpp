@@ -30,6 +30,10 @@ Client::Client(sock_t clfd)
     this->serverFd = -1;
 }
 
+Client::~Client()
+{
+}
+
 sock_t Client::getFd( void ) const
 {
     return (this->fd);
@@ -40,8 +44,66 @@ sock_t Client::getServerFd( void ) const
     return (this->serverFd);
 }
 
-Client::~Client()
-{
+// const HTTPRequest &Client::getRequest() const {
+//     return (_request);
+// }
+
+// HTTPResponse &Client::getResponse() {
+//     return (_response);
+// };
+
+// std::string &Client::getResponse() {
+//     return (_response);
+// }
+
+int Client::receiveRequest() {
+    char buf[READ_BUFFER];
+    int rdSize = recv(fd, buf, sizeof(buf) - 1, 0);
+
+    // std::cout << "rdSize = " << rdSize << std::endl;
+    if (rdSize == -1) { // TODO Checking the value of errno is strictly forbidden after a read or a write operation.
+        if (_maxSizeRequest == 1000) { // TODO client request caused infinit loop  change with time
+            return -1;
+        }
+        _maxSizeRequest++;
+    }
+     if (rdSize == 0) {  // TODO close tab. send response?
+        return (-1);
+    }
+    buf[rdSize] = '\0';
+    if (_isHeaderReady == false) {
+        httpRequest += buf;
+        size_t headerEndPos = httpRequest.find("\n\r\n");
+
+        if (headerEndPos == std::string::npos) {
+            return 0;
+        }
+        _isHeaderReady = true;
+        size_t pos = httpRequest.find("Content-Length: ");
+        std::cout << "pos = " << pos << std::endl;
+        if (pos == std::string::npos) {
+            _bodySize = 0;
+        } else {
+            _bodySize = std::stoi(httpRequest.substr(httpRequest.find("Content-Length: ") + strlen("Content-Length: "), 10));  // TODO throw 413 if the bodt size of payload is bigger then limits predefined configs;
+        }
+
+        std::string tmp = httpRequest.substr(headerEndPos + 3);
+        httpRequest.erase(headerEndPos);
+        if (_bodySize != 0) {
+            _body = tmp;
+            std::cout << "tmp = " << tmp << std::endl;
+        }
+        // TODO  parse header
+        return 0;
+    }
+    if (_bodySize <= _body.size()) {   // TODO check body length to do so
+        _body.erase(_bodySize);
+        _isBodyReady = true;
+        _isRequestReady = true;
+        return 0;
+    }
+    _body += buf;
+    return 0;
 }
 
 void Client::appendRequest(HTTPServer &srv)

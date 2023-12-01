@@ -13,6 +13,7 @@
 #include "HTTPRequest.hpp"
 #include "HTTPServer.hpp"
 
+
 // class HTTPServer;
 HTTPRequest::HTTPRequest( void )
 {
@@ -21,6 +22,8 @@ HTTPRequest::HTTPRequest( void )
     bodySize = 0;
     statusCode = 0;
     location = NULL;
+    _maxSizeRequest = 0;
+    _bodySize = 0;
     // methodsMap["GET"] = &HTTPRequest::get;
     // methodsMap["POST"] = &HTTPRequest::post;
     // methodsMap["DELETE"] = &HTTPRequest::delet;
@@ -47,6 +50,18 @@ std::string const &HTTPRequest::requestPath( void ) const
 std::string const &HTTPRequest::requestVersion( void ) const
 {
     return (version);
+}
+
+std::string HTTPRequest::getHttpRequest() const {
+    return (httpRequest);
+}
+
+bool HTTPRequest::isRequestReady() const {
+    return (_isRequestReady);
+}
+
+bool HTTPRequest::isResponseReady() const {
+    return (_isResponseReady);
 }
 
 std::string HTTPRequest::rtrim(const std::string &str)

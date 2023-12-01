@@ -14,7 +14,7 @@
 
 HTTPResponse::HTTPResponse( void )
 {
-    
+    _headerContent["server"] = "webserv";
 }
 
 HTTPResponse::~HTTPResponse()
@@ -39,7 +39,7 @@ std::string HTTPResponse::file(std::string const &filename)
     return (content);
 }
 
-std::string const &HTTPResponse::getResponse( void ) const
+std::string HTTPResponse::getResponse( void )
 {
     return (response);
 }
@@ -58,4 +58,8 @@ std::string const &HTTPResponse::getReserve403( void ) const
 std::string const &HTTPResponse::getReserve(int statusCode) const
 {
     return (reserve);
+}
+
+std::unordered_map<std::string, std::string> HTTPResponse::getHeader() {
+    return (_headerContent);
 }

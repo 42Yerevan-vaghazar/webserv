@@ -14,6 +14,7 @@
 #define REQ_HPP
 #include "Libs.hpp"
 #include "HTTPResponse.hpp"
+#define MAX_SIZE_REQUEST 1000
 
 class Location;
 class HTTPServer;
@@ -25,6 +26,12 @@ class HTTPRequest
     public:
         std::string findInMap(std::string const &key);
         void showHeaders( void );
+        std::string const &requestMethod( void ) const;
+        std::string const &requestPath( void ) const;
+        std::string const &requestVersion( void ) const;
+        std::string getHttpRequest() const;
+        bool isRequestReady() const;
+        bool isResponseReady() const;
     public:
         static bool isDir(std::string const &filePath);
         static bool isFile(std::string const &filePath);
@@ -39,9 +46,6 @@ class HTTPRequest
         // void processing(HTTPServer &srv);
         // void processing(sock_t fd);
 
-        std::string const &requestMethod( void ) const;
-        std::string const &requestPath( void ) const;
-        std::string const &requestVersion( void ) const;
         std::string ltrim(const std::string &str);
         std::string rtrim(const std::string &str);
         std::string trim(const std::string &str);
@@ -68,7 +72,7 @@ class HTTPRequest
         std::string queryString;
         std::string version;
         std::string headers;
-        std::string body;
+        std::string _body;
     protected:
         int statusCode;
     protected:
@@ -98,6 +102,15 @@ class HTTPRequest
         std::string const &getResponse( void );
     protected:
         std::string response;
+    protected:
+        bool _isHeaderReady;
+        bool _isBodyReady;
+        bool _isRequestReady;
+        bool _isOpenConnection;
+        bool _isResponseReady;
+        int _bodySize;
+        size_t _maxSizeRequest;
+
 };
 
 

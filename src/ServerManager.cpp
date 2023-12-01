@@ -33,6 +33,7 @@ void ServerManager::start() {
                 // if (client.getFd() == -1) {  // TODO is it needed
                 //     throw std::runtime_error(std::string("accept: ") + strerror(errno));
                 // }
+                std::cout << "fd = " << fd << std::endl;
                 EvManager::addEvent(fd, EvManager::read);
                 (*this)[i].push(fd, client);
                 continue ;
@@ -46,39 +47,39 @@ void ServerManager::start() {
                 break;
             }
         }
-        // if (client == NULL) {  TODO probably it never works
-
-        // }
-        // if (event.first == EvManager::eof) {
-        //     // std::cout << "\nEV_EOF\n" << std::endl;
-        //     closeConnetcion(client->getFd());
-        // } else if (event.first == EvManager::read) {
-        //     // std::cout << "\nEVFILT_READ\n" << std::endl;
-        //     if (client->getHttpRequest().empty()) {
-        //         EvManager::addEvent(client->getFd(), EvManager::write);
-        //     }
-        //     if (client->receiveMessage() == -1) {
-        //         closeConnetcion(client->getFd());
-        //     }
-        //     if (client->isRequestReady()) {
-        //         client->parsing();
-        //         client->setResponse(generateResponse(client->getHttpRequest(), client->getBody(), client->getHeaders()));
-        //     }
-        // } else if (client->isResponseReady() && event.first == EvManager::write) {
-        //     // std::cout << "\nEVFILT_WRITE\n" << std::endl;
-        //     // TODO send response little by little
-        //     if (client->sendMessage() == true) {
-        //         closeConnetcion(client->getFd());
-        //     }
-        // } else if (client->isResponseReady() == false) {
-        //     if (client->receiveMessage() == -1) {
-        //         closeConnetcion(client->getFd());
-        //     }
-        //     if (client->isRequestReady()) {
-        //         client->parsing();
-        //         client->setResponse(generateResponse(client->getHttpRequest(), client->getBody(), client->getHeaders()));
-        //     }
-        // }
+        if (client == NULL) {  //TODO probably it never works
+            throw std::runtime_error("client == NULL");
+        }
+        if (event.first == EvManager::eof) {
+            // std::cout << "\nEV_EOF\n" << std::endl;
+            closeConnetcion(client->getFd());
+        } else if (event.first == EvManager::read) {
+            // std::cout << "\nEVFILT_READ\n" << std::endl;
+            if (client->getHttpRequest().empty()) {
+                EvManager::addEvent(client->getFd(), EvManager::write);
+            }
+            if (client->receiveRequest() == -1) {
+                closeConnetcion(client->getFd());
+            }
+            // if (client->isRequestReady()) {
+            //     // client->parseRequest();
+            //     client->setResponse(generateResponse(client);
+            // }
+        } else if (client->isResponseReady() && event.first == EvManager::write) {
+            // std::cout << "\nEVFILT_WRITE\n" << std::endl;
+            // TODO send response little by little
+            // if (client->sendMessage() == true) {
+            //     closeConnetcion(client->getFd());
+            // }
+        } else if (client->isResponseReady() == false) {
+            if (client->receiveRequest() == -1) {
+                closeConnetcion(client->getFd());
+            }
+            // if (client->isRequestReady()) {
+            //     // client->parseRequest();
+            //     client->setResponse(generateResponse(client->getHttpRequest(), client->getBody(), client->getHeaders()));
+            // }
+        }
     }
 };
 

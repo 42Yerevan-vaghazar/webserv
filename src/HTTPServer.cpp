@@ -11,6 +11,7 @@
 /* ************************************************************************** */
 
 #include "HTTPServer.hpp"
+#include <unordered_map>
 
 size_t longestMatch(std::string const &s1, std::string const &s2);
 
@@ -334,16 +335,21 @@ size_t longestMatch(std::string const &s1, std::string const &s2)
 
 
 std::string HTTPServer::get(Client &client) {
+    // const HTTPRequest &request = client.getRequest();
+    // HTTPResponse &responseObj = client.getResponse();
+    // const std::string &fileName = request.requestPath();
+    // // const std::string  &contentType = ""
+    // std::unordered_map<std::string, std::string> &headerContent = responseObj.getHeader();
     // std::cout << "\nget\n" << std::endl;
-    // std::string response;
+    // std::string response = responseObj.getResponse();
 
-    // std::cout << "contentType = " <<  contentType << std::endl;
+    // // std::cout << "contentType = " <<  contentType << std::endl;
 
-    // if (contentType == "png"){
-    //     headerContent["Content-Type"] = "image/png";
-    // } else {
+    // // if (contentType == "png"){
+    // //     headerContent["Content-Type"] = "image/png";
+    // // } else {
     //     headerContent["Content-Type"] = "text/html";
-    // }
+    // // }
     // // response += "HTTP/1.1 ";
     // std::cout << "fileName = " << fileName << std::endl;
     // // TODO check is method allowed. 405

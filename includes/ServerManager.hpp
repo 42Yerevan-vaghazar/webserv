@@ -16,6 +16,7 @@
 #include "Location.hpp"
 #include "HTTPServer.hpp"
 #include "Client.hpp"
+#define SUCCSSES_STATUS "OK"
 
 class Client;
 class HTTPServer;
@@ -45,8 +46,10 @@ class ServerManager : public std::vector<HTTPServer>
         // std::vector<Client> clnt;
     public:
         void start();
+        std::string generateResponse(Client &client);
     private:
         bool closeConnetcion(sock_t fd);
+        bool newClient(int fd);
 };
 
 #endif

@@ -67,6 +67,7 @@ class HTTPRequest
         std::string path;
         std::string realPath;
         std::string actualPath;
+        std::string reqStatus;
         std::string filename;
         std::string extension;
         std::string queryString;

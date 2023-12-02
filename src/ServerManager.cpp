@@ -13,6 +13,23 @@
 #include "ServerManager.hpp"
 #include "EvManager.hpp"
 
+bool ServerManager::newClient(int fd) {
+    for (int i = 0; i < this->size(); ++i) {
+        if ((*this)[i].getfd() == fd) {
+            sock_t clientFd = accept((*this)[i].getfd(), 0, 0);
+            fcntl(clientFd, F_SETFL, O_NONBLOCK, FD_CLOEXEC);
+            Client *client = new Client(clientFd, (*this)[i].getfd());  // TODO delete in destructor
+            // if (client.getFd() == -1) {  // TODO is it needed
+            //     throw std::runtime_error(std::string("accept: ") + strerror(errno));
+            // }
+            EvManager::addEvent(clientFd, EvManager::read);
+            (*this)[i].push(clientFd, client);
+            return (true);
+        }
+    }
+    return (false);
+}
+
 void ServerManager::start() {
     EvManager::start();
 
@@ -22,25 +39,14 @@ void ServerManager::start() {
 
     while(true) {
         std::pair<EvManager::Flag, int> event = EvManager::listen();
-        // std::cout << "event.second = " << event.second << std::endl;
-        // std::cout << "event.first = " << event.first << std::endl;
-        for (int i = 0; i < this->size(); ++i) {
-            if ((*this)[i].getfd() == event.second) {
-                sock_t fd = accept((*this)[i].getfd(), 0, 0);
-                // std::cout << "\n_serverSocket\n" << std::endl;
-                fcntl(fd, F_SETFL, O_NONBLOCK, FD_CLOEXEC);
-                Client *client = new Client(fd, (*this)[i].getfd());  // TODO delete in destructor
-                // if (client.getFd() == -1) {  // TODO is it needed
-                //     throw std::runtime_error(std::string("accept: ") + strerror(errno));
-                // }
-                std::cout << "fd = " << fd << std::endl;
-                EvManager::addEvent(fd, EvManager::read);
-                (*this)[i].push(fd, client);
-                continue ;
-            }
+        std::cout << "event.second = " << event.second << std::endl;
+        std::cout << "event.first = " << event.first << std::endl;
+        if (newClient(event.second)) {
+            continue ;
         }
         // // std::cout << "else\n";
         Client *client;
+        std::cout << "event.second = " << event.second << std::endl;
         for (int i = 0; i < this->size(); ++i) {
             client = (*this)[i].getClient(event.second);
             if (client) {
@@ -50,6 +56,7 @@ void ServerManager::start() {
         if (client == NULL) {  //TODO probably it never works
             throw std::runtime_error("client == NULL");
         }
+        std::cout << "client->isResponseReady() = " << client->isResponseReady() << std::endl;
         if (event.first == EvManager::eof) {
             // std::cout << "\nEV_EOF\n" << std::endl;
             closeConnetcion(client->getFd());
@@ -61,27 +68,87 @@ void ServerManager::start() {
             if (client->receiveRequest() == -1) {
                 closeConnetcion(client->getFd());
             }
-            // if (client->isRequestReady()) {
-            //     // client->parseRequest();
-            //     client->setResponse(generateResponse(client);
-            // }
+            if (client->isRequestReady()) {
+                client->parse();
+                client->setResponse(generateResponse(client);
+            }
         } else if (client->isResponseReady() && event.first == EvManager::write) {
+            std::cout << "event.first == EvManager::write\n";
             // std::cout << "\nEVFILT_WRITE\n" << std::endl;
             // TODO send response little by little
-            // if (client->sendMessage() == true) {
-            //     closeConnetcion(client->getFd());
-            // }
+            if (client->sendResponse() == true) {
+                closeConnetcion(client->getFd());
+            }
         } else if (client->isResponseReady() == false) {
             if (client->receiveRequest() == -1) {
                 closeConnetcion(client->getFd());
             }
-            // if (client->isRequestReady()) {
-            //     // client->parseRequest();
-            //     client->setResponse(generateResponse(client->getHttpRequest(), client->getBody(), client->getHeaders()));
-            // }
+            // std::cout << client->getHttpRequest() << std::endl;
+            if (client->isRequestReady()) {
+                client->parse();
+                client->setResponse(generateResponse(client));
+            }
         }
     }
 };
+
+std::string ServerManager::generateResponse(Client &client) {
+    const std::string &httpRequest = clie;
+    const std::string &body;
+    std::map<std::string, std::string> const &headers;
+    std::string response;
+    
+    std::unordered_map<std::string, std::string> headerContent;
+
+    headerContent.insert(std::make_pair("server", "webserv"));
+    response = version;
+    response += " " + reqStatus + " ";
+    response += SUCCSSES_STATUS;
+    response += "\r\n";
+    try
+    {
+        if (method == "POST") {
+            response += post(client);
+        } else if (method == "GET") {
+            response += get(client);
+        } else if (method == "DELETE") {
+            response += del(client);
+        }
+    }
+    catch(const ServerMangaer::Error& e)
+    {
+        std::cout << "stex\n";
+         // TODO automate it   404, 405, 411, 412, 413, 414, 431, 500, 501, 505, 503, 507, 508
+        std::string fileContent;
+        std::ifstream ifs("./error_pages/404.html");
+        if (ifs.is_open() == false) {
+            throw std::logic_error("can not open file");
+        }
+        std::getline(ifs, fileContent, '\0');
+        size_t pos = fileContent.find("statusCode");
+        if (pos != std::string::npos) {
+            fileContent.replace(pos, strlen("statusCode"), std::to_string(e.getStatusCode()) + " " + e.what());
+        } else {
+            fileContent = "Error" + std::to_string(e.getStatusCode());
+        };
+        response = version + " ";
+        headerContent["Content-Length"] = std::to_string(fileContent.size());
+        response += std::to_string(e.getStatusCode());
+        // std::cout << response << std::endl;
+        response += "\r\n";
+
+        for (std::unordered_map<std::string, std::string>::iterator it = headerContent.begin();
+            it != headerContent.end(); ++it) {
+                response += it->first;
+                response += ": ";
+                response += it->second;
+                response += "\r\n";
+        }
+        response +=  "\n";
+        response +=  fileContent;
+    }
+    return (response);
+}
 
 bool ServerManager::closeConnetcion(sock_t fd) {
     EvManager::delEvent(fd, EvManager::read);

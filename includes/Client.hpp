@@ -33,6 +33,9 @@ class Client : public HTTPRequest, public HTTPResponse
         // const HTTPRequest &getRequest() const;
         // HTTPResponse &getResponse();
         int receiveRequest();
+        void parse();
+        bool sendResponse();
+        void setResponse(const std::string &response);
     private:
         int rd;
         sock_t fd;

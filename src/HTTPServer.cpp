@@ -351,14 +351,14 @@ std::string HTTPServer::get(Client &client) {
     const std::string &path = client.getPath();
     std::unordered_map<std::string, std::string> headerContent;
     std::string response;
-    std::string  fileName = " ";
+    std::string  fileName;
 
     std::cout << "path = " << path << std::endl;
     if(path[path.size() - 1] == '/')
     {
         fileName = "www/server1/index.html";  //TODO - remove hardcode should be default page from config  
         headerContent["Content-Type"] = "text/html"; //TODO - remove hardcode
-    } else {
+    } else if (path == "www/server1/pictures/a.png") {
         fileName = "www/server1/pictures/a.png"; 
         headerContent["Content-Type"] = "image/png";
     }
@@ -372,6 +372,7 @@ std::string HTTPServer::get(Client &client) {
     // TODO The URI requested is long  414
     // TODO header is large 431
     std::cout << "fileName = " << fileName << std::endl;
+    // std::cout << "access(fileName.c_str(), F_OK) = " << access(fileName.c_str(), F_OK) << std::endl;
     if (access(fileName.c_str(), F_OK) == 0) {   // TODO check permission to read
         std::string fileContent;
         std::ostringstream stream;

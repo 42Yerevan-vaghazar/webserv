@@ -43,8 +43,8 @@ void ServerManager::start() {
         Client *client = NULL;
     
         event = EvManager::listen();
-        // std::cout << "event.second = " << event.second << std::endl;
-        // std::cout << "event.first = " << event.first << std::endl;
+        std::cout << "event.second = " << event.second << std::endl;
+        std::cout << "event.first = " << event.first << std::endl;
         if (newClient(event.second)) {
             continue ;
         }
@@ -57,11 +57,10 @@ void ServerManager::start() {
             }
         }
         if (client == NULL) {  //TODO probably it never works
-            throw std::runtime_error("client == NULL");
+            throw std::runtime_error("client not found");
         }
         try
         {
-            // std::cout << "client->isResponseReady() = " << client->isResponseReady() << std::endl;
             if (event.first == EvManager::eof) {
                 // std::cout << "\nEV_EOF\n" << std::endl;
                 closeConnetcion(client->getFd());
@@ -71,6 +70,7 @@ void ServerManager::start() {
                     EvManager::addEvent(client->getFd(), EvManager::write);
                 }
                 if (client->receiveRequest() == -1) {
+                    std::cout << "client->receiveRequest() == -1\n";
                     closeConnetcion(client->getFd());
                 }
                 if (client->isRequestReady()) {
@@ -78,7 +78,7 @@ void ServerManager::start() {
                     client->setResponse(generateResponse(*client));
                 }
             } else if (client->isResponseReady() && event.first == EvManager::write) {
-                // std::cout << "event.first == EvManager::write\n";
+                std::cout << "event.first == EvManager::write\n";
                 // std::cout << "\nEVFILT_WRITE\n" << std::endl;
                 // TODO send response little by little
                 if (client->sendResponse() == true) {
@@ -86,6 +86,7 @@ void ServerManager::start() {
                 }
             } else if (client->isResponseReady() == false) {
                 if (client->receiveRequest() == -1) {
+                    std::cout << "   } else if (client->isResponseReady() == false) {\n";
                     closeConnetcion(client->getFd());
                 }
                 // std::cout << client->getHttpRequest() << std::endl;
@@ -97,16 +98,52 @@ void ServerManager::start() {
         }
         catch(const HTTPServer::Error& e)
         {
-            //TODO send response
+
+            // client.setResponse();
+            //TODO send response server error
             std::cerr << e.what() << '\n';
         }
         catch(const std::exception& e)
         {
-            //TODO 
             std::cerr << e.what() << '\n';
+            exit(1);
         }
     }
 };
+
+// std::string ServerManager::generateErrorResponse(const HTTPServer::Error& e) {
+//      // std::cout << "stex\n";
+//         // TODO automate it   404, 405, 411, 412, 413, 414, 431, 500, 501, 505, 503, 507, 508
+//     std::string fileContent;
+//     std::string response;
+//     std::ifstream ifs("./error_pages/404.html");
+//     if (ifs.is_open() == false) {
+//         throw std::logic_error("can not open file"); // TODO 
+//     }
+//     std::getline(ifs, fileContent, '\0');
+//     size_t pos = fileContent.find("404");
+//     if (pos != std::string::npos) {
+//         fileContent.replace(pos, strlen("statusCode"), std::to_string(e.getStatusCode()) + " " + e.what());
+//     } else {
+//         fileContent = "Error" + std::to_string(e.getStatusCode());
+//     };
+//     response = client.getVersion() + " ";
+//     headerContent["Content-Length"] = std::to_string(fileContent.size());
+//     response += std::to_string(e.getStatusCode());
+//     // std::cout << response << std::endl;
+//     response += "\r\n";
+
+//     for (std::unordered_map<std::string, std::string>::iterator it = headerContent.begin();
+//         it != headerContent.end(); ++it) {
+//             response += it->first;
+//             response += ": ";
+//             response += it->second;
+//             response += "\r\n";
+//     }
+//     response +=  "\n";
+//     response +=  fileContent;
+//     return (response);
+// }
 
 std::string ServerManager::generateResponse(Client &client) {
     const std::string httpRequest = client.getHttpRequest();
@@ -127,23 +164,21 @@ std::string ServerManager::generateResponse(Client &client) {
         if (it == this->end()) {  // TODO never work
             throw std::runtime_error("std::find(this->begin(), this->end(), client.getFd());");
         }
-        // std::cout << it->getPort() << std::endl;
         response += it->processing(client);
-        // std::cout << "--Final response = " << response << std::endl;
     }
     catch(const HTTPServer::Error& e)
     {
-        std::cout << "stex\n";
+        // std::cout << "stex\n";
          // TODO automate it   404, 405, 411, 412, 413, 414, 431, 500, 501, 505, 503, 507, 508
         std::string fileContent;
-        std::ifstream ifs("./error_pages/404.html");
+        std::ifstream ifs("./www/server1/error_pages/404.html");
         if (ifs.is_open() == false) {
-            throw std::logic_error("can not open file");
+            throw std::logic_error("can not open file"); // TODO 
         }
         std::getline(ifs, fileContent, '\0');
         size_t pos = fileContent.find("404");
         if (pos != std::string::npos) {
-            fileContent.replace(pos, strlen("statusCode"), std::to_string(e.getStatusCode()) + " " + e.what());
+            fileContent.replace(pos, strlen("404"), std::to_string(e.getStatusCode()) + " " + e.what());
         } else {
             fileContent = "Error" + std::to_string(e.getStatusCode());
         };
@@ -163,6 +198,7 @@ std::string ServerManager::generateResponse(Client &client) {
         response +=  "\n";
         response +=  fileContent;
     }
+    std::cout << "--Final response = " << response << std::endl;
     return (response);
 }
 

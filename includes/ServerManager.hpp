@@ -21,6 +21,7 @@
 
 class Client;
 class HTTPServer;
+
 class ServerManager : public std::vector<HTTPServer>
 {
     public:
@@ -47,6 +48,7 @@ class ServerManager : public std::vector<HTTPServer>
     public:
         void start();
         std::string generateResponse(Client &client);
+        // std::string generateErrorResponse(const HTTPServer::Error& e);
     private:
         bool closeConnetcion(sock_t fd);
         bool newClient(int fd);

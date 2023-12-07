@@ -61,7 +61,7 @@ int Client::receiveRequest() {
     int rdSize = recv(fd, buf, sizeof(buf) - 1, 0);
     // std::cout << "rdSize = " << rdSize << std::endl;
     if (rdSize == -1) { // TODO Checking the value of errno is strictly forbidden after a read or a write operation.
-        if (_maxSizeRequest == 5) { // TODO client request caused infinit loop  change with time
+        if (_maxSizeRequest == 3) { // TODO client request caused infinit loop  change with time
             return -1;
         } else {
             _maxSizeRequest++;

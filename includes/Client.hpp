@@ -20,8 +20,8 @@ class HTTPServer;
 class Client : public HTTPRequest, public HTTPResponse
 {
     public:
-        Client( void );
-        Client(sock_t clfd, sock_t srfd);
+        // Client( void );
+        Client(sock_t clfd, sock_t srfd, HTTPServer &srv);
         // Client(sock_t clfd);
         ~Client();
     public:
@@ -43,7 +43,7 @@ class Client : public HTTPRequest, public HTTPResponse
         // std::string _httpRequest;
         // std::string _body;
         std::string _response;
-
+        HTTPServer &_srv;
         // HTTPRequest _request;
         // HTTPResponse _response;
     private:

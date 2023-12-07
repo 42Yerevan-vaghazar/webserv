@@ -15,7 +15,7 @@
 
 
 // class HTTPServer;
-HTTPRequest::HTTPRequest( void )
+HTTPRequest::HTTPRequest(void)
 {
     reqLineEnd = 0;
     bodyEnd = 0;
@@ -49,7 +49,7 @@ std::string HTTPRequest::getBody() const
 
 std::string const &HTTPRequest::getPath( void ) const
 {
-    return (path);
+    return (absolutePath);
 }
 
 std::string const &HTTPRequest::getVersion( void ) const
@@ -211,13 +211,6 @@ int HTTPRequest::in(std::string const &method)
     return (0);
 }
 
-// void HTTPRequest::processing(HTTPServer &srv)
-// {
-//     std::map<std::string, void(HTTPRequest::*)(HTTPServer&)>::iterator function = methodsMap.find(method);
-//     if (function != methodsMap.end())
-//        (this->*(function->second))(srv);
-// }
-
 std::string HTTPRequest::dir_content(std::string const &realPath)
 {
     DIR* odir = opendir(realPath.c_str());
@@ -256,6 +249,7 @@ void HTTPRequest::checkPath(HTTPServer const &srv)
     }
     else
         absolutePath = middle_slash(srv.getRoot(), '/', path);
+    std::cout << "absolutePath = " << absolutePath << std::endl;
 }
 
 std::vector<std::string> HTTPRequest::pathChunking(std::string const &rPath)

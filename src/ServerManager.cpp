@@ -18,11 +18,12 @@ bool ServerManager::newClient(int fd) {
         if ((*this)[i].getfd() == fd) {
             sock_t clientFd = accept((*this)[i].getfd(), 0, 0);
             fcntl(clientFd, F_SETFL, O_NONBLOCK, FD_CLOEXEC);
-            Client *client = new Client(clientFd, (*this)[i].getfd());  // TODO delete in destructor
+            Client *client = new Client(clientFd, (*this)[i].getfd(), (*this)[i]);  // TODO delete in destructor
             // if (client.getFd() == -1) {  // TODO is it needed
             //     throw std::runtime_error(std::string("accept: ") + strerror(errno));
             // }
             EvManager::addEvent(clientFd, EvManager::read);
+            std::cout << "clientFd = " << clientFd << std::endl;
             (*this)[i].push(clientFd, client);
             return (true);
         }
@@ -38,15 +39,17 @@ void ServerManager::start() {
     }
 
     while(true) {
-        std::pair<EvManager::Flag, int> event = EvManager::listen();
-        std::cout << "event.second = " << event.second << std::endl;
-        std::cout << "event.first = " << event.first << std::endl;
+        std::pair<EvManager::Flag, int> event;
+        Client *client = NULL;
+    
+        event = EvManager::listen();
+        // std::cout << "event.second = " << event.second << std::endl;
+        // std::cout << "event.first = " << event.first << std::endl;
         if (newClient(event.second)) {
             continue ;
         }
         // // std::cout << "else\n";
-        Client *client;
-        std::cout << "event.second = " << event.second << std::endl;
+        // std::cout << "event.second = " << event.second << std::endl;
         for (int i = 0; i < this->size(); ++i) {
             client = (*this)[i].getClient(event.second);
             if (client) {
@@ -56,38 +59,51 @@ void ServerManager::start() {
         if (client == NULL) {  //TODO probably it never works
             throw std::runtime_error("client == NULL");
         }
-        std::cout << "client->isResponseReady() = " << client->isResponseReady() << std::endl;
-        if (event.first == EvManager::eof) {
-            // std::cout << "\nEV_EOF\n" << std::endl;
-            closeConnetcion(client->getFd());
-        } else if (event.first == EvManager::read) {
-            // std::cout << "\nEVFILT_READ\n" << std::endl;
-            if (client->getHttpRequest().empty()) {
-                EvManager::addEvent(client->getFd(), EvManager::write);
-            }
-            if (client->receiveRequest() == -1) {
+        try
+        {
+            // std::cout << "client->isResponseReady() = " << client->isResponseReady() << std::endl;
+            if (event.first == EvManager::eof) {
+                // std::cout << "\nEV_EOF\n" << std::endl;
                 closeConnetcion(client->getFd());
+            } else if (event.first == EvManager::read) {
+                // std::cout << "\nEVFILT_READ\n" << std::endl;
+                if (client->getHttpRequest().empty()) {
+                    EvManager::addEvent(client->getFd(), EvManager::write);
+                }
+                if (client->receiveRequest() == -1) {
+                    closeConnetcion(client->getFd());
+                }
+                if (client->isRequestReady()) {
+                    client->parse();
+                    client->setResponse(generateResponse(*client));
+                }
+            } else if (client->isResponseReady() && event.first == EvManager::write) {
+                // std::cout << "event.first == EvManager::write\n";
+                // std::cout << "\nEVFILT_WRITE\n" << std::endl;
+                // TODO send response little by little
+                if (client->sendResponse() == true) {
+                    closeConnetcion(client->getFd());
+                }
+            } else if (client->isResponseReady() == false) {
+                if (client->receiveRequest() == -1) {
+                    closeConnetcion(client->getFd());
+                }
+                // std::cout << client->getHttpRequest() << std::endl;
+                if (client->isRequestReady()) {
+                    client->parse();
+                    client->setResponse(generateResponse(*client));
+                }
             }
-            if (client->isRequestReady()) {
-                client->parse();
-                client->setResponse(generateResponse(*client));
-            }
-        } else if (client->isResponseReady() && event.first == EvManager::write) {
-            std::cout << "event.first == EvManager::write\n";
-            // std::cout << "\nEVFILT_WRITE\n" << std::endl;
-            // TODO send response little by little
-            if (client->sendResponse() == true) {
-                closeConnetcion(client->getFd());
-            }
-        } else if (client->isResponseReady() == false) {
-            if (client->receiveRequest() == -1) {
-                closeConnetcion(client->getFd());
-            }
-            // std::cout << client->getHttpRequest() << std::endl;
-            if (client->isRequestReady()) {
-                client->parse();
-                client->setResponse(generateResponse(*client));
-            }
+        }
+        catch(const HTTPServer::Error& e)
+        {
+            //TODO send response
+            std::cerr << e.what() << '\n';
+        }
+        catch(const std::exception& e)
+        {
+            //TODO 
+            std::cerr << e.what() << '\n';
         }
     }
 };
@@ -97,7 +113,7 @@ std::string ServerManager::generateResponse(Client &client) {
     const std::string body = client.getBody();
     std::string response;
     
-    std::unordered_map<std::string, std::string> headerContent;
+    std::unordered_map<std::string, std::string> &headerContent = client.getResponseHeader();
 
     headerContent.insert(std::make_pair("server", "webserv"));
     response = client.getVersion();
@@ -106,19 +122,14 @@ std::string ServerManager::generateResponse(Client &client) {
     response += "\r\n";
     try
     {
+        std::cout << "client.getFd()= " << client.getFd() << std::endl;
         std::vector<HTTPServer>::iterator it = std::find(this->begin(), this->end(), client.getFd());
-        std::cout << it->getPort() << std::endl;
         if (it == this->end()) {  // TODO never work
             throw std::runtime_error("std::find(this->begin(), this->end(), client.getFd());");
         }
-        if (client.getMethod() == "POST") {
-            response += it->post(client);
-        } else if (client.getMethod() == "GET") {
-            response += it->get(client);
-        } else if (client.getMethod() == "DELETE") {
-            response += it->del(client);
-        }
-        std::cout << "--Final response = " << response << std::endl;
+        // std::cout << it->getPort() << std::endl;
+        response += it->processing(client);
+        // std::cout << "--Final response = " << response << std::endl;
     }
     catch(const HTTPServer::Error& e)
     {
@@ -130,7 +141,7 @@ std::string ServerManager::generateResponse(Client &client) {
             throw std::logic_error("can not open file");
         }
         std::getline(ifs, fileContent, '\0');
-        size_t pos = fileContent.find("statusCode");
+        size_t pos = fileContent.find("404");
         if (pos != std::string::npos) {
             fileContent.replace(pos, strlen("statusCode"), std::to_string(e.getStatusCode()) + " " + e.what());
         } else {

@@ -12,12 +12,12 @@
 
 #include "Client.hpp"
 
-Client::Client( void )
-{
-    this->rd = 0;
-}
+// Client::Client( void )
+// {
+//     this->rd = 0;
+// }
 
-Client::Client(sock_t clfd, sock_t srfd)
+Client::Client(sock_t clfd, sock_t srfd, HTTPServer &srv) : _srv(srv)
 {
     this->fd = clfd;
     this->serverFd = srfd;
@@ -140,6 +140,7 @@ void Client::parse()
         }
     }
     httpRequest.clear();
+    HTTPRequest::checkPath(this->_srv);
     //    std::cout << "method = " << method << std::endl;
     // std::cout << "path = " << path << std::endl;
     // std::cout << "version = " << version << std::endl;

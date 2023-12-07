@@ -65,6 +65,7 @@ class HTTPServer : public Tcp, public IListener, public ServerCore
         std::string get(Client &client);
         std::string post(Client &client);
         std::string del(Client &client);
+        std::string processing(Client &client);
     private:
         std::map<std::string, std::string (HTTPServer::*)(Client&)> methodsMap;
     public:

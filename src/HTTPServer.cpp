@@ -181,6 +181,7 @@ bool HTTPServer::exist(sock_t fd)
 
 bool HTTPServer::operator==(HTTPServer const &sibling)
 {
+    std::cout << "bool HTTPServer::operator==(HTTPServer const &sibling)\n"; 
     if (std::strcmp(this->getIp(), sibling.getIp()) == 0 \
         && std::strcmp(this->getPort(),sibling.getPort()) == 0)
       return (true);  
@@ -189,9 +190,13 @@ bool HTTPServer::operator==(HTTPServer const &sibling)
 
 bool HTTPServer::operator==(sock_t fd)
 {
+    std::cout << "bool HTTPServer::operator==(sock_t fd)\n"; 
+
     if (clnt.find(fd) != clnt.end()) {
-      return (true);  
+        std::cout << "true\n";
+      return (true);
     } 
+        std::cout << "false\n";
     return (false);
 }
 
@@ -349,17 +354,24 @@ std::string HTTPServer::get(Client &client) {
     std::string  fileName = " ";
 
     std::cout << "path = " << path << std::endl;
-    if(path == "/")
+    if(path[path.size() - 1] == '/')
     {
-        fileName = "www/index.html";  //TODO - remove hardcode should be default page from config  
+        fileName = "www/server1/index.html";  //TODO - remove hardcode should be default page from config  
         headerContent["Content-Type"] = "text/html"; //TODO - remove hardcode
-    }
-    if(path == "/a.png")
-    {
-        fileName = "www/pictures/a.png"; 
+    } else {
+        fileName = "www/server1/pictures/a.png"; 
         headerContent["Content-Type"] = "image/png";
     }
-    
+    // if(path == "/a.png")
+    // {
+    // }
+    // TODO check is method allowed. 405
+    // TODO Content-Length is not defined in case post method called 411
+    // TODO valid request line 412
+    // TODO body is large 413
+    // TODO The URI requested is long  414
+    // TODO header is large 431
+    std::cout << "fileName = " << fileName << std::endl;
     if (access(fileName.c_str(), F_OK) == 0) {   // TODO check permission to read
         std::string fileContent;
         std::ostringstream stream;
@@ -381,6 +393,9 @@ std::string HTTPServer::get(Client &client) {
         }
         response +=  "\n";
         response +=  fileContent;
+    } else {
+        throw Error(404, "not found");
+        // TODO automate it   404, 405, 411, 412, 413, 414, 431, 500, 501, 505, 503, 507, 508
     }
     return (response);
 };
@@ -430,3 +445,12 @@ std::string HTTPServer::del(Client &client) {
     // };
     return (response);
 };
+
+std::string HTTPServer::processing(Client &client)
+{
+    std::map<std::string, std::string(HTTPServer::*)(Client&)>::iterator function = methodsMap.find(client.getMethod());
+    if (function != methodsMap.end())
+       return ((this->*(function->second))(client));
+    throw Error(405, "Method Not Allowed");
+    return ("");
+}

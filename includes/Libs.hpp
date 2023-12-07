@@ -6,7 +6,7 @@
 /*   By: dmartiro <dmartiro@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/19 06:37:27 by dmartiro          #+#    #+#             */
-/*   Updated: 2023/11/26 00:02:07 by dmartiro         ###   ########.fr       */
+/*   Updated: 2023/12/03 23:15:55 by dmartiro         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,9 +32,12 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <poll.h>
+#include <list>
 #include <fstream>
 #include <sys/select.h>
 #include <map>
+#include <iterator>
+#include <stack>
 #include <vector>
 #include "DefaultSetup.hpp"
 

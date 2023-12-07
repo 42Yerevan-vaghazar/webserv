@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Client.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: maharuty <maharuty@student.42.fr>          +#+  +:+       +#+        */
+/*   By: dmartiro <dmartiro@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/24 10:29:55 by dmartiro          #+#    #+#             */
-/*   Updated: 2023/12/05 21:39:49 by maharuty         ###   ########.fr       */
+/*   Updated: 2023/12/02 14:25:33 by dmartiro         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,14 +24,10 @@ Client::Client(sock_t clfd, sock_t srfd)
     this->rd = 0;
 }
 
-// Client::Client(sock_t clfd)
-// {
-//     this->fd = clfd;
-//     this->serverFd = -1;
-// }
-
-Client::~Client()
+Client::Client(sock_t clfd)
 {
+    this->fd = clfd;
+    this->serverFd = -1;
 }
 
 sock_t Client::getFd( void ) const
@@ -44,126 +40,8 @@ sock_t Client::getServerFd( void ) const
     return (this->serverFd);
 }
 
-// const HTTPRequest &Client::getRequest() const {
-//     return (_request);
-// }
-
-// HTTPResponse &Client::getResponse() {
-//     return (_response);
-// };
-
-// std::string &Client::getResponse() {
-//     return (_response);
-// }
-
-int Client::receiveRequest() {
-    char buf[READ_BUFFER];
-    int rdSize = recv(fd, buf, sizeof(buf) - 1, 0);
-    // std::cout << "rdSize = " << rdSize << std::endl;
-    if (rdSize == -1) { // TODO Checking the value of errno is strictly forbidden after a read or a write operation.
-        if (_maxSizeRequest == 5) { // TODO client request caused infinit loop  change with time
-            return -1;
-        } else {
-            _maxSizeRequest++;
-            return (0);
-        }
-    }
-    if (rdSize == 0) {  // TODO close tab. send response?
-        return (-1);
-    }
-    buf[rdSize] = '\0';
-    if (_isHeaderReady == false) {
-        httpRequest += buf;
-        size_t headerEndPos = httpRequest.find("\n\r\n");
-        if (headerEndPos == std::string::npos) {
-            return 0;
-        }
-        _isHeaderReady = true;
-        size_t pos = httpRequest.find("Content-Length: ");
-        if (pos == std::string::npos) {
-            _bodySize = 0;
-        } else {
-            _bodySize = std::stoi(httpRequest.substr(httpRequest.find("Content-Length: ") + strlen("Content-Length: "), 10));  // TODO throw 413 if the bodt size of payload is bigger then limits predefined configs;
-        }
-
-        std::string tmp = httpRequest.substr(headerEndPos + 3);
-        httpRequest.erase(headerEndPos);
-        if (_bodySize != 0) {
-            _body = tmp;
-            std::cout << "tmp = " << tmp << std::endl;
-        } else {
-            _isBodyReady = true;
-            _isRequestReady = true;
-        }
-        // TODO  parse header
-        return 0;
-    }
-    if (_bodySize <= _body.size()) {   // TODO check body length to do so
-        _body.erase(_bodySize);
-        _isBodyReady = true;
-        _isRequestReady = true;
-        return 0;
-    }
-    _body += buf;
-    return 0;
-}
-
-void Client::parse()
+Client::~Client()
 {
-    size_t space = 0;
-    size_t pos = httpRequest.find("\r\n");
-    request = httpRequest.substr(0, pos);
-    httpRequest.erase(0, pos + 2);
-
-    for (size_t i = 0; i < request.size(); i++)
-        if (std::isspace(request[i]))
-            space++;
-    if (space == 2)
-    {
-        method = trim(request.substr(0, request.find_first_of(" ")));
-        request.erase(0, request.find_first_of(" ") + 1);
-        path = trim(request.substr(0, request.find_first_of(" ")));// TODO handle ? var cases in path
-        request.erase(0, request.find_first_of(" ") + 1);
-        version = trim(request.substr(0, request.find("\r\n")));
-    }
-    std::stringstream iss(httpRequest);
-    std::string get_next_line;
-
-    while (std::getline(iss, get_next_line) && get_next_line != "\r\n")
-    {
-        size_t colon;
-        if ((colon = get_next_line.find_first_of(":")) != std::string::npos && std::isspace(get_next_line[colon+1]))
-        {
-            std::string key = trim(get_next_line.substr(0, colon));
-            std::string value = trim(get_next_line.substr(colon+2, get_next_line.find("\r\n")));
-            httpHeaders.insert(std::make_pair(key, value));
-        }
-    }
-    httpRequest.clear();
-    //    std::cout << "method = " << method << std::endl;
-    // std::cout << "path = " << path << std::endl;
-    // std::cout << "version = " << version << std::endl;
-    // for (std::map<std::string, std::string>::iterator it = httpHeaders.begin(); it !=  httpHeaders.end(); ++it)
-    // {
-    //     std::cout << "key = " << it->first << ", val = " << it->second << std::endl;
-    // }
-}
-
-bool Client::sendResponse() {
-    size_t sendSize = WRITE_BUFFER < _response.size() ? WRITE_BUFFER : _response.size();
-    if (send(fd, _response.c_str(), sendSize, 0) == -1) {
-        perror("send :");  //TODO shoud be removed before submission
-        exit(1);
-    }
-    _response.erase(0, sendSize);
-    // _response.clear();
-    // _isResponseReady = false;
-    return (_response.empty());
-}
-
-void Client::setResponse(const std::string &response) {
-    _response = response;
-    _isResponseReady = true;
 }
 
 void Client::appendRequest(HTTPServer &srv)
@@ -188,7 +66,7 @@ void Client::appendRequest(HTTPServer &srv)
                 {
                     method = trim(request.substr(0, request.find_first_of(" ")));
                     request.erase(0, request.find_first_of(" ") + 1);
-                    path = trim(request.substr(0, request.find_first_of(" "))); // TODO handle ? var cases in path
+                    path = trim(request.substr(0, request.find_first_of(" ")));
                     request.erase(0, request.find_first_of(" ") + 1);
                     version = trim(request.substr(0, request.find("\r\n")));
                     reqLineFound = 1;
@@ -201,7 +79,8 @@ void Client::appendRequest(HTTPServer &srv)
                 std::string get_next_line;
                 while (std::getline(iss, get_next_line) && get_next_line != "\r\n")
                 {
-                    if (size_t colon = get_next_line.find_first_of(":") != std::string::npos && std::isspace(get_next_line[colon+1]))
+                    size_t colon;
+                    if ((colon = get_next_line.find_first_of(":")) != std::string::npos && std::isspace(get_next_line[colon+1]))
                     {
                         std::string key = trim(get_next_line.substr(0, colon));
                         std::string value = trim(get_next_line.substr(colon+2, get_next_line.find("\r\n")));
@@ -217,18 +96,18 @@ void Client::appendRequest(HTTPServer &srv)
     }
     delete [] http;
     if (reqLineFound && headersFound)
-    {
+    {        
         reqLineFound = false;
         headersFound = false;
-        // Client::processing(srv);
+        Client::processing(srv);
     }
 }
 
-// void Client::processing(HTTPServer &srv)
-// {
-//     if (in(method) && version == "HTTP/1.1")
-//     {
-//         HTTPRequest::checkPath(srv);
-//         // HTTPRequest::processing(srv);
-//     }
-// }
+void Client::processing(HTTPServer &srv)
+{
+    if (in(method) && version == "HTTP/1.1")
+    {
+        HTTPRequest::checkPath(srv);
+        HTTPRequest::processing(srv);
+    }
+}

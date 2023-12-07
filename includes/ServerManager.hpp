@@ -6,24 +6,24 @@
 /*   By: dmartiro <dmartiro@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/13 23:52:27 by dmartiro          #+#    #+#             */
-/*   Updated: 2023/11/24 23:03:41 by dmartiro         ###   ########.fr       */
+/*   Updated: 2023/12/06 00:09:51 by dmartiro         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef SERVER_MANAGER
 #define SERVER_MANAGER
 #include "Libs.hpp"
+#include "Parser.hpp"
 #include "Location.hpp"
 #include "HTTPServer.hpp"
 #include "Client.hpp"
-#define SUCCSSES_STATUS "OK"
 
 class Client;
 class HTTPServer;
 class ServerManager : public std::vector<HTTPServer>
 {
     public:
-        ServerManager(std::string const &configFile);
+        ServerManager(const char *configFile);
         ~ServerManager();
     public:
         int isServer(sock_t fd);
@@ -38,18 +38,26 @@ class ServerManager : public std::vector<HTTPServer>
         sock_t getmax( void ) const;
         int used(HTTPServer *srv) const;
     public:
-        // void push(HTTPServer const &srv);
+        void push(HTTPServer const &srv);
     private:
         std::vector<HTTPServer> srvs;
-        // std::vector<Client> clnt;
     public:
-        // std::vector<Client> clnt;
-    public:
-        void start();
-        std::string generateResponse(Client &client);
+        void setmax(sock_t lastfd);
+        void set( void );
+        void set_r(sock_t fd);
+        void set_w(sock_t fd);
+        void set_e(sock_t fd);
+        fd_set r_set( void ) const;
+        fd_set w_set( void ) const;
+        fd_set e_set( void ) const;
+        void rm_r(sock_t fd);
+        void rm_w(sock_t fd);
+        void rm_e(sock_t fd);
     private:
-        bool closeConnetcion(sock_t fd);
-        bool newClient(int fd);
+        sock_t max_fd;
+        fd_set s_rd;
+        fd_set s_wr;
+        fd_set s_except;
 };
 
 #endif

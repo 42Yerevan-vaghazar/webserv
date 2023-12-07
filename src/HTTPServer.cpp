@@ -3,15 +3,14 @@
 /*                                                        :::      ::::::::   */
 /*   HTTPServer.cpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: maharuty <maharuty@student.42.fr>          +#+  +:+       +#+        */
+/*   By: dmartiro <dmartiro@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/13 23:57:39 by dmartiro          #+#    #+#             */
-/*   Updated: 2023/12/06 20:41:46 by maharuty         ###   ########.fr       */
+/*   Updated: 2023/11/28 21:18:04 by dmartiro         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "HTTPServer.hpp"
-#include <unordered_map>
 
 size_t longestMatch(std::string const &s1, std::string const &s2);
 
@@ -20,13 +19,6 @@ HTTPServer::HTTPServer( void )
     //defualt initializations
     this->port = DEFAULT_HTTP_PORT;
     this->ip = DEFAULT_MASK;
-    methodsMap["GET"] = &HTTPServer::get;
-    methodsMap["POST"] = &HTTPServer::post;
-    methodsMap["DELETE"] = &HTTPServer::del;
-    //boundary = "&"; // !IMPORTANT: if GET request: the boundary is (&) else if POST request: boundary is read from (Headers)
-    methods.push_back("GET");
-    methods.push_back("POST");
-    methods.push_back("DELETE");
 }
 
 HTTPServer::~HTTPServer()
@@ -148,7 +140,7 @@ void HTTPServer::up(ServerManager &mgn)
         Tcp::createSocket();
         Tcp::bindSocket();
         Tcp::listenSocket();
-        // mgn.setmax(fd);  // TODO delete line
+        mgn.setmax(fd);
         std::cout << givenIp <<  ":" << givenPort << std::endl;
         freeaddrinfo(addrList);
     }
@@ -157,14 +149,14 @@ void HTTPServer::up(ServerManager &mgn)
     
 }
 
-void HTTPServer::push(sock_t clFd, Client *clt)
+void HTTPServer::push(sock_t clFd, Client &clt)
 {
     clnt.insert(std::make_pair(clFd, clt));
 }
 
 int HTTPServer::pop(sock_t clFd)
 {
-    std::map<sock_t, Client*>::iterator it = clnt.find(clFd);
+    std::map<sock_t, Client>::iterator it = clnt.find(clFd);
     if (it != clnt.end())
     {
         clnt.erase(it);
@@ -187,27 +179,19 @@ bool HTTPServer::operator==(HTTPServer const &sibling)
     return (false);
 }
 
-bool HTTPServer::operator==(sock_t fd)
-{
-    if (clnt.find(fd) != clnt.end()) {
-      return (true);  
-    } 
-    return (false);
-}
-
 Client* HTTPServer::getClient(sock_t fd)
 {
-    std::map<sock_t, Client*>::iterator it = clnt.find(fd);
+    std::map<sock_t, Client>::iterator it = clnt.find(fd);
     if (it != clnt.end())
-        return (it->second);
+        return (&it->second);
     return (NULL);
 }
 
 void HTTPServer::removeClient(sock_t fd)
 {
-    std::map<sock_t, Client*>::iterator it = clnt.find(fd);
+    std::map<sock_t, Client>::iterator it = clnt.find(fd);
     if (it != clnt.end())
-        clnt.erase(it);  // TODO delete object before erase
+        clnt.erase(it);
     return ;
 }
 
@@ -340,93 +324,3 @@ size_t longestMatch(std::string const &s1, std::string const &s2)
 // {
 // 	return (autoindex);
 // }
-
-
-std::string HTTPServer::get(Client &client) {
-    const std::string &path = client.getPath();
-    std::unordered_map<std::string, std::string> headerContent;
-    std::string response;
-    std::string  fileName = " ";
-
-    std::cout << "path = " << path << std::endl;
-    if(path == "/")
-    {
-        fileName = "www/index.html";  //TODO - remove hardcode should be default page from config  
-        headerContent["Content-Type"] = "text/html"; //TODO - remove hardcode
-    }
-    if(path == "/a.png")
-    {
-        fileName = "www/pictures/a.png"; 
-        headerContent["Content-Type"] = "image/png";
-    }
-    
-    if (access(fileName.c_str(), F_OK) == 0) {   // TODO check permission to read
-        std::string fileContent;
-        std::ostringstream stream;
-        std::ifstream ifs(fileName);
-        if (ifs.is_open() == false) {
-            throw std::logic_error("can not open file");
-        }
-        
-        stream << ifs.rdbuf();
-        fileContent = stream.str();
-        headerContent["Content-Length"] = std::to_string(fileContent.size());
-
-        for (std::unordered_map<std::string, std::string>::iterator it = headerContent.begin();
-            it != headerContent.end(); ++it) {
-                response += it->first;
-                response += ": ";
-                response += it->second;
-                response += "\r\n";
-        }
-        response +=  "\n";
-        response +=  fileContent;
-    }
-    return (response);
-};
-
-std::string HTTPServer::post(Client &client) {
-    // std::map<std::string, std::string>::const_iterator it = headers.find("boundary");
-    // if( it == headers.end())
-    // {
-    //     throw Error(412, "Precondition Failed");
-    // }
-    // std::string boundary = it->second;
-
-    // std::cout << "\npost\n" << std::endl;
-    // std::string fileName;
-    // size_t pos = filePath.rfind("/");
-    // if (pos == std::string::npos) {
-    //     fileName = filePath;
-    // } else {
-    //     fileName = filePath.substr(pos + 1);
-    // }
-    // std::cout << "filename = " << fileName << std::endl;
-    // std::ofstream ofs("./data/" + fileName);
-    // if (ofs.is_open() == false) {
-    //     throw std::logic_error("can not open file"); // TODO change -> failed status in response
-    // }
-    std::string response;
-    // // _data.push_back(body);
-    // ofs << body;
-    return (response);
-};
-
-std::string HTTPServer::del(Client &client) {
-    // std::cout << "\ndel\n" << std::endl;
-    // std::string fileName =  "./data/";
-    // size_t pos = filePath.rfind("/");
-    // if (pos == std::string::npos) {
-    //     fileName += filePath;
-    // } else {
-    //     fileName += filePath.substr(pos + 1);
-    // }
-    std::string response;
-    // std::cout << "fileName = " << fileName << std::endl;
-    // if (std::remove(fileName.c_str()) == -1) {
-    //     std::cerr << (std::string("remove: ") + strerror(errno)) << std::endl;
-
-    //     // throw std::runtime_error(std::string("remove: ") + strerror(errno)); // TODO change failed status in response
-    // };
-    return (response);
-};

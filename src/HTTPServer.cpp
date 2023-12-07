@@ -6,7 +6,7 @@
 /*   By: maharuty <maharuty@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/13 23:57:39 by dmartiro          #+#    #+#             */
-/*   Updated: 2023/12/06 20:41:46 by maharuty         ###   ########.fr       */
+/*   Updated: 2023/12/07 20:59:57 by maharuty         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -181,7 +181,6 @@ bool HTTPServer::exist(sock_t fd)
 
 bool HTTPServer::operator==(HTTPServer const &sibling)
 {
-    std::cout << "bool HTTPServer::operator==(HTTPServer const &sibling)\n"; 
     if (std::strcmp(this->getIp(), sibling.getIp()) == 0 \
         && std::strcmp(this->getPort(),sibling.getPort()) == 0)
       return (true);  
@@ -190,13 +189,9 @@ bool HTTPServer::operator==(HTTPServer const &sibling)
 
 bool HTTPServer::operator==(sock_t fd)
 {
-    std::cout << "bool HTTPServer::operator==(sock_t fd)\n"; 
-
     if (clnt.find(fd) != clnt.end()) {
-        std::cout << "true\n";
       return (true);
     } 
-        std::cout << "false\n";
     return (false);
 }
 
@@ -358,7 +353,7 @@ std::string HTTPServer::get(Client &client) {
     {
         fileName = "www/server1/index.html";  //TODO - remove hardcode should be default page from config  
         headerContent["Content-Type"] = "text/html"; //TODO - remove hardcode
-    } else if (path == "www/server1/pictures/a.png") {
+    } else {
         fileName = "www/server1/pictures/a.png"; 
         headerContent["Content-Type"] = "image/png";
     }
@@ -395,13 +390,15 @@ std::string HTTPServer::get(Client &client) {
         response +=  "\n";
         response +=  fileContent;
     } else {
-        throw Error(404, "not found");
+        throw ResponseError(404, "not found");
         // TODO automate it   404, 405, 411, 412, 413, 414, 431, 500, 501, 505, 503, 507, 508
     }
     return (response);
 };
 
 std::string HTTPServer::post(Client &client) {
+    
+    std::cout << "\n--- in Post function \n" << std::endl;
     // std::map<std::string, std::string>::const_iterator it = headers.find("boundary");
     // if( it == headers.end())
     // {
@@ -452,6 +449,6 @@ std::string HTTPServer::processing(Client &client)
     std::map<std::string, std::string(HTTPServer::*)(Client&)>::iterator function = methodsMap.find(client.getMethod());
     if (function != methodsMap.end())
        return ((this->*(function->second))(client));
-    throw Error(405, "Method Not Allowed");
+    throw ResponseError(405, "Method Not Allowed");
     return ("");
 }

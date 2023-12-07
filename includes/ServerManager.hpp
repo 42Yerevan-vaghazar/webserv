@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ServerManager.hpp                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dmartiro <dmartiro@student.42.fr>          +#+  +:+       +#+        */
+/*   By: maharuty <maharuty@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/13 23:52:27 by dmartiro          #+#    #+#             */
-/*   Updated: 2023/12/06 00:09:51 by dmartiro         ###   ########.fr       */
+/*   Updated: 2023/12/07 18:34:31 by maharuty         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,10 +17,12 @@
 #include "Location.hpp"
 #include "HTTPServer.hpp"
 #include "Client.hpp"
+#include <ResponseError.hpp>
 #define SUCCSSES_STATUS "OK"
 
 class Client;
 class HTTPServer;
+class Error;
 
 class ServerManager : public std::vector<HTTPServer>
 {
@@ -48,7 +50,7 @@ class ServerManager : public std::vector<HTTPServer>
     public:
         void start();
         std::string generateResponse(Client &client);
-        // std::string generateErrorResponse(const HTTPServer::Error& e);
+        std::string generateErrorResponse(const ResponseError& e, Client &client);
     private:
         bool closeConnetcion(sock_t fd);
         bool newClient(int fd);

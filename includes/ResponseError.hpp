@@ -1,15 +1,16 @@
     #pragma once
-    
-    class Error : public std::exception
+    #include <iostream>
+
+    class ResponseError : public std::exception
     {
         public:
-            Error(int statusCode, const std::string &errMessage)
+            ResponseError(int statusCode, const std::string &errMessage)
                 : _statusCode(statusCode), _errMessage(errMessage) {};
-            Error(const Error& rhs) {
+            ResponseError(const ResponseError& rhs) {
                 _statusCode = rhs._statusCode;
                 _errMessage = rhs._errMessage;
             };
-            ~Error() throw() {};
+            ~ResponseError() throw() {};
 
             const char * what() const throw() {
                 return _errMessage.c_str();
@@ -20,8 +21,8 @@
             }
 
         private:
-            Error() : _statusCode(0) {};
-            Error& operator=(const Error& rhs);
+            ResponseError() : _statusCode(0) {};
+            ResponseError& operator=(const ResponseError& rhs);
         private:
             int _statusCode;
             std::string _errMessage;

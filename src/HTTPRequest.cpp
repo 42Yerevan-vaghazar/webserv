@@ -6,7 +6,7 @@
 /*   By: maharuty <maharuty@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/12 22:14:54 by dmartiro          #+#    #+#             */
-/*   Updated: 2023/12/05 21:31:31 by maharuty         ###   ########.fr       */
+/*   Updated: 2023/12/07 21:47:39 by maharuty         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -131,31 +131,38 @@ std::string HTTPRequest::findInMap(std::string key)
 //     std::cout << "method is DELETE" << std::endl;
 // }
 
-// void HTTPRequest::multipart(sock_t fd)
-// {
-//     std::cout << "multipart/form-data" << std::endl;
-//     std::cout << httpRequest << std::endl;
-//     contentType.erase(0, contentType.find(";")+1);
-//     boundary = "--" + contentType.substr(contentType.find("=")+1);
-//     boundaryEnd = boundary + "--";
-//     std::stringstream iss(httpRequest);
-//     std::vector<std::string> content;
-//     std::string line;
-//     std::string get_next_line;
-//     while (std::getline(iss, get_next_line))
-//     {
-//         if (trim(get_next_line) == boundary || trim(get_next_line) == boundaryEnd)
-//         {
-//             if (!line.empty())
-//             {
-//                 // content.push_back(line);
-//                 line.erase();
-//             }
-//         }
-//         else
-//             line += get_next_line + "\r\n";
-//     }
-// }
+
+void HTTPRequest::multipart(void)
+{
+    std::map<std::string, std::string>::iterator it =  httpHeaders.find("Content-Type");
+    std::cout << "multipart function " << std::endl;
+    if(it == httpHeaders.end())
+    {
+        throw ResponseError(428, "Precondition Required");
+    }
+    std::string contentType = it->second;
+    contentType.erase(0, contentType.find(";")+1);
+    boundary = "--" + contentType.substr(contentType.find("=")+1);
+    boundaryEnd = boundary + "--";
+    std::cout << "boundaryEnd = " << boundaryEnd << std::endl;
+    std::stringstream iss(_body);
+    std::string line;
+    std::string get_next_line;
+    // while (std::getline(iss, get_next_line))
+    // {
+    //     if (trim(get_next_line) == boundary || trim(get_next_line) == boundaryEnd)
+    //     {
+    //         if (!line.empty())
+    //         {
+    //             line.find(Content-Disposition
+    //             _uploadedFiles[""].push_back(line);
+    //             line.erase();
+    //         }
+    //     }
+    //     else
+    //         line += get_next_line + "\r\n";
+    // }
+}
 
 void HTTPRequest::showHeaders( void )
 {

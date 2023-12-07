@@ -6,7 +6,7 @@
 /*   By: maharuty <maharuty@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 00:05:52 by dmartiro          #+#    #+#             */
-/*   Updated: 2023/12/06 20:39:30 by maharuty         ###   ########.fr       */
+/*   Updated: 2023/12/07 21:51:02 by maharuty         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,8 +43,8 @@ void ServerManager::start() {
         Client *client = NULL;
     
         event = EvManager::listen();
-        std::cout << "event.second = " << event.second << std::endl;
-        std::cout << "event.first = " << event.first << std::endl;
+        // std::cout << "event.second = " << event.second << std::endl;
+        // std::cout << "event.first = " << event.first << std::endl;
         if (newClient(event.second)) {
             continue ;
         }
@@ -70,15 +70,15 @@ void ServerManager::start() {
                     EvManager::addEvent(client->getFd(), EvManager::write);
                 }
                 if (client->receiveRequest() == -1) {
-                    std::cout << "client->receiveRequest() == -1\n";
                     closeConnetcion(client->getFd());
                 }
                 if (client->isRequestReady()) {
+                    std::cout << " client->getHttpRequest() = " << client->getHttpRequest() << std::endl;
                     client->parse();
                     client->setResponse(generateResponse(*client));
                 }
             } else if (client->isResponseReady() && event.first == EvManager::write) {
-                std::cout << "event.first == EvManager::write\n";
+                // std::cout << "event.first == EvManager::write\n";
                 // std::cout << "\nEVFILT_WRITE\n" << std::endl;
                 // TODO send response little by little
                 if (client->sendResponse() == true) {
@@ -86,22 +86,21 @@ void ServerManager::start() {
                 }
             } else if (client->isResponseReady() == false) {
                 if (client->receiveRequest() == -1) {
-                    std::cout << "   } else if (client->isResponseReady() == false) {\n";
                     closeConnetcion(client->getFd());
                 }
                 // std::cout << client->getHttpRequest() << std::endl;
                 if (client->isRequestReady()) {
+                    std::cout << " client->getHttpRequest() = " << client->getHttpRequest() << std::endl;
+
                     client->parse();
                     client->setResponse(generateResponse(*client));
                 }
             }
         }
-        catch(const HTTPServer::Error& e)
+        catch(const ResponseError& e)
         {
-
-            // client.setResponse();
-            //TODO send response server error
-            std::cerr << e.what() << '\n';
+        std::cout << "stex " << std::endl;
+            client->setResponse( generateErrorResponse(e, *client));
         }
         catch(const std::exception& e)
         {
@@ -111,39 +110,41 @@ void ServerManager::start() {
     }
 };
 
-// std::string ServerManager::generateErrorResponse(const HTTPServer::Error& e) {
-//      // std::cout << "stex\n";
-//         // TODO automate it   404, 405, 411, 412, 413, 414, 431, 500, 501, 505, 503, 507, 508
-//     std::string fileContent;
-//     std::string response;
-//     std::ifstream ifs("./error_pages/404.html");
-//     if (ifs.is_open() == false) {
-//         throw std::logic_error("can not open file"); // TODO 
-//     }
-//     std::getline(ifs, fileContent, '\0');
-//     size_t pos = fileContent.find("404");
-//     if (pos != std::string::npos) {
-//         fileContent.replace(pos, strlen("statusCode"), std::to_string(e.getStatusCode()) + " " + e.what());
-//     } else {
-//         fileContent = "Error" + std::to_string(e.getStatusCode());
-//     };
-//     response = client.getVersion() + " ";
-//     headerContent["Content-Length"] = std::to_string(fileContent.size());
-//     response += std::to_string(e.getStatusCode());
-//     // std::cout << response << std::endl;
-//     response += "\r\n";
 
-//     for (std::unordered_map<std::string, std::string>::iterator it = headerContent.begin();
-//         it != headerContent.end(); ++it) {
-//             response += it->first;
-//             response += ": ";
-//             response += it->second;
-//             response += "\r\n";
-//     }
-//     response +=  "\n";
-//     response +=  fileContent;
-//     return (response);
-// }
+std::string ServerManager::generateErrorResponse(const ResponseError& e, Client &client) {  //TODO put inside class or namespace
+     // std::cout << "stex\n";
+        // TODO automate it   404, 405, 411, 412, 413, 414, 431, 500, 501, 505, 503, 507, 508
+    std::unordered_map<std::string, std::string> &headerContent = client.getResponseHeader();
+    std::string fileContent;
+    std::string response;
+    std::ifstream ifs("./www/server1/error_pages/404.html");
+    if (ifs.is_open() == false) {
+        throw std::logic_error("can not open file error_pages"); // TODO 
+    }
+    std::getline(ifs, fileContent, '\0');
+    size_t pos = fileContent.find("404");
+    if (pos != std::string::npos) {
+        fileContent.replace(pos, strlen("404"), std::to_string(e.getStatusCode()) + " " + e.what());
+    } else {
+        fileContent = "Error" + std::to_string(e.getStatusCode());
+    };
+    response = client.getVersion() + " ";
+    headerContent["Content-Length"] = std::to_string(fileContent.size());
+    response += std::to_string(e.getStatusCode());
+    // std::cout << response << std::endl;
+    response += "\r\n";
+
+    for (std::unordered_map<std::string, std::string>::iterator it = headerContent.begin();
+        it != headerContent.end(); ++it) {
+            response += it->first;
+            response += ": ";
+            response += it->second;
+            response += "\r\n";
+    }
+    response +=  "\n";
+    response +=  fileContent;
+    return (response);
+}
 
 std::string ServerManager::generateResponse(Client &client) {
     const std::string httpRequest = client.getHttpRequest();
@@ -166,39 +167,11 @@ std::string ServerManager::generateResponse(Client &client) {
         }
         response += it->processing(client);
     }
-    catch(const HTTPServer::Error& e)
+    catch(const ResponseError& e)
     {
-        // std::cout << "stex\n";
-         // TODO automate it   404, 405, 411, 412, 413, 414, 431, 500, 501, 505, 503, 507, 508
-        std::string fileContent;
-        std::ifstream ifs("./www/server1/error_pages/404.html");
-        if (ifs.is_open() == false) {
-            throw std::logic_error("can not open file"); // TODO 
-        }
-        std::getline(ifs, fileContent, '\0');
-        size_t pos = fileContent.find("404");
-        if (pos != std::string::npos) {
-            fileContent.replace(pos, strlen("404"), std::to_string(e.getStatusCode()) + " " + e.what());
-        } else {
-            fileContent = "Error" + std::to_string(e.getStatusCode());
-        };
-        response = client.getVersion() + " ";
-        headerContent["Content-Length"] = std::to_string(fileContent.size());
-        response += std::to_string(e.getStatusCode());
-        // std::cout << response << std::endl;
-        response += "\r\n";
-
-        for (std::unordered_map<std::string, std::string>::iterator it = headerContent.begin();
-            it != headerContent.end(); ++it) {
-                response += it->first;
-                response += ": ";
-                response += it->second;
-                response += "\r\n";
-        }
-        response +=  "\n";
-        response +=  fileContent;
+        response = generateErrorResponse(e, client);
     }
-    std::cout << "--Final response = " << response << std::endl;
+    // std::cout << "--Final response = " << response << std::endl;
     return (response);
 }
 

@@ -6,7 +6,7 @@
 /*   By: maharuty <maharuty@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/13 23:56:30 by dmartiro          #+#    #+#             */
-/*   Updated: 2023/12/05 21:55:11 by maharuty         ###   ########.fr       */
+/*   Updated: 2023/12/07 18:31:31 by maharuty         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,7 @@
 #include "core.hpp"
 #include "ServerCore.hpp"
 #include "ServerManager.hpp"
+#include "ResponseError.hpp"
 
 class HTTPRequest;
 class ServerManager;
@@ -69,7 +70,6 @@ class HTTPServer : public Tcp, public IListener, public ServerCore
     private:
         std::map<std::string, std::string (HTTPServer::*)(Client&)> methodsMap;
     public:
-#include "Error.hpp"
 };
 
 #endif

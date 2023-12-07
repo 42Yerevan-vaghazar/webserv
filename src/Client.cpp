@@ -6,7 +6,7 @@
 /*   By: maharuty <maharuty@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/24 10:29:55 by dmartiro          #+#    #+#             */
-/*   Updated: 2023/12/05 21:39:49 by maharuty         ###   ########.fr       */
+/*   Updated: 2023/12/07 21:42:39 by maharuty         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -86,11 +86,17 @@ int Client::receiveRequest() {
             _bodySize = std::stoi(httpRequest.substr(httpRequest.find("Content-Length: ") + strlen("Content-Length: "), 10));  // TODO throw 413 if the bodt size of payload is bigger then limits predefined configs;
         }
 
-        std::string tmp = httpRequest.substr(headerEndPos + 3);
+        std::string tmpBody = httpRequest.substr(headerEndPos + 3);
         httpRequest.erase(headerEndPos);
         if (_bodySize != 0) {
-            _body = tmp;
-            std::cout << "tmp = " << tmp << std::endl;
+            _body = tmpBody;
+            std::cout << "httpRequest = " << httpRequest << "$" << std::endl;
+            std::cout << "tmp = " << tmpBody << "$" << std::endl;
+            if (_bodySize == _body.size()) {
+                _isBodyReady = true;
+                _isRequestReady = true;
+            }
+            
         } else {
             _isBodyReady = true;
             _isRequestReady = true;
@@ -140,6 +146,7 @@ void Client::parse()
         }
     }
     httpRequest.clear();
+    multipart();
     HTTPRequest::checkPath(this->_srv);
     //    std::cout << "method = " << method << std::endl;
     // std::cout << "path = " << path << std::endl;

@@ -255,6 +255,11 @@ int ServerManager::isClient(sock_t fd)
     return (0);
 }
 
+void ServerManager::push(HTTPServer const &srv)
+{
+    srvs.push_back(srv);
+}
+
 // void ServerManager::push(HTTPServer const &srv)
 // {
 //     srvs.push_back(srv);

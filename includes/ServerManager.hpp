@@ -6,13 +6,14 @@
 /*   By: dmartiro <dmartiro@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/13 23:52:27 by dmartiro          #+#    #+#             */
-/*   Updated: 2023/11/24 23:03:41 by dmartiro         ###   ########.fr       */
+/*   Updated: 2023/12/06 00:09:51 by dmartiro         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef SERVER_MANAGER
 #define SERVER_MANAGER
 #include "Libs.hpp"
+#include "Parser.hpp"
 #include "Location.hpp"
 #include "HTTPServer.hpp"
 #include "Client.hpp"
@@ -38,10 +39,9 @@ class ServerManager : public std::vector<HTTPServer>
         sock_t getmax( void ) const;
         int used(HTTPServer *srv) const;
     public:
-        // void push(HTTPServer const &srv);
+        void push(HTTPServer const &srv);
     private:
         std::vector<HTTPServer> srvs;
-        // std::vector<Client> clnt;
     public:
         // std::vector<Client> clnt;
     public:

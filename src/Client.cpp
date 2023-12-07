@@ -188,7 +188,7 @@ void Client::appendRequest(HTTPServer &srv)
                 {
                     method = trim(request.substr(0, request.find_first_of(" ")));
                     request.erase(0, request.find_first_of(" ") + 1);
-                    path = trim(request.substr(0, request.find_first_of(" "))); // TODO handle ? var cases in path
+                    path = trim(request.substr(0, request.find_first_of(" ")));
                     request.erase(0, request.find_first_of(" ") + 1);
                     version = trim(request.substr(0, request.find("\r\n")));
                     reqLineFound = 1;
@@ -201,7 +201,8 @@ void Client::appendRequest(HTTPServer &srv)
                 std::string get_next_line;
                 while (std::getline(iss, get_next_line) && get_next_line != "\r\n")
                 {
-                    if (size_t colon = get_next_line.find_first_of(":") != std::string::npos && std::isspace(get_next_line[colon+1]))
+                    size_t colon;
+                    if ((colon = get_next_line.find_first_of(":")) != std::string::npos && std::isspace(get_next_line[colon+1]))
                     {
                         std::string key = trim(get_next_line.substr(0, colon));
                         std::string value = trim(get_next_line.substr(colon+2, get_next_line.find("\r\n")));
@@ -217,7 +218,7 @@ void Client::appendRequest(HTTPServer &srv)
     }
     delete [] http;
     if (reqLineFound && headersFound)
-    {
+    {        
         reqLineFound = false;
         headersFound = false;
         // Client::processing(srv);
@@ -229,6 +230,6 @@ void Client::appendRequest(HTTPServer &srv)
 //     if (in(method) && version == "HTTP/1.1")
 //     {
 //         HTTPRequest::checkPath(srv);
-//         // HTTPRequest::processing(srv);
+//         HTTPRequest::processing(srv);
 //     }
 // }

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HTTPResponse.hpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: maharuty <maharuty@student.42.fr>          +#+  +:+       +#+        */
+/*   By: dmartiro <dmartiro@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/26 01:26:17 by dmartiro          #+#    #+#             */
-/*   Updated: 2023/12/05 22:08:48 by maharuty         ###   ########.fr       */
+/*   Updated: 2023/11/28 01:29:45 by dmartiro         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,7 +22,7 @@ class HTTPResponse
         ~HTTPResponse();
     public:
         std::string file(std::string const &filename);
-        std::string getResponse( void );
+        std::string const &getResponse( void ) const;
         std::string const &getReserve404( void ) const;
         std::string const &getReserve403( void ) const;
         std::string const &getReserve(int statusCode) const;

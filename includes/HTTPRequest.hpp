@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HTTPRequest.hpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: maharuty <maharuty@student.42.fr>          +#+  +:+       +#+        */
+/*   By: dmartiro <dmartiro@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/12 22:14:28 by dmartiro          #+#    #+#             */
-/*   Updated: 2023/12/05 21:31:01 by maharuty         ###   ########.fr       */
+/*   Updated: 2023/12/02 15:38:36 by dmartiro         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,7 +24,7 @@ class HTTPRequest
 		HTTPRequest( void );
 		~HTTPRequest();
     public:
-        std::string findInMap(std::string const &key);
+        std::string findInMap(std::string key);
         void showHeaders( void );
         std::string const &getMethod( void ) const;
         std::string const &getPath( void ) const;
@@ -38,19 +38,21 @@ class HTTPRequest
         static bool isFile(std::string const &filePath);
         static bool isExist(std::string const &filePath);
         static void charChange(std::string &str, char s, char d);
-        static void lastChar(std::string &str, char s);
+        static std::string lastChar(std::string const &str, char s);
         static void firstChar(std::string &str, char s);
+        static std::string middle_slash(std::string const &s1, char s, std::string const &s2);
         static size_t slashes(std::string const &pathtosplit);
+        static std::string ltrim(const std::string &str);
+        static std::string rtrim(const std::string &str);
+        static std::string trim(const std::string &str);
     protected:
+        std::vector<std::string> pathChunking(std::string const &rPath);
         void checkPath(HTTPServer const &srv);
         int in(std::string const &method);
-        // void processing(HTTPServer &srv);
-        // void processing(sock_t fd);
-
-        std::string ltrim(const std::string &str);
-        std::string rtrim(const std::string &str);
-        std::string trim(const std::string &str);
+        void processing(HTTPServer &srv);
+        void processing(sock_t fd);
     protected:
+        std::vector<std::string> pathChunks;
         // enum PathInfo {ISDIR, ISFILE, NOTFOUND, FORBIDDEN};
         enum PathStatus{ISDIR, DIROFF, DIRON, ISFILE, NOTFOUND, FORBIDDEN, UNDEFINED};
         // PathStatus path_status(std::string const &checkPath);
@@ -68,6 +70,7 @@ class HTTPRequest
         std::string path;
         std::string realPath;
         std::string actualPath;
+        std::string absolutePath;
         std::string reqStatus;
         std::string filename;
         std::string extension;

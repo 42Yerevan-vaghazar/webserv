@@ -39,7 +39,7 @@ std::string HTTPResponse::file(std::string const &filename)
     return (content);
 }
 
-std::string HTTPResponse::getResponse( void )
+std::string const &HTTPResponse::getResponse( void ) const
 {
     return (response);
 }

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Client.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dmartiro <dmartiro@student.42.fr>          +#+  +:+       +#+        */
+/*   By: maharuty <maharuty@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/24 10:29:55 by dmartiro          #+#    #+#             */
-/*   Updated: 2023/11/28 20:02:24 by dmartiro         ###   ########.fr       */
+/*   Updated: 2023/12/05 21:39:49 by maharuty         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,11 +24,11 @@ Client::Client(sock_t clfd, sock_t srfd)
     this->rd = 0;
 }
 
-Client::Client(sock_t clfd)
-{
-    this->fd = clfd;
-    this->serverFd = -1;
-}
+// Client::Client(sock_t clfd)
+// {
+//     this->fd = clfd;
+//     this->serverFd = -1;
+// }
 
 Client::~Client()
 {
@@ -151,7 +151,7 @@ void Client::parse()
 
 bool Client::sendResponse() {
     size_t sendSize = WRITE_BUFFER < _response.size() ? WRITE_BUFFER : _response.size();
-    if (send(_fd, _response.c_str(), sendSize, 0) == -1) {
+    if (send(fd, _response.c_str(), sendSize, 0) == -1) {
         perror("send :");  //TODO shoud be removed before submission
         exit(1);
     }

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HTTPRequest.cpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dmartiro <dmartiro@student.42.fr>          +#+  +:+       +#+        */
+/*   By: maharuty <maharuty@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/12 22:14:54 by dmartiro          #+#    #+#             */
-/*   Updated: 2023/11/28 22:01:13 by dmartiro         ###   ########.fr       */
+/*   Updated: 2023/12/05 21:31:31 by maharuty         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,17 +37,22 @@ HTTPRequest::~HTTPRequest()
 {
 }
 
-std::string const &HTTPRequest::requestMethod( void ) const
+std::string const &HTTPRequest::getMethod( void ) const
 {
     return (method);
 }
 
-std::string const &HTTPRequest::requestPath( void ) const
+std::string HTTPRequest::getBody() const
+{
+    return (_body);
+}
+
+std::string const &HTTPRequest::getPath( void ) const
 {
     return (path);
 }
 
-std::string const &HTTPRequest::requestVersion( void ) const
+std::string const &HTTPRequest::getVersion( void ) const
 {
     return (version);
 }

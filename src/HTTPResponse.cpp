@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HTTPResponse.cpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dmartiro <dmartiro@student.42.fr>          +#+  +:+       +#+        */
+/*   By: maharuty <maharuty@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/26 01:28:07 by dmartiro          #+#    #+#             */
-/*   Updated: 2023/11/28 01:29:33 by dmartiro         ###   ########.fr       */
+/*   Updated: 2023/12/05 22:09:25 by maharuty         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,7 @@
 
 HTTPResponse::HTTPResponse( void )
 {
-    _headerContent["server"] = "webserv";
+    _responseHeader["server"] = "webserv";
 }
 
 HTTPResponse::~HTTPResponse()
@@ -60,6 +60,6 @@ std::string const &HTTPResponse::getReserve(int statusCode) const
     return (reserve);
 }
 
-std::unordered_map<std::string, std::string> HTTPResponse::getHeader() {
-    return (_headerContent);
+std::unordered_map<std::string, std::string> &HTTPResponse::getResponseHeader() {
+    return (_responseHeader);
 }

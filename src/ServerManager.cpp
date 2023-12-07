@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ServerManager.cpp                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dmartiro <dmartiro@student.42.fr>          +#+  +:+       +#+        */
+/*   By: maharuty <maharuty@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 00:05:52 by dmartiro          #+#    #+#             */
-/*   Updated: 2023/11/18 15:19:40 by dmartiro         ###   ########.fr       */
+/*   Updated: 2023/12/06 20:39:30 by maharuty         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -70,7 +70,7 @@ void ServerManager::start() {
             }
             if (client->isRequestReady()) {
                 client->parse();
-                client->setResponse(generateResponse(client);
+                client->setResponse(generateResponse(*client));
             }
         } else if (client->isResponseReady() && event.first == EvManager::write) {
             std::cout << "event.first == EvManager::write\n";
@@ -86,36 +86,41 @@ void ServerManager::start() {
             // std::cout << client->getHttpRequest() << std::endl;
             if (client->isRequestReady()) {
                 client->parse();
-                client->setResponse(generateResponse(client));
+                client->setResponse(generateResponse(*client));
             }
         }
     }
 };
 
 std::string ServerManager::generateResponse(Client &client) {
-    const std::string &httpRequest = clie;
-    const std::string &body;
-    std::map<std::string, std::string> const &headers;
+    const std::string httpRequest = client.getHttpRequest();
+    const std::string body = client.getBody();
     std::string response;
     
     std::unordered_map<std::string, std::string> headerContent;
 
     headerContent.insert(std::make_pair("server", "webserv"));
-    response = version;
-    response += " " + reqStatus + " ";
+    response = client.getVersion();
+    response += " " + std::string("200") + " ";
     response += SUCCSSES_STATUS;
     response += "\r\n";
     try
     {
-        if (method == "POST") {
-            response += post(client);
-        } else if (method == "GET") {
-            response += get(client);
-        } else if (method == "DELETE") {
-            response += del(client);
+        std::vector<HTTPServer>::iterator it = std::find(this->begin(), this->end(), client.getFd());
+        std::cout << it->getPort() << std::endl;
+        if (it == this->end()) {  // TODO never work
+            throw std::runtime_error("std::find(this->begin(), this->end(), client.getFd());");
         }
+        if (client.getMethod() == "POST") {
+            response += it->post(client);
+        } else if (client.getMethod() == "GET") {
+            response += it->get(client);
+        } else if (client.getMethod() == "DELETE") {
+            response += it->del(client);
+        }
+        std::cout << "--Final response = " << response << std::endl;
     }
-    catch(const ServerMangaer::Error& e)
+    catch(const HTTPServer::Error& e)
     {
         std::cout << "stex\n";
          // TODO automate it   404, 405, 411, 412, 413, 414, 431, 500, 501, 505, 503, 507, 508
@@ -131,7 +136,7 @@ std::string ServerManager::generateResponse(Client &client) {
         } else {
             fileContent = "Error" + std::to_string(e.getStatusCode());
         };
-        response = version + " ";
+        response = client.getVersion() + " ";
         headerContent["Content-Length"] = std::to_string(fileContent.size());
         response += std::to_string(e.getStatusCode());
         // std::cout << response << std::endl;

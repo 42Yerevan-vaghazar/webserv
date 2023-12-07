@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HTTPRequest.hpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dmartiro <dmartiro@student.42.fr>          +#+  +:+       +#+        */
+/*   By: maharuty <maharuty@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/12 22:14:28 by dmartiro          #+#    #+#             */
-/*   Updated: 2023/11/28 20:32:06 by dmartiro         ###   ########.fr       */
+/*   Updated: 2023/12/05 21:31:01 by maharuty         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,10 +26,11 @@ class HTTPRequest
     public:
         std::string findInMap(std::string const &key);
         void showHeaders( void );
-        std::string const &requestMethod( void ) const;
-        std::string const &requestPath( void ) const;
-        std::string const &requestVersion( void ) const;
+        std::string const &getMethod( void ) const;
+        std::string const &getPath( void ) const;
+        std::string const &getVersion( void ) const;
         std::string getHttpRequest() const;
+        std::string getBody() const;
         bool isRequestReady() const;
         bool isResponseReady() const;
     public:

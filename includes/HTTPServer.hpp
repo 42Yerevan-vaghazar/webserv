@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HTTPServer.hpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dmartiro <dmartiro@student.42.fr>          +#+  +:+       +#+        */
+/*   By: maharuty <maharuty@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/13 23:56:30 by dmartiro          #+#    #+#             */
-/*   Updated: 2023/11/28 20:31:48 by dmartiro         ###   ########.fr       */
+/*   Updated: 2023/12/05 21:55:11 by maharuty         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,12 +60,14 @@ class HTTPServer : public Tcp, public IListener, public ServerCore
 		virtual uint16_t getNPort( void ) const;
     public:
         bool operator==(HTTPServer const &);
+        bool operator==(sock_t);
     public:
         std::string get(Client &client);
         std::string post(Client &client);
-        std::string delet(Client &client);
+        std::string del(Client &client);
     private:
         std::map<std::string, std::string (HTTPServer::*)(Client&)> methodsMap;
+    public:
 #include "Error.hpp"
 };
 

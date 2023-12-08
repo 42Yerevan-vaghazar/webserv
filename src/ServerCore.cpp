@@ -87,9 +87,9 @@ std::string ServerCore::getErrPage(int key) const
 	return (nill);
 }
 
-void ServerCore::setSize(std::string const &bodySize)
+void ServerCore::setSize(std::string const &_bodySize)
 {
-	unsigned long long int toLong = std::strtoull(bodySize.c_str(), NULL, 10);
+	unsigned long long int toLong = std::strtoull(_bodySize.c_str(), NULL, 10);
 	if (errno == ERANGE && toLong == ULLONG_MAX)
 		this->client_body_size = 200;
 	else

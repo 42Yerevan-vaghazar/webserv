@@ -327,9 +327,9 @@ size_t longestMatch(std::string const &s1, std::string const &s2)
 // 	error_page.insert(std::make_pair(key, errpage_filename));
 // }
 
-// void HTTPServer::setSize(std::string const &bodySize)
+// void HTTPServer::setSize(std::string const &_bodySize)
 // {
-// 	unsigned long long int toLong = std::strtoull(bodySize.c_str(), NULL, 10);
+// 	unsigned long long int toLong = std::strtoull(_bodySize.c_str(), NULL, 10);
 // 	if (errno == ERANGE && toLong == ULLONG_MAX)
 // 		this->client_body_size = 200;
 // 	else
@@ -348,7 +348,7 @@ std::string HTTPServer::get(Client &client) {
     std::string response;
     std::string  fileName;
 
-    std::cout << "path = " << path << std::endl;
+    // std::cout << "path = " << path << std::endl;
     if(path[path.size() - 1] == '/')
     {
         fileName = "www/server1/index.html";  //TODO - remove hardcode should be default page from config  

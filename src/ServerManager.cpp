@@ -23,7 +23,7 @@ bool ServerManager::newClient(int fd) {
             //     throw std::runtime_error(std::string("accept: ") + strerror(errno));
             // }
             EvManager::addEvent(clientFd, EvManager::read);
-            std::cout << "clientFd = " << clientFd << std::endl;
+            // std::cout << "clientFd = " << clientFd << std::endl;
             (*this)[i].push(clientFd, client);
             return (true);
         }
@@ -73,7 +73,7 @@ void ServerManager::start() {
                     closeConnetcion(client->getFd());
                 }
                 if (client->isRequestReady()) {
-                    std::cout << " client->getHttpRequest() = " << client->getHttpRequest() << std::endl;
+                    // std::cout << " client->getHttpRequest() = " << client->getHttpRequest() << std::endl;
                     client->parse();
                     client->setResponse(generateResponse(*client));
                 }
@@ -90,7 +90,7 @@ void ServerManager::start() {
                 }
                 // std::cout << client->getHttpRequest() << std::endl;
                 if (client->isRequestReady()) {
-                    std::cout << " client->getHttpRequest() = " << client->getHttpRequest() << std::endl;
+                    // std::cout << " client->getHttpRequest() = " << client->getHttpRequest() << std::endl;
 
                     client->parse();
                     client->setResponse(generateResponse(*client));
@@ -160,7 +160,7 @@ std::string ServerManager::generateResponse(Client &client) {
     response += "\r\n";
     try
     {
-        std::cout << "client.getFd()= " << client.getFd() << std::endl;
+        // std::cout << "client.getFd()= " << client.getFd() << std::endl;
         std::vector<HTTPServer>::iterator it = std::find(this->begin(), this->end(), client.getFd());
         if (it == this->end()) {  // TODO never work
             throw std::runtime_error("std::find(this->begin(), this->end(), client.getFd());");

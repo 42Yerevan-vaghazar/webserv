@@ -78,7 +78,7 @@ bool EvManager::delEvent(int fd, Flag flag) {
 }
 
 std::pair<EvManager::Flag, int> EvManager::listen() {
-    std::cout << "listen" << std::endl;
+    // std::cout << "listen" << std::endl;
 label:
     if (_itFds == _fdActiveSet.end()) {
         _activeRfds = _rfds;

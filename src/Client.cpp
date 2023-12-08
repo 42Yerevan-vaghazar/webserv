@@ -90,9 +90,8 @@ int Client::receiveRequest() {
         httpRequest.erase(headerEndPos);
         if (_bodySize != 0) {
             _body = tmpBody;
-            std::cout << "httpRequest = " << httpRequest << "$" << std::endl;
-            std::cout << "tmp = " << tmpBody << "$" << std::endl;
-            if (_bodySize == _body.size()) {
+            if (_bodySize <= _body.size()) {
+                _body.erase(_bodySize);
                 _isBodyReady = true;
                 _isRequestReady = true;
             }
@@ -104,13 +103,12 @@ int Client::receiveRequest() {
         // TODO  parse header
         return 0;
     }
+    _body += buf;
     if (_bodySize <= _body.size()) {   // TODO check body length to do so
         _body.erase(_bodySize);
         _isBodyReady = true;
         _isRequestReady = true;
-        return 0;
     }
-    _body += buf;
     return 0;
 }
 
@@ -146,7 +144,10 @@ void Client::parse()
         }
     }
     httpRequest.clear();
-    multipart();
+    // std::cout << "method = " << method << std::endl;
+    // if (method == "POST") {
+    //     multipart();
+    // }
     HTTPRequest::checkPath(this->_srv);
     //    std::cout << "method = " << method << std::endl;
     // std::cout << "path = " << path << std::endl;

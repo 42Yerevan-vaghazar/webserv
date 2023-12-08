@@ -19,11 +19,16 @@ HTTPRequest::HTTPRequest(void)
 {
     reqLineEnd = 0;
     bodyEnd = 0;
-    bodySize = 0;
+    _bodySize = 0;
     statusCode = 0;
     location = NULL;
     _maxSizeRequest = 0;
     _bodySize = 0;
+    _isHeaderReady = false;
+    _isBodyReady = false;
+    _isRequestReady = false;
+    _isOpenConnection = false;
+    _isResponseReady = false;
     // methodsMap["GET"] = &HTTPRequest::get;
     // methodsMap["POST"] = &HTTPRequest::post;
     // methodsMap["DELETE"] = &HTTPRequest::delet;
@@ -134,6 +139,7 @@ std::string HTTPRequest::findInMap(std::string key)
 
 void HTTPRequest::multipart(void)
 {
+    // showHeaders();
     std::map<std::string, std::string>::iterator it =  httpHeaders.find("Content-Type");
     std::cout << "multipart function " << std::endl;
     if(it == httpHeaders.end())
@@ -256,7 +262,6 @@ void HTTPRequest::checkPath(HTTPServer const &srv)
     }
     else
         absolutePath = middle_slash(srv.getRoot(), '/', path);
-    std::cout << "absolutePath = " << absolutePath << std::endl;
 }
 
 std::vector<std::string> HTTPRequest::pathChunking(std::string const &rPath)

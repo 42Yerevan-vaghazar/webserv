@@ -88,7 +88,7 @@ class HTTPRequest
         std::string contentType;
         std::string transferEncoding;
         std::string type;
-        unsigned long int bodySize;
+        unsigned long int _bodySize;
     protected:
         const Location* location;
     protected:
@@ -114,7 +114,6 @@ class HTTPRequest
         bool _isRequestReady;
         bool _isOpenConnection;
         bool _isResponseReady;
-        int _bodySize;
         size_t _maxSizeRequest;
         std::map<std::string, std::string> _uploadedFiles;
 

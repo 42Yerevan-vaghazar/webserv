@@ -144,10 +144,10 @@ void Client::parse()
         }
     }
     httpRequest.clear();
-    // std::cout << "method = " << method << std::endl;
-    // if (method == "POST") {
-    //     multipart();
-    // }
+    std::cout << "method = " << method << std::endl;
+    if (method == "POST") {
+        multipart();
+    }
     HTTPRequest::checkPath(this->_srv);
     //    std::cout << "method = " << method << std::endl;
     // std::cout << "path = " << path << std::endl;

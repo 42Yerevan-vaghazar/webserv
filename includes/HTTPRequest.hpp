@@ -15,6 +15,7 @@
 #include "Libs.hpp"
 #include "HTTPResponse.hpp"
 #define MAX_SIZE_REQUEST 1000
+#include <unordered_map>
 
 class Location;
 class HTTPServer;
@@ -115,7 +116,7 @@ class HTTPRequest
         bool _isOpenConnection;
         bool _isResponseReady;
         size_t _maxSizeRequest;
-        std::map<std::string, std::string> _uploadedFiles;
+        std::unordered_map<std::string, std::string> _uploadedFiles;
 
 };
 

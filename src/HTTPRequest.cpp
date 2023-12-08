@@ -139,9 +139,9 @@ std::string HTTPRequest::findInMap(std::string key)
 
 void HTTPRequest::multipart(void)
 {
-    // showHeaders();
     std::map<std::string, std::string>::iterator it =  httpHeaders.find("Content-Type");
     std::cout << "multipart function " << std::endl;
+
     if(it == httpHeaders.end())
     {
         throw ResponseError(428, "Precondition Required");
@@ -150,23 +150,24 @@ void HTTPRequest::multipart(void)
     contentType.erase(0, contentType.find(";")+1);
     boundary = "--" + contentType.substr(contentType.find("=")+1);
     boundaryEnd = boundary + "--";
-    std::cout << "boundaryEnd = " << boundaryEnd << std::endl;
-    std::stringstream iss(_body);
-    std::string line;
-    std::string get_next_line;
-    // while (std::getline(iss, get_next_line))
-    // {
-    //     if (trim(get_next_line) == boundary || trim(get_next_line) == boundaryEnd)
-    //     {
-    //         if (!line.empty())
-    //         {
-    //             line.find(Content-Disposition
-    //             _uploadedFiles[""].push_back(line);
-    //             line.erase();
-    //         }
-    //     }
-    //     else
-    //         line += get_next_line + "\r\n";
+
+    size_t boundaryPos = _body.find(boundary);
+    size_t endPos = _body.find(boundaryEnd);
+
+    do {
+        size_t filenameStart = _body.find("filename", boundaryPos) + strlen("filename") + 2;
+        std::string filename = _body.substr(filenameStart, _body.find("\"", filenameStart) - filenameStart);
+        boundaryPos = _body.find(boundary, filenameStart);
+        size_t contentStart = _body.find("\r\n\r\n", filenameStart) + strlen("\r\n\r\n");
+        std::string fileContent = _body.substr(contentStart, boundaryPos - contentStart - 4);
+        _uploadedFiles[filename] = fileContent;
+    } while (boundaryPos != endPos);
+
+    // std::unordered_map<std::string, std::string>::iterator it1 = _uploadedFiles.begin();
+    // while (it1 != _uploadedFiles.end()) {
+    //     std::cout << it1->first << "$" <<std::endl;
+    //     std::cout << it1->second  << "$" <<std::endl;
+    //     ++it1;
     // }
 }
 

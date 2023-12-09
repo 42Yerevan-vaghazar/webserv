@@ -148,14 +148,19 @@ void HTTPRequest::multipart(void)
     }
     std::string contentType = it->second;
     contentType.erase(0, contentType.find(";")+1);
-    boundary = "--" + contentType.substr(contentType.find("=")+1);
+    boundary = "--" + contentType.substr(contentType.find("=") + 1);  // TODO in case the boundary not found throw ResponseError(428, "Precondition Required");
     boundaryEnd = boundary + "--";
 
     size_t boundaryPos = _body.find(boundary);
     size_t endPos = _body.find(boundaryEnd);
 
     do {
-        size_t filenameStart = _body.find("filename", boundaryPos) + strlen("filename") + 2;
+        size_t filenameStart = _body.find("filename", boundaryPos);
+
+        if(filenameStart == std::string::npos) {
+            throw ResponseError(428, "Precondition Required");
+        }
+        filenameStart += strlen("filename") + 2;
         std::string filename = _body.substr(filenameStart, _body.find("\"", filenameStart) - filenameStart);
         boundaryPos = _body.find(boundary, filenameStart);
         size_t contentStart = _body.find("\r\n\r\n", filenameStart) + strlen("\r\n\r\n");
@@ -240,11 +245,6 @@ std::string HTTPRequest::dir_content(std::string const &realPath)
         return (directoryContent);
     }
     return (directoryContent);
-}
-
-std::string const &HTTPRequest::getResponse( void )
-{
-    return (response);
 }
 
 void HTTPRequest::checkPath(HTTPServer const &srv)

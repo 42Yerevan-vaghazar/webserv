@@ -12,6 +12,7 @@
 
 #include "HTTPServer.hpp"
 #include <unordered_map>
+#include "HelperFunctions.hpp"
 
 size_t longestMatch(std::string const &s1, std::string const &s2);
 
@@ -345,17 +346,17 @@ size_t longestMatch(std::string const &s1, std::string const &s2)
 std::string HTTPServer::get(Client &client) {
     const std::string &path = client.getPath();
     std::unordered_map<std::string, std::string> headerContent;
-    std::string response;
     std::string  fileName;
 
     // std::cout << "path = " << path << std::endl;
     if(path[path.size() - 1] == '/')
     {
         fileName = "www/server1/index.html";  //TODO - remove hardcode should be default page from config  
-        headerContent["Content-Type"] = "text/html"; //TODO - remove hardcode
+        client.addHeader(std::pair<std::string, std::string>("Content-Type", "text/html")); //TODO - remove hardcode
+
     } else {
         fileName = "www/server1/pictures/a.png"; 
-        headerContent["Content-Type"] = "image/png";
+        client.addHeader(std::pair<std::string, std::string>("Content-Type", "image/png")); //TODO - remove hardcode
     }
     // if(path == "/a.png")
     // {
@@ -367,38 +368,22 @@ std::string HTTPServer::get(Client &client) {
     // TODO The URI requested is long  414
     // TODO header is large 431
     std::cout << "fileName = " << fileName << std::endl;
-    // std::cout << "access(fileName.c_str(), F_OK) = " << access(fileName.c_str(), F_OK) << std::endl;
     if (access(fileName.c_str(), F_OK) == 0) {   // TODO check permission to read
-        std::string fileContent;
-        std::ostringstream stream;
-        std::ifstream ifs(fileName);
-        if (ifs.is_open() == false) {
-            throw std::logic_error("can not open file");
-        }
-        
-        stream << ifs.rdbuf();
-        fileContent = stream.str();
-        headerContent["Content-Length"] = std::to_string(fileContent.size());
-
-        for (std::unordered_map<std::string, std::string>::iterator it = headerContent.begin();
-            it != headerContent.end(); ++it) {
-                response += it->first;
-                response += ": ";
-                response += it->second;
-                response += "\r\n";
-        }
-        response +=  "\n";
-        response +=  fileContent;
+        std::string fileContent = fileToString(fileName);
+        client.addHeader(std::pair<std::string, std::string>("Content-Length", std::to_string(fileContent.size())));
+        client.buildHeader();
+        return (client.getResponse() + fileContent);
     } else {
         throw ResponseError(404, "not found");
-        // TODO automate it   404, 405, 411, 412, 413, 414, 431, 500, 501, 505, 503, 507, 508
+        // TODO automate it   404, 405, 408, 411, 412, 413, 414, 431, 500, 501, 505, 503, 507, 508
     }
-    return (response);
+    return ("");
 };
 
 std::string HTTPServer::post(Client &client) {
     
     std::cout << "\n--- in Post function \n" << std::endl;
+    // TODO if cgi exstention detected go through cgi and give body as stdin else get files
     // std::map<std::string, std::string>::const_iterator it = headers.find("boundary");
     // if( it == headers.end())
     // {
@@ -406,14 +391,6 @@ std::string HTTPServer::post(Client &client) {
     // }
     // std::string boundary = it->second;
 
-    // std::cout << "\npost\n" << std::endl;
-    // std::string fileName;
-    // size_t pos = filePath.rfind("/");
-    // if (pos == std::string::npos) {
-    //     fileName = filePath;
-    // } else {
-    //     fileName = filePath.substr(pos + 1);
-    // }
     // std::cout << "filename = " << fileName << std::endl;
     // std::ofstream ofs("./data/" + fileName);
     // if (ofs.is_open() == false) {
@@ -451,4 +428,71 @@ std::string HTTPServer::processing(Client &client)
        return ((this->*(function->second))(client));
     throw ResponseError(405, "Method Not Allowed");
     return ("");
+}
+
+bool	directory_listing(std::string path)
+{
+	DIR					*opened_dir;
+	dirent				*dir_struct;
+	std::string			table;
+	std::string			name;
+	struct stat			buf;
+	struct tm			*timeinfo;
+	char				time_buf[100];
+	std::string 		relPath;
+	std::string 		displayPath;
+	
+	if (path != "." && path != ".." && path[0] != '/' && (path[0] != '.' && path[1] != '/') && (path[0] != '.' && path[1] != '.' && path[2] != '/')) {
+        relPath = "./" + path + "/";
+        displayPath = "./" + path;
+    } else {
+		relPath = path + "/";
+		displayPath = path;
+	}
+	opened_dir = opendir(relPath.c_str());
+	
+	table += "<!DOCTYPE html><html><head><title>";
+	table += "Index of ";
+	table += displayPath;
+	table += "</title>";
+	table += "<style>";
+	table += ".box>* {flex: 33.33%;}";
+	table += ".box {display: flex; flex-wrap: wrap; width: 75%;}";
+	table += "</style></head>";
+	table += "<body><h1>";
+	table += "Index of ";
+	table += displayPath;
+	table += "</h1><hr><pre class=\"box\">";
+
+	dir_struct = readdir(opened_dir);
+	while ((dir_struct = readdir(opened_dir)) != NULL)
+	{
+		name = dir_struct->d_name;
+		if (name != ".")
+		{
+			table += "<a href=\"";
+			table += name;
+			table += "\">";
+			table += name;
+			table += "</a>";
+			//std::cout << "name = " << name << std::endl;
+			if (stat((relPath + name).c_str(), &buf) == 0)
+			{
+				//std::cout << "name.c_str() = " << name.c_str() << std::endl;
+				table += "<span>";
+				timeinfo = localtime(&(buf.st_mtime));
+				strftime(time_buf, 100, "%d-%b-%Y %H:%S", timeinfo);
+				table += time_buf;
+				table += "</span><span>";
+				if (dir_struct->d_type == DT_DIR)
+					table += "-";
+				table += "</span>";
+			}
+			table += "<br>";
+		}
+	}
+	table += "</pre><hr></body></html>";
+	closedir(opened_dir);
+    std::cout << table << std::endl;
+    return true;
 }

@@ -27,8 +27,10 @@ class HTTPResponse
         std::string const &getReserve403( void ) const;
         std::string const &getReserve(int statusCode) const;
         std::unordered_map<std::string, std::string> &getResponseHeader();
+        void addHeader(const std::pair<std::string, std::string> &);
+        void buildHeader();
     protected:
-        std::string response;
+        std::string _response;
         std::unordered_map<std::string, std::string> _responseHeader;
     private:
         std::string reserve;

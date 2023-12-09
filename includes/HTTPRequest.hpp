@@ -105,8 +105,6 @@ class HTTPRequest
     protected:
         std::string dir_content(std::string const &realPath);
         void multipart(void);
-    public:
-        std::string const &getResponse( void );
     protected:
         std::string response;
     protected:

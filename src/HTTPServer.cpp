@@ -384,21 +384,24 @@ std::string HTTPServer::post(Client &client) {
     
     std::cout << "\n--- in Post function \n" << std::endl;
     // TODO if cgi exstention detected go through cgi and give body as stdin else get files
-    // std::map<std::string, std::string>::const_iterator it = headers.find("boundary");
-    // if( it == headers.end())
-    // {
-    //     throw Error(412, "Precondition Failed");
-    // }
-    // std::string boundary = it->second;
-
+    const std::unordered_map<std::string, std::string> &uploadedFiles = client.getUploadedFiles();
+    std::unordered_map<std::string, std::string>::const_iterator it = uploadedFiles.cbegin();
     // std::cout << "filename = " << fileName << std::endl;
-    // std::ofstream ofs("./data/" + fileName);
-    // if (ofs.is_open() == false) {
-    //     throw std::logic_error("can not open file"); // TODO change -> failed status in response
-    // }
+    for (; it != uploadedFiles.cend(); ++it) {
+        const std::string &fileName = it->first;
+        const std::string &fileContent = it->second;
+        std::ofstream ofs("./www/server1/data_base/" + fileName);
+        
+        if (ofs.is_open() == false) {
+            throw std::logic_error("can not open file"); // TODO change -> failed status in response
+        }
+        ofs << fileContent;
+        // std::cout << "fileContent = " << fileContent << "$" << std::endl;
+        ofs.close();
+    }
     std::string response;
-    // // _data.push_back(body);
-    // ofs << body;
+    client.buildHeader();
+    response = client.getResponse();
     return (response);
 };
 

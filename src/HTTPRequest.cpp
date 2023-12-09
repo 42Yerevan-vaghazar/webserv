@@ -66,6 +66,10 @@ std::string HTTPRequest::getHttpRequest() const {
     return (httpRequest);
 }
 
+const std::unordered_map<std::string, std::string> &HTTPRequest::getUploadedFiles() const {
+    return(_uploadedFiles);
+}
+
 bool HTTPRequest::isRequestReady() const {
     return (_isRequestReady);
 }
@@ -164,8 +168,9 @@ void HTTPRequest::multipart(void)
         std::string filename = _body.substr(filenameStart, _body.find("\"", filenameStart) - filenameStart);
         boundaryPos = _body.find(boundary, filenameStart);
         size_t contentStart = _body.find("\r\n\r\n", filenameStart) + strlen("\r\n\r\n");
-        std::string fileContent = _body.substr(contentStart, boundaryPos - contentStart - 4);
+        std::string fileContent = _body.substr(contentStart, boundaryPos - contentStart - strlen("\r\n"));
         _uploadedFiles[filename] = fileContent;
+        // std::cout << "fileContent = " << fileContent << "$" << std::endl;
     } while (boundaryPos != endPos);
 
     // std::unordered_map<std::string, std::string>::iterator it1 = _uploadedFiles.begin();

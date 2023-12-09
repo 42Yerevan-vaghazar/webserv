@@ -115,6 +115,8 @@ class HTTPRequest
         bool _isResponseReady;
         size_t _maxSizeRequest;
         std::unordered_map<std::string, std::string> _uploadedFiles;
+    public:
+        const std::unordered_map<std::string, std::string> &getUploadedFiles() const;
 
 };
 

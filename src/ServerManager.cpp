@@ -48,8 +48,6 @@ void ServerManager::start() {
         if (newClient(event.second)) {
             continue ;
         }
-        // // std::cout << "else\n";
-        // std::cout << "event.second = " << event.second << std::endl;
         for (int i = 0; i < this->size(); ++i) {
             client = (*this)[i].getClient(event.second);
             if (client) {
@@ -64,7 +62,7 @@ void ServerManager::start() {
             if (event.first == EvManager::eof) {
                 // std::cout << "\nEV_EOF\n" << std::endl;
                 closeConnetcion(client->getFd());
-            } else if (event.first == EvManager::read) {
+            } else if (event.first == EvManager::read || client->isRequestReady() == false) {
                 // std::cout << "\nEVFILT_READ\n" << std::endl;
                 if (client->getHttpRequest().empty()) {
                     EvManager::addEvent(client->getFd(), EvManager::write);
@@ -84,22 +82,10 @@ void ServerManager::start() {
                 if (client->sendResponse() == true) {
                     closeConnetcion(client->getFd());
                 }
-            } else if (client->isResponseReady() == false) {
-                if (client->receiveRequest() == -1) {
-                    closeConnetcion(client->getFd());
-                }
-                // std::cout << client->getHttpRequest() << std::endl;
-                if (client->isRequestReady()) {
-                    // std::cout << " client->getHttpRequest() = " << client->getHttpRequest() << std::endl;
-
-                    client->parse();
-                    client->setResponse(generateResponse(*client));
-                }
             }
         }
         catch(const ResponseError& e)
         {
-        std::cout << "stex " << std::endl;
             client->setResponse( generateErrorResponse(e, *client));
         }
         catch(const std::exception& e)

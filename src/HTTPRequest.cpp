@@ -152,7 +152,11 @@ void HTTPRequest::multipart(void)
     }
     std::string contentType = it->second;
     contentType.erase(0, contentType.find(";")+1);
-    boundary = "--" + contentType.substr(contentType.find("=") + 1);  // TODO in case the boundary not found throw ResponseError(428, "Precondition Required");
+    size_t posEqualsign = contentType.find("=");
+    if (posEqualsign == std::string::npos) {
+        throw ResponseError(428, "Precondition Required");
+    }
+    boundary = "--" + contentType.substr(posEqualsign + 1);
     boundaryEnd = boundary + "--";
 
     size_t boundaryPos = _body.find(boundary);

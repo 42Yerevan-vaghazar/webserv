@@ -55,13 +55,14 @@ sock_t Client::getServerFd( void ) const
 // std::string &Client::getResponse() {
 //     return (_response);
 // }
-
 int Client::receiveRequest() {
     char buf[READ_BUFFER];
-    int rdSize = recv(fd, buf, sizeof(buf) - 1, 0);
+    errno = 0;
+    int rdSize = recv(fd, buf, sizeof(buf) - 1, 0);  // TODO does not work with pictures or large files
     // std::cout << "rdSize = " << rdSize << std::endl;
+    // std::cout << "errno = " << errno << std::endl;
     if (rdSize == -1) { // TODO Checking the value of errno is strictly forbidden after a read or a write operation.
-        if (_maxSizeRequest == 3) { // TODO client request caused infinit loop  change with time
+        if (_maxSizeRequest == 100) { // TODO client request caused infinit loop  change with time
             return -1;
         } else {
             _maxSizeRequest++;
@@ -114,9 +115,11 @@ int Client::receiveRequest() {
 
 void Client::parse()
 {
+    std::cout << "void Client::parse()" << std::endl;
     size_t space = 0;
     size_t pos = httpRequest.find("\r\n");
     request = httpRequest.substr(0, pos);
+    // std::cout << "request = " << request << std::endl;
     httpRequest.erase(0, pos + 2);
 
     for (size_t i = 0; i < request.size(); i++)

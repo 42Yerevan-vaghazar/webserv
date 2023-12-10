@@ -12,6 +12,7 @@
 
 #include "ServerManager.hpp"
 #include "EvManager.hpp"
+#include "HelperFunctions.hpp"
 
 bool ServerManager::newClient(int fd) {
     for (int i = 0; i < this->size(); ++i) {
@@ -98,16 +99,11 @@ void ServerManager::start() {
 
 
 std::string ServerManager::generateErrorResponse(const ResponseError& e, Client &client) {  //TODO put inside class or namespace
-     // std::cout << "stex\n";
-        // TODO automate it   404, 405, 411, 412, 413, 414, 431, 500, 501, 505, 503, 507, 508
-    std::unordered_map<std::string, std::string> &headerContent = client.getResponseHeader();
-    std::string fileContent;
+    // TODO automate it   404, 405, 411, 412, 413, 414, 431, 500, 501, 505, 503, 507, 508
     std::string response;
-    std::ifstream ifs("./www/server1/error_pages/404.html");
-    if (ifs.is_open() == false) {
-        throw std::logic_error("can not open file error_pages"); // TODO 
-    }
-    std::getline(ifs, fileContent, '\0');
+
+    std::string fileContent = fileToString("./www/server1/error_pages/404.html");
+
     size_t pos = fileContent.find("404");
     if (pos != std::string::npos) {
         fileContent.replace(pos, strlen("404"), std::to_string(e.getStatusCode()) + " " + e.what());
@@ -115,38 +111,25 @@ std::string ServerManager::generateErrorResponse(const ResponseError& e, Client 
         fileContent = "Error" + std::to_string(e.getStatusCode());
     };
     response = client.getVersion() + " ";
-    headerContent["Content-Length"] = std::to_string(fileContent.size());
     response += std::to_string(e.getStatusCode());
-    // std::cout << response << std::endl;
     response += "\r\n";
-
-    for (std::unordered_map<std::string, std::string>::iterator it = headerContent.begin();
-        it != headerContent.end(); ++it) {
-            response += it->first;
-            response += ": ";
-            response += it->second;
-            response += "\r\n";
-    }
-    response +=  "\n";
+    client.addHeader(std::pair<std::string, std::string>("Content-Length", std::to_string(fileContent.size())));
+    client.buildHeader();
+    response += client.getResponse();
     response +=  fileContent;
     return (response);
 }
 
 std::string ServerManager::generateResponse(Client &client) {
-    const std::string httpRequest = client.getHttpRequest();
-    const std::string body = client.getBody();
     std::string response;
-    
-    std::unordered_map<std::string, std::string> &headerContent = client.getResponseHeader();
 
-    headerContent.insert(std::make_pair("server", "webserv"));
+    client.addHeader(std::make_pair("server", "webserv"));
     response = client.getVersion();
     response += " " + std::string("200") + " ";
     response += SUCCSSES_STATUS;
     response += "\r\n";
     try
     {
-        // std::cout << "client.getFd()= " << client.getFd() << std::endl;
         std::vector<HTTPServer>::iterator it = std::find(this->begin(), this->end(), client.getFd());
         if (it == this->end()) {  // TODO never work
             throw std::runtime_error("std::find(this->begin(), this->end(), client.getFd());");

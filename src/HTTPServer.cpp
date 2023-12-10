@@ -349,19 +349,16 @@ std::string HTTPServer::get(Client &client) {
     std::unordered_map<std::string, std::string> headerContent;
     std::string  fileName;
 
-    // std::cout << "path = " << path << std::endl;
+    std::cout << "path = " << path << std::endl;
     if(path[path.size() - 1] == '/')
     {
         fileName = "www/server1/index.html";  //TODO - remove hardcode should be default page from config  
         client.addHeader(std::pair<std::string, std::string>("Content-Type", "text/html")); //TODO - remove hardcode
 
-    } else {
+    } else if (path == "www/server1/img/a.png")  {
         fileName = "www/server1/pictures/a.png"; 
         client.addHeader(std::pair<std::string, std::string>("Content-Type", "image/png")); //TODO - remove hardcode
     }
-    // if(path == "/a.png")
-    // {
-    // }
     // TODO check is method allowed. 405
     // TODO Content-Length is not defined in case post method called 411
     // TODO valid request line 412
@@ -385,6 +382,7 @@ std::string HTTPServer::post(Client &client) {
     
     std::cout << "\n--- in Post function \n" << std::endl;
     // TODO if cgi exstention detected go through cgi and give body as stdin else get files
+    // TODO if multipart data not detected throw precondition failed
     const std::unordered_map<std::string, std::string> &uploadedFiles = client.getUploadedFiles();
     std::unordered_map<std::string, std::string>::const_iterator it = uploadedFiles.cbegin();
     // std::cout << "filename = " << fileName << std::endl;
@@ -417,11 +415,9 @@ std::string HTTPServer::del(Client &client) {
     // }
     std::string response;
     // std::cout << "fileName = " << fileName << std::endl;
-    // if (std::remove(fileName.c_str()) == -1) {
-    //     std::cerr << (std::string("remove: ") + strerror(errno)) << std::endl;
-
-    //     // throw std::runtime_error(std::string("remove: ") + strerror(errno)); // TODO change failed status in response
-    // };
+    if (std::remove(client.getPath().c_str()) == -1) {
+        throw ResponseError(404, "not found");
+    };
     return (response);
 };
 

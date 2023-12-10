@@ -168,6 +168,7 @@ int HTTPServer::pop(sock_t clFd)
     std::map<sock_t, Client*>::iterator it = clnt.find(clFd);
     if (it != clnt.end())
     {
+        delete it->second;
         clnt.erase(it);
         return (0);
     }

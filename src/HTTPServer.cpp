@@ -6,7 +6,7 @@
 /*   By: maharuty <maharuty@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/13 23:57:39 by dmartiro          #+#    #+#             */
-/*   Updated: 2023/12/07 20:59:57 by maharuty         ###   ########.fr       */
+/*   Updated: 2023/12/12 21:59:18 by maharuty         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -399,8 +399,10 @@ std::string HTTPServer::post(Client &client) {
         ofs.close();
     }
     std::string response;
+    client.addHeader(std::pair<std::string, std::string>("content-type", "text/plain"));
     client.buildHeader();
     response = client.getResponse();
+    response += "ok";
     return (response);
 };
 

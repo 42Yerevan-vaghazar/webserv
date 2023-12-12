@@ -6,7 +6,7 @@
 /*   By: maharuty <maharuty@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/26 01:28:07 by dmartiro          #+#    #+#             */
-/*   Updated: 2023/12/05 22:09:25 by maharuty         ###   ########.fr       */
+/*   Updated: 2023/12/12 21:56:56 by maharuty         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -65,7 +65,7 @@ std::unordered_map<std::string, std::string> &HTTPResponse::getResponseHeader() 
 }
 
 void HTTPResponse::addHeader(const std::pair<std::string, std::string> &pair) {
-    _responseHeader.insert(pair);
+    _responseHeader[pair.first] = pair.second;
 }
 
 

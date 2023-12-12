@@ -6,7 +6,7 @@
 /*   By: maharuty <maharuty@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/24 10:29:55 by dmartiro          #+#    #+#             */
-/*   Updated: 2023/12/07 21:42:39 by maharuty         ###   ########.fr       */
+/*   Updated: 2023/12/12 21:55:22 by maharuty         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -149,7 +149,7 @@ void Client::parse()
     httpRequest.clear();
     std::cout << "method = " << method << std::endl;
     if (method == "POST") {
-        multipart();
+        // multipart();
     }
     HTTPRequest::checkPath(this->_srv);
     //    std::cout << "method = " << method << std::endl;

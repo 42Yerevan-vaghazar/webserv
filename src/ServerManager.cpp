@@ -77,9 +77,6 @@ void ServerManager::start() {
                     client->setResponse(generateResponse(*client));
                 }
             } else if (client->isResponseReady() && event.first == EvManager::write) {
-                // std::cout << "event.first == EvManager::write\n";
-                // std::cout << "\nEVFILT_WRITE\n" << std::endl;
-                // TODO send response little by little
                 if (client->sendResponse() == true) {
                     closeConnetcion(client->getFd());
                 }
@@ -140,7 +137,6 @@ std::string ServerManager::generateResponse(Client &client) {
     {
         response = generateErrorResponse(e, client);
     }
-    // std::cout << "--Final response = " << response << std::endl;
     return (response);
 }
 

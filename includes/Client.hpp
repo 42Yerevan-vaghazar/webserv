@@ -26,7 +26,6 @@ class Client : public HTTPRequest, public HTTPResponse
         ~Client();
     public:
         // void processing(HTTPServer &srv);
-        void appendRequest(HTTPServer &srv);
     public:
         sock_t getFd( void ) const;
         sock_t getServerFd( void ) const;

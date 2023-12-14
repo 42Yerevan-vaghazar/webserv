@@ -29,13 +29,7 @@ HTTPRequest::HTTPRequest(void)
     _isRequestReady = false;
     _isOpenConnection = false;
     _isResponseReady = false;
-    // methodsMap["GET"] = &HTTPRequest::get;
-    // methodsMap["POST"] = &HTTPRequest::post;
-    // methodsMap["DELETE"] = &HTTPRequest::delet;
     //boundary = "&"; // !IMPORTANT: if GET request: the boundary is (&) else if POST request: boundary is read from (Headers)
-    // methods.push_back("GET");
-    // methods.push_back("POST");
-    // methods.push_back("DELETE");
 }
 
 HTTPRequest::~HTTPRequest()
@@ -261,7 +255,7 @@ void HTTPRequest::checkPath(HTTPServer const &srv)
     size_t use = 0;
     if ((use = path.find_first_of("?")) != std::string::npos)
     {
-        queryString = path.substr(use+1);
+        queryString = path.substr(use+1); // TODO determine the 
         path = path.substr(0, use);
     }
     location = srv.find(path);
@@ -272,6 +266,8 @@ void HTTPRequest::checkPath(HTTPServer const &srv)
     }
     else
         absolutePath = middle_slash(srv.getRoot(), '/', path);
+    //TODO  check indexs
+    // TODO extension absolutePath 
 }
 
 std::vector<std::string> HTTPRequest::pathChunking(std::string const &rPath)

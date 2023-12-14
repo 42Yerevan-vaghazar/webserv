@@ -58,23 +58,22 @@ sock_t Client::getServerFd( void ) const
 int Client::receiveRequest() {
     char buf[READ_BUFFER];
     errno = 0;
-    int rdSize = recv(fd, buf, sizeof(buf) - 1, 0);  // TODO does not work with pictures or large files
-    // std::cout << "rdSize = " << rdSize << std::endl;
+    int rdSize = recv(fd, buf, sizeof(buf), 0);  // TODO does not work with pictures or large files
     // std::cout << "errno = " << errno << std::endl;
     if (rdSize == -1) { // TODO Checking the value of errno is strictly forbidden after a read or a write operation.
-        if (_maxSizeRequest == 100) { // TODO client request caused infinit loop  change with time
-            return -1;
-        } else {
-            _maxSizeRequest++;
+        // if (_maxSizeRequest == 100) { // TODO client request caused infinit loop  change with time
+        //     return -1;
+        // } else {
+        //     _maxSizeRequest++;
             return (0);
-        }
+        // }
     }
+    // std::cout << "rdSize = " << rdSize << std::endl;
     if (rdSize == 0) {  // TODO close tab. send response?
         return (-1);
     }
-    buf[rdSize] = '\0';
     if (_isHeaderReady == false) {
-        httpRequest += buf;
+        httpRequest.append(buf, rdSize);
         size_t headerEndPos = httpRequest.find("\n\r\n");
         if (headerEndPos == std::string::npos) {
             return 0;
@@ -86,6 +85,7 @@ int Client::receiveRequest() {
         } else {
             _bodySize = std::stoi(httpRequest.substr(httpRequest.find("Content-Length: ") + strlen("Content-Length: "), 10));  // TODO throw 413 if the bodt size of payload is bigger then limits predefined configs;
         }
+        // std::cout << "_bodySize = " << _bodySize << std::endl;
 
         std::string tmpBody = httpRequest.substr(headerEndPos + 3);
         httpRequest.erase(headerEndPos);
@@ -104,7 +104,7 @@ int Client::receiveRequest() {
         // TODO  parse header
         return 0;
     }
-    _body += buf;
+    _body.append(buf, rdSize);
     if (_bodySize <= _body.size()) {   // TODO check body length to do so
         _body.erase(_bodySize);
         _isBodyReady = true;
@@ -149,7 +149,7 @@ void Client::parse()
     httpRequest.clear();
     std::cout << "method = " << method << std::endl;
     if (method == "POST") {
-        // multipart();
+        multipart();
     }
     HTTPRequest::checkPath(this->_srv);
     //    std::cout << "method = " << method << std::endl;

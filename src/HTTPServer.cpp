@@ -394,10 +394,12 @@ std::string HTTPServer::post(Client &client) {
         std::ofstream ofs("./www/server1/data_base/" + fileName);
         
         if (ofs.is_open() == false) {
-            throw std::logic_error("can not open file"); // TODO change -> failed status in response
+            throw ResponseError(507 , "Insufficient Storage");
         }
         ofs << fileContent;
-        // std::cout << "fileContent = " << fileContent << "$" << std::endl;
+        if (ofs.good() == false) {
+            throw ResponseError(507 , "Insufficient Storage");
+        }
         ofs.close();
     }
     std::string response;
@@ -409,16 +411,7 @@ std::string HTTPServer::post(Client &client) {
 };
 
 std::string HTTPServer::del(Client &client) {
-    // std::cout << "\ndel\n" << std::endl;
-    // std::string fileName =  "./data/";
-    // size_t pos = filePath.rfind("/");
-    // if (pos == std::string::npos) {
-    //     fileName += filePath;
-    // } else {
-    //     fileName += filePath.substr(pos + 1);
-    // }
     std::string response;
-    // std::cout << "fileName = " << fileName << std::endl;
     if (std::remove(client.getPath().c_str()) == -1) {
         throw ResponseError(404, "not found");
     };

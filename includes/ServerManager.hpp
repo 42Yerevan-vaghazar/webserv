@@ -40,7 +40,7 @@ class ServerManager : public std::vector<HTTPServer>
         sock_t findServerBySocket(sock_t issetfd);
         sock_t findClientBySocket(sock_t issetfd);
         sock_t getmax( void ) const;
-        int used(HTTPServer *srv) const;
+        int used(HTTPServer &srv) const;
     public:
         // void push(HTTPServer const &srv);
         std::vector<HTTPServer> getVirtualServers( void );

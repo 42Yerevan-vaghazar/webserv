@@ -141,8 +141,8 @@ sock_t HTTPServer::getfd( void ) const
 
 void HTTPServer::up(ServerManager &mgn)
 {
-    if (!mgn.used(this))
-    {
+    // if (!mgn.used(this))
+    // {
         const char* givenIp = ip.c_str();
         const char* givenPort = port.c_str();
         Tcp::setup(givenIp, givenPort);
@@ -152,9 +152,9 @@ void HTTPServer::up(ServerManager &mgn)
         // mgn.setmax(fd);  // TODO delete line
         std::cout << givenIp <<  ":" << givenPort << std::endl;
         freeaddrinfo(addrList);
-    }
-    else
-        std::cout << "{Already:used}" << std::endl;
+    // }
+    // else
+    //     std::cout << "{Already:used}" << std::endl;
     
 }
 

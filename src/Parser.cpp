@@ -222,8 +222,10 @@ void Parser::fill_servers(ServerManager &mgn)
     std::list<Token>::iterator ch;
     for(ch = tokens.begin(); ch != tokens.end(); ch++)
     {
-        if (ch->type == CONTEXT && context_keyword(ch->token) == "server")
+        if (ch->type == CONTEXT && context_keyword(ch->token) == "server") {
+            std::cout << "CONTEXT \n";
             create_server(mgn, ch);
+        }
     }
 }
 
@@ -303,12 +305,15 @@ void Parser::create_server(ServerManager &mgn, std::list<Token>::iterator& ch)
     {
         if (next->type == DIRECTIVE)
             directive(next, srv);
-        if (next->type == CONTEXT && context_keyword(next->token) == "server")
+        if (next->type == CONTEXT && context_keyword(next->token) == "server") {
             break;
+        }
         if (next->type == CONTEXT && context_keyword(next->token) == "location")
             location(next, srv);
-        mgn.push_back(srv);
         next++;
+    }
+    if (!mgn.used(srv)) {
+        mgn.push_back(srv);
     }
     std::cout << "***************" << std::endl;
 }

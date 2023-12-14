@@ -189,14 +189,14 @@ HTTPServer *ServerManager::getServerByClientSocket(sock_t fd)
     return (NULL);
 }
 
-int ServerManager::used(HTTPServer *srv) const
+int ServerManager::used(HTTPServer &srv) const
 {
-    if (!this->empty())
-    {
-        for(size_t i = 0; i < this->size(); i++)
-            if (std::strcmp((*this)[i].getPort(), srv->getPort()) == 0)
-                return (-1);
-    }
+    for(size_t i = 0; i < this->size(); i++)
+        if (std::strcmp((*this)[i].getPort(), srv.getPort()) == 0)
+        {
+            std::cout << "return (-1);\n";
+            return (-1);
+        }
     return (0);
 }
 

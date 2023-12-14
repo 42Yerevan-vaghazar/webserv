@@ -26,37 +26,37 @@ int main(int ac, char **av)
         ///////////////////////////////////IN PARSING//////////////////////////////////
         ///////////////////////////////////////////////////////////////////////////////
         ///////////////////////////////////////////////////////////////////////////////
-            HTTPServer srv;
-            srv.setIp("127.0.0.1");
-            srv.setPort("3000");
-            srv.setRoot("www/server1/");
-            srv.setSize("200mb");
-            srv.setAutoindex("on");
-            srv.pushIndex("index.html");
-            srv.pushErrPage(404, "www/server1/error_pages/404.html");
-            // srv.pushMethods("GET");
-            // srv.pushMethods("POST");
-            srv.push_serverName("google.com");
-            srv.setAutoindex("on");
+            // HTTPServer srv;
+            // srv.setIp("127.0.0.1");
+            // srv.setPort("3000");
+            // srv.setRoot("www/server1/");
+            // srv.setSize("200mb");
+            // srv.setAutoindex("on");
+            // srv.pushIndex("index.html");
+            // srv.pushErrPage(404, "www/server1/error_pages/404.html");
+            // // srv.pushMethods("GET");
+            // // srv.pushMethods("POST");
+            // srv.push_serverName("google.com");
+            // srv.setAutoindex("on");
             
             
-            Location location("/images");
-            location.setRoot("www/pictures");
-            location.pushIndex("index.html");
-            location.setAutoindex("on");
-            srv.push(location.getLocation(), location);
+            // Location location("/images");
+            // location.setRoot("www/pictures");
+            // location.pushIndex("index.html");
+            // location.setAutoindex("on");
+            // srv.push(location.getLocation(), location);
 
             
-            Location location1("/images/result/post");
-            location1.setRoot("www/pictures1/");
-            location1.setAutoindex("off");
-            srv.push(location1.getLocation(), location1);
+            // Location location1("/images/result/post");
+            // location1.setRoot("www/pictures1/");
+            // location1.setAutoindex("off");
+            // srv.push(location1.getLocation(), location1);
 
 
-            Location location2("/images/result/post/breakdown");
-            location2.setRoot("www/pictures2/");
-            location2.setAutoindex("off");            
-            srv.push(location2.getLocation(), location2);
+            // Location location2("/images/result/post/breakdown");
+            // location2.setRoot("www/pictures2/");
+            // location2.setAutoindex("off");            
+            // srv.push(location2.getLocation(), location2);
             
         ///////////////////////////////////////////////////////////////////////////////
         ///////////////////////////////////////////////////////////////////////////////
@@ -64,8 +64,14 @@ int main(int ac, char **av)
 
 
         
-        srv.up(mgn);
-        mgn.push_back(srv);
+        // srv.up(mgn[0]);
+        // mgn.push_back(srv);
+        std::cout << "mgn.size() = " << mgn.size() << std::endl;
+        for (size_t i = 0; i < mgn.size(); i++)
+        {
+            mgn[i].up(mgn);
+        }
+        
         mgn.start();
     //     FD_SET(srv.getfd(), &rd);
     //     maxfd = srv.getfd();

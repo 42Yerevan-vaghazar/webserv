@@ -152,9 +152,10 @@ bool ServerManager::closeConnetcion(sock_t fd) {
     return (true);
 };
 
-ServerManager::ServerManager(std::string const &configfile)
+ServerManager::ServerManager(const char *configfile)
 {
-    (void)configfile;
+    Parser parser(configfile);
+    parser.start(*this);
 }
 
 ServerManager::~ServerManager()
@@ -244,10 +245,10 @@ int ServerManager::isClient(sock_t fd)
     return (0);
 }
 
-void ServerManager::push(HTTPServer const &srv)
-{
-    srvs.push_back(srv);
-}
+// void ServerManager::push(HTTPServer const &srv)
+// {
+//     srvs.push_back(srv);
+// }
 
 // void ServerManager::push(HTTPServer const &srv)
 // {

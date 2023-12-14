@@ -27,7 +27,7 @@ class Error;
 class ServerManager : public std::vector<HTTPServer>
 {
     public:
-        ServerManager(std::string const &configFile);
+        ServerManager(const char *configfile);
         ~ServerManager();
     public:
         int isServer(sock_t fd);
@@ -42,9 +42,10 @@ class ServerManager : public std::vector<HTTPServer>
         sock_t getmax( void ) const;
         int used(HTTPServer *srv) const;
     public:
-        void push(HTTPServer const &srv);
+        // void push(HTTPServer const &srv);
+        std::vector<HTTPServer> getVirtualServers( void );
     private:
-        std::vector<HTTPServer> srvs;
+        // std::vector<HTTPServer> _srvs;
     public:
         // std::vector<Client> clnt;
     public:

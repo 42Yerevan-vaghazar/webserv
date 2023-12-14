@@ -73,7 +73,7 @@ void HTTPServer::setIp(std::string const &ipv)
     std::string octet;
     
     if (ipv.size() > 15)
-        throw HTTPCoreException("Ip: Syntax Error");
+        throw HTTPCoreException("The entered IP address does not follow the correct syntax.");
     for(size_t i = 0; i <= ipv.size(); i++)
     {
         if (std::isdigit(ipv[i]))
@@ -86,16 +86,16 @@ void HTTPServer::setIp(std::string const &ipv)
             if (ipv[i] == '.')
                 k++;
             if (n > 3 || std::atoi(octet.c_str()) > 255)
-                throw HTTPCoreException("Octet: > 255");
+                throw HTTPCoreException("The entered IP address does not follow the correct syntax.");
             octet.clear();
             n = 0;
         }
         else
-            throw HTTPCoreException("Ip: Syntax Error");
+            throw HTTPCoreException("The entered IP address does not follow the correct syntax.");
 
     }
     if (k != 3)
-        throw HTTPCoreException("Dots: syntax error");
+        throw HTTPCoreException("The entered IP address does not follow the correct syntax.");
     this->ip = ipv;
 }
 

@@ -71,6 +71,10 @@ const char* ServerCore::findMethod(std::string const &method) const
 void ServerCore::setAutoindex(std::string const &sw)
 {
 	(sw == "on") ? this->autoindex = true : this->autoindex = false;
+	if (sw == "on")
+		this->autoindex = true;
+	else if (sw == "off")
+		this->autoindex = false;
 }
 
 void ServerCore::pushErrPage(int key, std::string const &errpage_filename)
@@ -87,9 +91,9 @@ std::string ServerCore::getErrPage(int key) const
 	return (nill);
 }
 
-void ServerCore::setSize(std::string const &_bodySize)
+void ServerCore::setSize(std::string const &bodySize)
 {
-	unsigned long long int toLong = std::strtoull(_bodySize.c_str(), NULL, 10);
+	unsigned long long int toLong = std::strtoull(bodySize.c_str(), NULL, 10);
 	if (errno == ERANGE && toLong == ULLONG_MAX)
 		this->client_body_size = 200;
 	else
@@ -100,4 +104,3 @@ bool ServerCore::getAutoindex( void ) const
 {
 	return (autoindex);
 }
-

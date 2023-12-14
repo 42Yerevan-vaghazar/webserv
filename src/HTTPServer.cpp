@@ -350,14 +350,16 @@ std::string HTTPServer::get(Client &client) {
     std::string  fileName;
 
     std::cout << "path = " << path << std::endl;
+    // TODO unrecognized types "application/octet- stream"
     if(path[path.size() - 1] == '/')
     {
         fileName = "www/server1/index.html";  //TODO - remove hardcode should be default page from config  
         client.addHeader(std::pair<std::string, std::string>("Content-Type", "text/html")); //TODO - remove hardcode
 
-    } else if (path == "www/server1/img/a.png")  {
-        fileName = "www/server1/pictures/a.png"; 
-        client.addHeader(std::pair<std::string, std::string>("Content-Type", "image/png")); //TODO - remove hardcode
+    } else {
+        // if ()
+        // client.addHeader(std::pair<std::string, std::string>("Content-Type", "application/octet- stream")); //TODO - remove hardcode
+        fileName = path;
     }
     // TODO check is method allowed. 405
     // TODO Content-Length is not defined in case post method called 411
@@ -365,7 +367,7 @@ std::string HTTPServer::get(Client &client) {
     // TODO body is large 413
     // TODO The URI requested is long  414
     // TODO header is large 431
-    std::cout << "fileName = " << fileName << std::endl;
+    // std::cout << "fileName = " << fileName << std::endl;
     if (access(fileName.c_str(), F_OK) == 0) {   // TODO check permission to read
         std::string fileContent = fileToString(fileName);
         client.addHeader(std::pair<std::string, std::string>("Content-Length", std::to_string(fileContent.size())));

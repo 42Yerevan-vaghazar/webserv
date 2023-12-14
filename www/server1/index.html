@@ -4,6 +4,7 @@
 <head>
     <title>File Upload Example</title>
     <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="./src/styles.css">
 </head>
 <body>
     <h2>HTML Forms</h2>
@@ -29,22 +30,6 @@
         <button type="button" onclick="submitForm()">Submit</button>
     </form>
     <img src="img/a.png">
-
-    <script>
-        function submitForm() {
-            const formData = new FormData(document.getElementById('myForm'));
-            fetch('/submit', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.text())
-            .then(data => {
-                document.getElementById('response').innerText = data;
-            })
-            .catch(error => {
-                console.error('Error:', error);
-            });
-        }
-    </script>
+    <script src="./src/script.js"></script>
 </body>
 </html>

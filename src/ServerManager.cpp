@@ -99,6 +99,9 @@ std::string ServerManager::generateErrorResponse(const ResponseError& e, Client 
     std::string response;
     std::string fileContent;
 
+    if (e.getStatusCode() == 301) {
+        client.addHeader(std::make_pair("Location", "/pictures"));
+    }
     try
     {
         fileContent = fileToString("./www/server1/error_pages/404.html");

@@ -270,6 +270,16 @@ void HTTPRequest::setExtension(const std::string &path) {
     std::cout << "_extension = " << _extension << "$" << std::endl;
 }
 
+void HTTPRequest::checkRedirect(const std::string &path, const std::string &redirectPath) {
+    // TODO 508 Loop Detected
+    if (path == redirectPath) {  // TODO change path to redirect path defined in congige file
+        throw ResponseError(508, "Loop Detected");
+    }
+    // TODO set redirect path on client
+    this->setRedirectPath(redirectPath);
+    throw ResponseError(301, "Moved Permanently");
+}
+
 void HTTPRequest::checkPath(HTTPServer const &srv)
 {
     size_t use = 0;
@@ -281,14 +291,13 @@ void HTTPRequest::checkPath(HTTPServer const &srv)
     location = srv.find(_path);
     if (location)
     {
+        if (true) {
+            checkRedirect(location->getLocation(), "_path"); // TODO change path to redirect path defined in congige file
+        }
+
         pathChunks = pathChunking(_path);
         _relativePath = middle_slash(location->getRoot(), '/', pathChunks[pathChunks.size() - 1]);
-    }
-    else
-        _relativePath = middle_slash(srv.getRoot(), '/', _path);
-    
-    if (_path == "/") {
-        std::vector<std::string> indexes = srv.getIndexFiles();
+        std::vector<std::string> indexes = location->getIndexFiles();
 
         for (size_t i = 0; i < indexes.size(); i++) {
             std::string path = _relativePath + indexes[i];
@@ -298,6 +307,26 @@ void HTTPRequest::checkPath(HTTPServer const &srv)
                 break ;
             }
         }
+    }
+    else {
+        if (true && _path == "/") {
+            checkRedirect("/", "_path"); // TODO change path to redirect path defined in congige file
+        }
+        _relativePath = middle_slash(srv.getRoot(), '/', _path);
+        if (_path == "/") {
+
+            std::vector<std::string> indexes = srv.getIndexFiles();
+
+            for (size_t i = 0; i < indexes.size(); i++) {
+                std::string path = _relativePath + indexes[i];
+
+                if (access(path.c_str(), R_OK) == 0) {
+                    _relativePath = path;
+                    break ;
+                }
+            }
+        }
+    
     }
     setExtension(_relativePath);
 }
@@ -398,3 +427,11 @@ bool HTTPRequest::isExist(std::string const &filePath)
     struct stat existing;
     return (stat(filePath.c_str(), &existing) == 0);
 }
+
+std::string const &HTTPRequest::getRedirectPath() const {
+    return (_redirectPath);
+};
+
+void HTTPRequest::setRedirectPath(const std::string &path) {
+    _redirectPath = path;
+};

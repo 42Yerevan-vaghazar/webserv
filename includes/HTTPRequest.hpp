@@ -33,6 +33,8 @@ class HTTPRequest
         std::string const &getVersion( void ) const;
         std::string getHttpRequest() const;
         std::string const &getExtension() const;
+        std::string const &getRedirectPath() const;
+        void setRedirectPath(const std::string &path);
         std::string getBody() const;
         bool isRequestReady() const;
         bool isResponseReady() const;
@@ -83,6 +85,7 @@ class HTTPRequest
         std::string _body;
     protected:
         int statusCode;
+        std::string _redirectPath;
     protected:
         std::map<std::string, std::string> httpHeaders;
     protected:
@@ -108,6 +111,7 @@ class HTTPRequest
         std::string dir_content(std::string const &realPath);
         void multipart(void);
         void setExtension(const std::string &path);
+        void checkRedirect(const std::string &path, const std::string &redirectPath);
     protected:
         std::string response;
     protected:

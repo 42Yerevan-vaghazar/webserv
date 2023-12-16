@@ -143,6 +143,7 @@ void Client::parse()
     if (method == "POST") {
         multipart();
     }
+    
     HTTPRequest::checkPath(this->_srv);
     //    std::cout << "method = " << method << std::endl;
     // std::cout << "_path = " << _path << std::endl;

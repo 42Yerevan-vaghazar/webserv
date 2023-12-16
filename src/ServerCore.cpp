@@ -50,7 +50,7 @@ std::string const &ServerCore::getRoot( void ) const
 	return (this->root);
 }
 
-const char* ServerCore::findIndex(std::string const &filename) const
+const char* ServerCore::findIndex(std::string const &filename) const // TODO useless
 {
 	size_t i = 0;
 	for(; i < index.size(); i++)
@@ -70,11 +70,11 @@ const char* ServerCore::findMethod(std::string const &method) const
 
 void ServerCore::setAutoindex(std::string const &sw)
 {
-	(sw == "on") ? this->autoindex = true : this->autoindex = false;
+	(sw == "on") ? this->_autoindex = true : this->_autoindex = false;
 	if (sw == "on")
-		this->autoindex = true;
+		this->_autoindex = true;
 	else if (sw == "off")
-		this->autoindex = false;
+		this->_autoindex = false;
 }
 
 void ServerCore::pushErrPage(int key, std::string const &errpage_filename)
@@ -93,7 +93,11 @@ std::string ServerCore::getErrPage(int key) const
 
 void ServerCore::setSize(std::string const &bodySize)
 {
-	unsigned long long int toLong = std::strtoull(bodySize.c_str(), NULL, 10);
+	char *ptr;
+	unsigned long int toLong = std::strtoul(bodySize.c_str(), &ptr, 10);
+	if (*ptr != '\0') {
+		throw std::logic_error("client_body_size out of range unsigned long int max");
+	}
 	if (errno == ERANGE && toLong == ULLONG_MAX)
 		this->client_body_size = 200;
 	else
@@ -102,5 +106,5 @@ void ServerCore::setSize(std::string const &bodySize)
 
 bool ServerCore::getAutoindex( void ) const
 {
-	return (autoindex);
+	return (_autoindex);
 }

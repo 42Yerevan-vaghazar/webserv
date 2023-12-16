@@ -79,34 +79,34 @@ bool EvManager::delEvent(int fd, Flag flag) {
 
 std::pair<EvManager::Flag, int> EvManager::listen() {
     // std::cout << "listen" << std::endl;
-label:
-    if (_itFds == _fdActiveSet.end()) {
-        _activeRfds = _rfds;
-        _activeWfds = _wfds;
-        _numEvents = select(_nfds, &_activeRfds, &_activeWfds, NULL, NULL);
-        for (std::set<int>::iterator it = _fdRSet.begin();
-            it != _fdRSet.end(); ++it) {
-            if (FD_ISSET(*it, &_activeRfds) || FD_ISSET(*it, &_activeWfds)) {
-                _fdActiveSet.insert(*it);
+    while (true) {
+        if (_itFds == _fdActiveSet.end()) {
+            _activeRfds = _rfds;
+            _activeWfds = _wfds;
+            _numEvents = select(_nfds, &_activeRfds, &_activeWfds, NULL, NULL);
+            for (std::set<int>::iterator it = _fdRSet.begin();
+                it != _fdRSet.end(); ++it) {
+                if (FD_ISSET(*it, &_activeRfds) || FD_ISSET(*it, &_activeWfds)) {
+                    _fdActiveSet.insert(*it);
+                }
             }
-        }
-        for (std::set<int>::iterator it = _fdWSet.begin();
-            it != _fdWSet.end(); ++it) {
-            if (FD_ISSET(*it, &_activeRfds) || FD_ISSET(*it, &_activeWfds)) {
-                _fdActiveSet.insert(*it);
+            for (std::set<int>::iterator it = _fdWSet.begin();
+                it != _fdWSet.end(); ++it) {
+                if (FD_ISSET(*it, &_activeRfds) || FD_ISSET(*it, &_activeWfds)) {
+                    _fdActiveSet.insert(*it);
+                }
             }
+            _itFds = _fdActiveSet.begin();
         }
-        _itFds = _fdActiveSet.begin();
-    }
-    while (_itFds != _fdActiveSet.end()) {
-        if (FD_ISSET(*_itFds, &_activeRfds)) {
-            return (std::pair<EvManager::Flag, int>(EvManager::read, *(_itFds++)));
-        } else if (FD_ISSET(*_itFds, &_activeWfds)) {
-            return (std::pair<EvManager::Flag, int>(EvManager::write, *(_itFds++)));
+        while (_itFds != _fdActiveSet.end()) {
+            if (FD_ISSET(*_itFds, &_activeRfds)) {
+                return (std::pair<EvManager::Flag, int>(EvManager::read, *(_itFds++)));
+            } else if (FD_ISSET(*_itFds, &_activeWfds)) {
+                return (std::pair<EvManager::Flag, int>(EvManager::write, *(_itFds++)));
+            }
+            _itFds++;
         }
-        _itFds++;
     }
-    goto label;
     return (std::pair<EvManager::Flag, int>(EvManager::def, -1));
 }
 

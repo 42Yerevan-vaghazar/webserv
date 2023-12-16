@@ -63,7 +63,7 @@ class Parser
         struct Token
         {
             p_type type;
-            std::string token;   
+            std::string token;
         };
         std::list<Token> tokens;
         std::stack<std::string> braces;

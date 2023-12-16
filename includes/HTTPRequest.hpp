@@ -29,8 +29,10 @@ class HTTPRequest
         void showHeaders( void );
         std::string const &getMethod( void ) const;
         std::string const &getPath( void ) const;
+        std::string const &getDisplayPath( void ) const;
         std::string const &getVersion( void ) const;
         std::string getHttpRequest() const;
+        std::string const &getExtension() const;
         std::string getBody() const;
         bool isRequestReady() const;
         bool isResponseReady() const;
@@ -68,13 +70,13 @@ class HTTPRequest
         std::string httpRequest;
         std::string request;
         std::string method;
-        std::string path;
+        std::string _path;
         std::string realPath;
         std::string actualPath;
-        std::string absolutePath;
+        std::string _relativePath;
         std::string reqStatus;
         std::string filename;
-        std::string extension;
+        std::string _extension;
         std::string queryString;
         std::string version;
         std::string headers;
@@ -105,6 +107,7 @@ class HTTPRequest
     protected:
         std::string dir_content(std::string const &realPath);
         void multipart(void);
+        void setExtension(const std::string &path);
     protected:
         std::string response;
     protected:

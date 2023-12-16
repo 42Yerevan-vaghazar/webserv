@@ -18,6 +18,7 @@
 #include "ServerCore.hpp"
 #include "ServerManager.hpp"
 #include "ResponseError.hpp"
+#include <errno.h>
 
 class HTTPRequest;
 class ServerManager;
@@ -59,6 +60,7 @@ class HTTPServer : public Tcp, public IListener, public ServerCore
 		virtual const char* getPort( void ) const;
         virtual uint32_t getNIp( void ) const;
 		virtual uint16_t getNPort( void ) const;
+        std::string	directory_listing(const std::string &path, std::string displayPath);
     public:
         bool operator==(HTTPServer const &);
         bool operator==(sock_t);

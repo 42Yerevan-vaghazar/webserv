@@ -21,7 +21,6 @@ class HTTPResponse
         HTTPResponse( void );
         ~HTTPResponse();
     public:
-        std::string file(std::string const &filename);
         std::string const &getResponse( void ) const;
         std::string const &getReserve404( void ) const;
         std::string const &getReserve403( void ) const;

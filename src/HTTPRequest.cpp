@@ -48,13 +48,22 @@ std::string HTTPRequest::getBody() const
 
 std::string const &HTTPRequest::getPath( void ) const
 {
-    return (absolutePath);
+    return (_relativePath);
 }
+
+std::string const &HTTPRequest::getDisplayPath( void ) const
+{
+    return (_path);
+};
 
 std::string const &HTTPRequest::getVersion( void ) const
 {
     return (version);
 }
+
+std::string const &HTTPRequest::getExtension() const {
+    return (_extension);
+};
 
 std::string HTTPRequest::getHttpRequest() const {
     return (httpRequest);
@@ -250,26 +259,47 @@ std::string HTTPRequest::dir_content(std::string const &realPath)
     return (directoryContent);
 }
 
+void HTTPRequest::setExtension(const std::string &path) {
+    std::cout << "path = " << path << "$" << std::endl;
+
+    size_t pos = _relativePath.rfind(".");
+    std::string tmpExtension = _relativePath.substr(pos + 1);
+    if (tmpExtension.find("/") == std::string::npos) {
+        _extension = tmpExtension;
+    }
+    std::cout << "_extension = " << _extension << "$" << std::endl;
+}
+
 void HTTPRequest::checkPath(HTTPServer const &srv)
 {
     size_t use = 0;
-    if ((use = path.find_first_of("?")) != std::string::npos)
+    if ((use = _path.find_first_of("?")) != std::string::npos)
     {
-        queryString = path.substr(use+1); // TODO determine the
-        path = path.substr(0, use);
+        queryString = _path.substr(use+1); // TODO determine the
+        _path = _path.substr(0, use);
     }
-    location = srv.find(path);
+    location = srv.find(_path);
     if (location)
     {
-        pathChunks = pathChunking(path);
-        absolutePath = middle_slash(location->getRoot(), '/', pathChunks[pathChunks.size() - 1]);
+        pathChunks = pathChunking(_path);
+        _relativePath = middle_slash(location->getRoot(), '/', pathChunks[pathChunks.size() - 1]);
     }
     else
-        absolutePath = middle_slash(srv.getRoot(), '/', path);
+        _relativePath = middle_slash(srv.getRoot(), '/', _path);
     
-    
-    // TODO check indexs
-    // TODO extension absolutePath
+    if (_path == "/") {
+        std::vector<std::string> indexes = srv.getIndexFiles();
+
+        for (size_t i = 0; i < indexes.size(); i++) {
+            std::string path = _relativePath + indexes[i];
+
+            if (access(path.c_str(), R_OK) == 0) {
+                _relativePath = path;
+                break ;
+            }
+        }
+    }
+    setExtension(_relativePath);
 }
 
 std::vector<std::string> HTTPRequest::pathChunking(std::string const &rPath)

@@ -141,21 +141,14 @@ sock_t HTTPServer::getfd( void ) const
 
 void HTTPServer::up(ServerManager &mgn)
 {
-    // if (!mgn.used(this))
-    // {
-        const char* givenIp = ip.c_str();
-        const char* givenPort = port.c_str();
-        Tcp::setup(givenIp, givenPort);
-        Tcp::createSocket();
-        Tcp::bindSocket();
-        Tcp::listenSocket();
-        // mgn.setmax(fd);  // TODO delete line
-        std::cout << givenIp <<  ":" << givenPort << std::endl;
-        freeaddrinfo(addrList);
-    // }
-    // else
-    //     std::cout << "{Already:used}" << std::endl;
-    
+    const char* givenIp = ip.c_str();
+    const char* givenPort = port.c_str();
+    Tcp::setup(givenIp, givenPort);
+    Tcp::createSocket();
+    Tcp::bindSocket();
+    Tcp::listenSocket();
+    std::cout << givenIp <<  ":" << givenPort << std::endl;
+    freeaddrinfo(addrList);
 }
 
 void HTTPServer::push(sock_t clFd, Client *clt)
@@ -348,40 +341,36 @@ size_t longestMatch(std::string const &s1, std::string const &s2)
 
 std::string HTTPServer::get(Client &client) {
     const std::string &path = client.getPath();
-    std::unordered_map<std::string, std::string> headerContent;
-    std::string  fileName;
 
-    std::cout << "path = " << path << std::endl;
     // TODO unrecognized types "application/octet- stream"
-    if(path[path.size() - 1] == '/')
-    {
-        fileName = "www/server1/index.html";  //TODO - remove hardcode should be default page from config  
-        client.addHeader(std::pair<std::string, std::string>("Content-Type", "text/html")); //TODO - remove hardcode
-    } else {
-        // if ()
-        // client.addHeader(std::pair<std::string, std::string>("Content-Type", "application/octet- stream")); //TODO - remove hardcode
-        fileName = path;
-    }
     // TODO check is method allowed. 405
     // TODO Content-Length is not defined in case post method called 411
     // TODO valid request line 412
     // TODO body is large 413
     // TODO The URI requested is long  414
     // TODO header is large 431
-    // std::cout << "fileName = " << fileName << std::endl;
-    if (access(fileName.c_str(), F_OK) == 0) {   // TODO check permission to read
+    std::cout << "path = " << path << std::endl;
+    if (access(path.c_str(), R_OK) == 0) {
         std::string fileContent;
         try
         {
-            fileContent = fileToString(fileName);
+            if (this->getAutoindex() == true && HTTPRequest::isDir(path)) {
+                fileContent = directory_listing(path, client.getDisplayPath());
+            } else if (HTTPRequest::isDir(path)) {  //  TODO Set a default file to answer if the request is a directory.
+                throw ResponseError(404, "not found");
+            } else {
+                fileContent = fileToString(path);
+            }
+        }
+        catch(const ResponseError& e)  // TODO lava?
+        {
+            throw e;
         }
         catch(const std::exception& e)
         {
-            if (e.what() == std::string("can not open file")) {
-                throw ResponseError(500, "Internal Server Error");
-            }
+            throw ResponseError(500, "Internal Server Error");
         }
-        
+        client.addHeader(std::pair<std::string, std::string>("Content-Type", "text/" + client.getExtension())); // TODO check actual type
         client.addHeader(std::pair<std::string, std::string>("Content-Length", std::to_string(fileContent.size())));
         client.buildHeader();
         return (client.getResponse() + fileContent);
@@ -439,7 +428,7 @@ std::string HTTPServer::processing(Client &client)
     return ("");
 }
 
-bool	directory_listing(std::string path)
+std::string	HTTPServer::directory_listing(const std::string &path, std::string displayPath)
 {
 	DIR					*opened_dir;
 	dirent				*dir_struct;
@@ -449,17 +438,19 @@ bool	directory_listing(std::string path)
 	struct tm			*timeinfo;
 	char				time_buf[100];
 	std::string 		relPath;
-	std::string 		displayPath;
 	
 	if (path != "." && path != ".." && path[0] != '/' && (path[0] != '.' && path[1] != '/') && (path[0] != '.' && path[1] != '.' && path[2] != '/')) {
         relPath = "./" + path + "/";
-        displayPath = "./" + path;
     } else {
 		relPath = path + "/";
-		displayPath = path;
 	}
+
 	opened_dir = opendir(relPath.c_str());
 	
+    if (opened_dir == NULL) {
+        throw std::logic_error (strerror(errno));
+    }
+
 	table += "<!DOCTYPE html><html><head><title>";
 	table += "Index of ";
 	table += displayPath;
@@ -480,7 +471,11 @@ bool	directory_listing(std::string path)
 		if (name != ".")
 		{
 			table += "<a href=\"";
-			table += name;
+            if (displayPath.back() != '/')
+            {
+    			displayPath +=  "/";
+            }
+			table += displayPath + name;
 			table += "\">";
 			table += name;
 			table += "</a>";
@@ -502,6 +497,5 @@ bool	directory_listing(std::string path)
 	}
 	table += "</pre><hr></body></html>";
 	closedir(opened_dir);
-    std::cout << table << std::endl;
-    return true;
+    return table;
 }

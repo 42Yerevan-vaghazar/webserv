@@ -315,11 +315,11 @@ void Parser::create_server(ServerManager &mgn, std::list<Token>::iterator& ch)
     if (!mgn.used(srv)) {
         mgn.push_back(srv);
     }
-    std::vector<std::string> vec = srv.getIndexFiles();
-    for (int i = 0; i < vec.size(); ++i) {
-        std::cout << vec[i] << " ";
-    }
-    std::cout << std::endl;
+    // std::vector<std::string> vec = srv.getIndexFiles();
+    // for (int i = 0; i < vec.size(); ++i) {
+    //     std::cout << vec[i] << " ";
+    // }
+    // std::cout << std::endl;
     std::cout << "***************" << std::endl;
 }
 

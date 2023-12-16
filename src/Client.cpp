@@ -108,7 +108,6 @@ int Client::receiveRequest() {
 
 void Client::parse()
 {
-    std::cout << "void Client::parse()" << std::endl;
     size_t space = 0;
     size_t pos = httpRequest.find("\r\n");
     request = httpRequest.substr(0, pos);
@@ -122,7 +121,7 @@ void Client::parse()
     {
         method = trim(request.substr(0, request.find_first_of(" ")));
         request.erase(0, request.find_first_of(" ") + 1);
-        path = trim(request.substr(0, request.find_first_of(" ")));// TODO handle ? var cases in path
+        _path = trim(request.substr(0, request.find_first_of(" ")));// TODO handle ? var cases in _path
         request.erase(0, request.find_first_of(" ") + 1);
         version = trim(request.substr(0, request.find("\r\n")));
     }
@@ -146,7 +145,7 @@ void Client::parse()
     }
     HTTPRequest::checkPath(this->_srv);
     //    std::cout << "method = " << method << std::endl;
-    // std::cout << "path = " << path << std::endl;
+    // std::cout << "_path = " << _path << std::endl;
     // std::cout << "version = " << version << std::endl;
     // for (std::map<std::string, std::string>::iterator it = httpHeaders.begin(); it !=  httpHeaders.end(); ++it)
     // {

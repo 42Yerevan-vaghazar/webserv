@@ -208,8 +208,10 @@ Client* HTTPServer::getClient(sock_t fd)
 void HTTPServer::removeClient(sock_t fd)
 {
     std::map<sock_t, Client*>::iterator it = clnt.find(fd);
-    if (it != clnt.end())
-        clnt.erase(it);  // TODO delete object before erase
+    if (it != clnt.end()) {
+        delete it->second;
+        clnt.erase(it);
+    }
     return ;
 }
 
@@ -369,7 +371,17 @@ std::string HTTPServer::get(Client &client) {
     // TODO header is large 431
     // std::cout << "fileName = " << fileName << std::endl;
     if (access(fileName.c_str(), F_OK) == 0) {   // TODO check permission to read
-        std::string fileContent = fileToString(fileName);
+        try
+        {
+            std::string fileContent = fileToString(fileName);
+        }
+        catch(const std::exception& e)
+        {
+            if (e.what() == "can not open file") {
+                throw ResponseError(500, "Internal Server Error");
+            }
+        }
+        
         client.addHeader(std::pair<std::string, std::string>("Content-Length", std::to_string(fileContent.size())));
         client.buildHeader();
         return (client.getResponse() + fileContent);

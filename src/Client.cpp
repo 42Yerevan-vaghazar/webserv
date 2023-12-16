@@ -157,12 +157,13 @@ void Client::parse()
 bool Client::sendResponse() {
     size_t sendSize = WRITE_BUFFER < _response.size() ? WRITE_BUFFER : _response.size();
     if (send(fd, _response.c_str(), sendSize, 0) == -1) {
-        perror("send :");  //TODO shoud be removed before submission
-        exit(1);
+        return (false); // TODO is send function return -1 seting EAGAIN in errno
     }
     _response.erase(0, sendSize);
     // _response.clear();
-    // _isResponseReady = false;
+    if (_response.empty() == true) {
+        _isResponseReady = false;
+    }
     return (_response.empty());
 }
 

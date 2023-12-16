@@ -255,7 +255,7 @@ void HTTPRequest::checkPath(HTTPServer const &srv)
     size_t use = 0;
     if ((use = path.find_first_of("?")) != std::string::npos)
     {
-        queryString = path.substr(use+1); // TODO determine the 
+        queryString = path.substr(use+1); // TODO determine the
         path = path.substr(0, use);
     }
     location = srv.find(path);
@@ -266,8 +266,9 @@ void HTTPRequest::checkPath(HTTPServer const &srv)
     }
     else
         absolutePath = middle_slash(srv.getRoot(), '/', path);
-    //TODO  check indexs
-    // TODO extension absolutePath 
+    
+    // TODO check indexs
+    // TODO extension absolutePath
 }
 
 std::vector<std::string> HTTPRequest::pathChunking(std::string const &rPath)

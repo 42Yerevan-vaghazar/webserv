@@ -357,7 +357,6 @@ std::string HTTPServer::get(Client &client) {
     {
         fileName = "www/server1/index.html";  //TODO - remove hardcode should be default page from config  
         client.addHeader(std::pair<std::string, std::string>("Content-Type", "text/html")); //TODO - remove hardcode
-
     } else {
         // if ()
         // client.addHeader(std::pair<std::string, std::string>("Content-Type", "application/octet- stream")); //TODO - remove hardcode
@@ -371,13 +370,14 @@ std::string HTTPServer::get(Client &client) {
     // TODO header is large 431
     // std::cout << "fileName = " << fileName << std::endl;
     if (access(fileName.c_str(), F_OK) == 0) {   // TODO check permission to read
+        std::string fileContent;
         try
         {
-            std::string fileContent = fileToString(fileName);
+            fileContent = fileToString(fileName);
         }
         catch(const std::exception& e)
         {
-            if (e.what() == "can not open file") {
+            if (e.what() == std::string("can not open file")) {
                 throw ResponseError(500, "Internal Server Error");
             }
         }

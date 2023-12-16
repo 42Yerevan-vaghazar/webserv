@@ -98,14 +98,15 @@ void ServerManager::start() {
 std::string ServerManager::generateErrorResponse(const ResponseError& e, Client &client) {  //TODO put inside class or namespace
     // TODO automate it   404, 405, 411, 412, 413, 414, 431, 500, 501, 505, 503, 507, 508
     std::string response;
+    std::string fileContent;
 
     try
     {
-        std::string fileContent = fileToString("./www/server1/error_pages/404.html");
+        fileContent = fileToString("./www/server1/error_pages/404.html");
     }
     catch(const std::exception& e)
     {
-        if (e.what() == "can not open file") {
+        if (e.what() == std::string("can not open file")) {
             throw ResponseError(500, "Internal Server Error");
         }
     }

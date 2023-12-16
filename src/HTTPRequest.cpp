@@ -267,6 +267,7 @@ void HTTPRequest::checkPath(HTTPServer const &srv)
     else
         absolutePath = middle_slash(srv.getRoot(), '/', path);
     
+    
     // TODO check indexs
     // TODO extension absolutePath
 }

@@ -120,6 +120,4 @@ class HTTPRequest
 
 };
 
-
-
 #endif

@@ -6,7 +6,7 @@
 /*   By: dmartiro <dmartiro@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/02 00:25:27 by dmartiro          #+#    #+#             */
-/*   Updated: 2023/12/16 14:38:26 by dmartiro         ###   ########.fr       */
+/*   Updated: 2023/12/17 14:08:46 by dmartiro         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,6 +46,7 @@ class Parser
         size_t contextWord(std::string const &config, size_t p);
         void removeUnprintables(std::vector<std::string> &tmp_ctx);
         bool isWord(char s);
+        std::string remove_extraSpace(std::string const &d_val);
         int context_wrap(std::string const &server);
         void tolower(std::string &s);
         void addWord(std::string config, size_t *i);
@@ -59,8 +60,8 @@ class Parser
         void remove_spaces(std::string &tmp_text);
     private:
         std::fstream IO;
-        std::map<std::string, void (Parser::*)(std::string &, std::string &, HTTPServer &)>directives;
-        std::map<std::string, void (Parser::*)(std::string &, std::string &, Location &)>location_directives;
+        std::map<std::string, void (Parser::*)(std::string &, HTTPServer &)>directives;
+        std::map<std::string, void (Parser::*)(std::string &, Location &)>location_directives;
         struct Token
         {
             p_type type;
@@ -76,27 +77,29 @@ class Parser
         void s_directive(std::list<Token>::iterator& next, HTTPServer& srv); // Server directives
         void make_pair(size_t i, std::list<Token>::iterator& node, HTTPServer &srv);
     private:
-        void d_listen(std::string &d_key, std::string &d_val, HTTPServer &srv);
-        void d_root(std::string &d_key, std::string &d_val, HTTPServer &srv);
-        void d_index(std::string &d_key, std::string &d_val, HTTPServer &srv);
-        void d_autoindex(std::string &d_key, std::string &d_val, HTTPServer &srv);
-        void d_methods(std::string &d_key, std::string &d_val, HTTPServer &srv);
-        void d_err_page(std::string &d_key, std::string &d_val, HTTPServer &srv);
-        void d_server_name(std::string &d_key, std::string &d_val, HTTPServer &srv);
-        void d_body_size(std::string &d_key, std::string &d_val, HTTPServer &srv);
-        void d_redirect(std::string &d_key, std::string &d_val, HTTPServer &srv);
-        void d_cgi(std::string &d_key, std::string &d_val, HTTPServer &srv);
+        void d_listen(std::string &d_val, HTTPServer &srv);
+        void d_root(std::string &d_val, HTTPServer &srv);
+        void d_index(std::string &d_val, HTTPServer &srv);
+        void d_autoindex(std::string &d_val, HTTPServer &srv);
+        void d_methods(std::string &d_val, HTTPServer &srv);
+        void d_err_page(std::string &d_val, HTTPServer &srv);
+        void d_server_name(std::string &d_val, HTTPServer &srv);
+        void d_body_size(std::string &d_val, HTTPServer &srv);
+        void d_redirect(std::string &d_val, HTTPServer &srv);
+        void d_cgi(std::string &d_val, HTTPServer &srv);
+        void d_upload_dir(std::string &d_val, HTTPServer &srv);
     private:
-        void l_root(std::string &d_key, std::string &d_val, Location &srv);
-        void l_index(std::string &d_key, std::string &d_val, Location &srv);
-        void l_autoindex(std::string &d_key, std::string &d_val, Location &srv);
-        void l_methods(std::string &d_key, std::string &d_val, Location &srv);
-        void l_err_page(std::string &d_key, std::string &d_val, Location &srv);
-        void l_redirect(std::string &d_key, std::string &d_val, Location &loc);
-        void l_cgi(std::string &d_key, std::string &d_val, Location &loc);
+        void l_root(std::string &d_val, Location &srv);
+        void l_index(std::string &d_val, Location &srv);
+        void l_autoindex(std::string &d_val, Location &srv);
+        void l_methods(std::string &d_val, Location &srv);
+        void l_err_page(std::string &d_val, Location &srv);
+        void l_redirect(std::string &d_val, Location &loc);
+        void l_cgi(std::string &d_val, Location &loc);
+        void l_upload_dir(std::string &d_val, Location &loc);
 };
-typedef std::map<std::string, void (Parser::*)(std::string &, std::string &, HTTPServer &)>::iterator FuncDir;
-typedef std::map<std::string, void (Parser::*)(std::string &, std::string &, Location &)>::iterator LocDir;
+typedef std::map<std::string, void (Parser::*)(std::string &, HTTPServer &)>::iterator FuncDir;
+typedef std::map<std::string, void (Parser::*)(std::string &, Location &)>::iterator LocDir;
 
 // server, location
 //root, index, autoindex, error_page, methods, client_body_size, server_name, listen

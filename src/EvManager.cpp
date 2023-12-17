@@ -78,7 +78,6 @@ bool EvManager::delEvent(int fd, Flag flag) {
 }
 
 std::pair<EvManager::Flag, int> EvManager::listen() {
-    // std::cout << "listen" << std::endl;
     while (true) {
         if (_itFds == _fdActiveSet.end()) {
             _activeRfds = _rfds;
@@ -137,7 +136,6 @@ bool EvManager::addEvent(int fd, Flag flag) {
 
 bool EvManager::delEvent(int fd, Flag flag) {
     if (_kq != 0) {
-        // std::cout << "\ndelEvent" << std::endl;
         int evFlag = getFlag(flag);
         struct kevent evSet;
 
@@ -152,8 +150,6 @@ std::pair<EvManager::Flag, int> EvManager::listen() {
     while (_numEvents == 0) {
         _numEvents = kevent(_kq, NULL, 0, _evList, CLIENT_LIMIT, NULL);
     }
-
-    // std::cout << "_numEvents = " << _numEvents << std::endl;
 
     if (_numEvents == -1) {
         throw std::runtime_error(std::string("kevent: ") + strerror(errno));

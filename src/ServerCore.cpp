@@ -19,7 +19,7 @@ ServerCore::ServerCore() {
 };
 
 
-int ServerCore::getClientBodySize( void )
+int ServerCore::getClientBodySize( void ) const
 {
 	return (client_body_size);
 }
@@ -105,11 +105,12 @@ void ServerCore::setSize(std::string const &bodySize)
 	if (*ptr != '\0') {
 		throw std::logic_error("client_body_size out of range unsigned long int max");
 	}
-	if (errno == ERANGE && toLong == ULLONG_MAX)
-		this->client_body_size = 200;
-	else
-		this->client_body_size = toLong * 1048576 / 1;
-	std::cout << "client_body_size = " << client_body_size << std::endl;
+	this->client_body_size = toLong;
+}
+
+void ServerCore::setUploadDir(std::string const &upload_dir)
+{
+	_uploadDir = upload_dir;
 }
 
 bool ServerCore::getAutoindex( void ) const
@@ -120,6 +121,11 @@ bool ServerCore::getAutoindex( void ) const
 void ServerCore::setRedirection(int status, std::string redirectPath)
 {
 	_redirections.insert(std::make_pair(status, redirectPath));
+}
+
+void ServerCore::setR(bool status)
+{
+	_redirect = status;
 }
 
 std::map<int, std::string> const &ServerCore::getRedirection( void ) const

@@ -6,7 +6,7 @@
 /*   By: dmartiro <dmartiro@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/02 00:30:12 by dmartiro          #+#    #+#             */
-/*   Updated: 2023/12/17 01:21:34 by dmartiro         ###   ########.fr       */
+/*   Updated: 2023/12/17 14:40:41 by dmartiro         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,15 +30,17 @@ Parser::Parser(const char *confFile)
     directives["client_body_size"] = &Parser::d_body_size;
     directives["return"] = &Parser::d_redirect;
     directives["cgi"] = &Parser::d_cgi;
+    directives["upload_dir"] = &Parser::d_upload_dir;
 
     location_directives["root"] = &Parser::l_root;
     location_directives["index"] = &Parser::l_index;
     location_directives["autoindex"] = &Parser::l_autoindex;
     location_directives["methods"] = &Parser::l_methods;
     location_directives["error_page"] = &Parser::l_err_page;
-    // location_directives["client_body_size"] = &Parser::l_body_size;
     location_directives["return"] = &Parser::l_redirect;
+    // location_directives["client_body_size"] = &Parser::l_body_size;
     location_directives["cgi"] = &Parser::l_cgi;
+    location_directives["upload_dir"] = &Parser::l_upload_dir;
 }
 
 Parser::~Parser()
@@ -57,15 +59,10 @@ void Parser::start(ServerManager &mgn)
 
 
     std::map<std::string, Location>::const_iterator it = mgn[0].getLocations().begin();
-    std::cout << it->second.getRoot() << std::endl;
-    std::cout << it->second.getAutoindex() << std::endl;
-    std::cout << it->second.getErrPage(404) << std::endl;
-
-    // std::cout << mgn[0].getRoot() << std::endl;
-    // std::map<std::string, Location>::const_iterator it = mgn[0].getLocations().begin();
-    // it++;
-    // std::cout << it->second.getRedirection().begin()->first << std::endl;
-    // std::cout << it->second.getRedirection().begin()->second << std::endl;
+    // std::cout << it->second.getRoot() << std::endl;
+    // std::cout << it->second.getAutoindex() << std::endl;
+    // std::cout << it->second.getErrPage(403) << std::endl;
+    // std::cout << it->second.getRedirection(301) << std::endl; 
     // std::list<Token>::iterator tok = tokens.begin();
     // for(; tok != tokens.end(); tok++)
     //     std::cout << tok->type << " : " << "|" << tok->token << "|" << std::endl;
@@ -82,7 +79,7 @@ std::string Parser::context_keyword(std::string const &context_token)
     return (context_token.substr(0, i));
 }
 
- void Parser::clean()
+void Parser::clean()
 {
     std::string line;
     size_t comment = 0;
@@ -276,6 +273,20 @@ bool Parser::isWord(char s)
     return (false);
 }
 
+std::string Parser::remove_extraSpace(std::string const &d_val)
+{
+    std::string out;
+    std::string word;
+    std::istringstream iss(d_val);
+    while (iss >> word)
+    {
+        if (!out.empty())
+            out += ' ';
+        out += word;
+    }
+    return (out);
+}
+
 void Parser::addWord(std::string config, size_t *i)
 {
     int pos = *i;
@@ -392,7 +403,7 @@ void Parser::l_directive(std::list<Token>::iterator &node, Location &loc)
     node->token[i] = ' ';
     LocDir f = location_directives.find(d_key);
     if (f != location_directives.end())
-        (this->*(f->second))(d_key, d_val, loc);
+        (this->*(f->second))(d_val, loc);
 }
 
 void Parser::s_directive(std::list<Token>::iterator& node, HTTPServer &srv)
@@ -412,16 +423,17 @@ void Parser::s_directive(std::list<Token>::iterator& node, HTTPServer &srv)
     {
         node->token[i] = '\a';
         node->token = HTTPRequest::trim(node->token);
-        d_val = node->token.substr(i+1);
+        d_val = remove_extraSpace(node->token.substr(i+1));
     }
     if (d_key.empty() || d_val.empty())
         throw HTTPCoreException("Directive Value: Value Can't be NULL");
     node->token[i] = ' ';
+    
+    // std::cout << "|" << d_key << "|" << " : " << "|" << d_val << "|" << std::endl;
     FuncDir f = directives.find(d_key);
-    std::cout << "f->first = " << f->first << std::endl;
-
+    // std::cout << "f->first = " << f->first << std::endl;
     if (f != directives.end())
-        (this->*(f->second))(d_key, d_val, srv);
+        (this->*(f->second))(d_val, srv);
 }
 
 void Parser::make_pair(size_t i, std::list<Token>::iterator& node, HTTPServer &srv)
@@ -430,7 +442,7 @@ void Parser::make_pair(size_t i, std::list<Token>::iterator& node, HTTPServer &s
     std::cout << d_key << std::endl;
 }
 
-void Parser::d_listen(std::string &d_key, std::string &d_val, HTTPServer &srv)
+void Parser::d_listen(std::string &d_val, HTTPServer &srv)
 {
     size_t splitter = d_val.find(":");
     if (splitter != std::string::npos)
@@ -442,12 +454,15 @@ void Parser::d_listen(std::string &d_key, std::string &d_val, HTTPServer &srv)
         srv.setIp(d_val);
 }
 
-void Parser::d_root(std::string &d_key, std::string &d_val, HTTPServer &srv)
+void Parser::d_root(std::string &d_val, HTTPServer &srv)
 {
+    size_t spaceFound = d_val.find(" ");
+    if (spaceFound != std::string::npos)
+        throw HTTPCoreException("Root: directive should has one value");
     srv.setRoot(d_val);
 }
 
-void Parser::d_server_name(std::string &d_key, std::string &d_val, HTTPServer &srv)
+void Parser::d_server_name(std::string &d_val, HTTPServer &srv)
 {
     std::stringstream srv_names(d_val);
     std::string name;
@@ -455,7 +470,7 @@ void Parser::d_server_name(std::string &d_key, std::string &d_val, HTTPServer &s
         srv.push_serverName(name);
 }
 
-void Parser::d_index(std::string &d_key, std::string &d_val, HTTPServer &srv)
+void Parser::d_index(std::string &d_val, HTTPServer &srv)
 {
     std::stringstream srv_indexes(d_val);
     std::string index;
@@ -463,7 +478,7 @@ void Parser::d_index(std::string &d_key, std::string &d_val, HTTPServer &srv)
         srv.pushIndex(index);
 }
 
-void Parser::d_autoindex(std::string &d_key, std::string &d_val, HTTPServer &srv)
+void Parser::d_autoindex(std::string &d_val, HTTPServer &srv)
 {
     if (d_val == "on" || d_val == "off")
         srv.setAutoindex(d_val);
@@ -471,7 +486,7 @@ void Parser::d_autoindex(std::string &d_key, std::string &d_val, HTTPServer &srv
         throw HTTPCoreException("Autoindex: undefined set of BOOLEAN value");
 }
 
-void Parser::d_methods(std::string &d_key, std::string &d_val, HTTPServer &srv)
+void Parser::d_methods(std::string &d_val, HTTPServer &srv)
 {
     std::stringstream srv_methods(d_val);
     std::string method;
@@ -479,7 +494,7 @@ void Parser::d_methods(std::string &d_key, std::string &d_val, HTTPServer &srv)
         srv.pushMethods(method);
 }
 
-void Parser::d_err_page(std::string &d_key, std::string &d_val, HTTPServer &srv)
+void Parser::d_err_page(std::string &d_val, HTTPServer &srv)
 {
     std::vector<std::string> err_page;
     std::stringstream srv_err_page(d_val);
@@ -494,7 +509,7 @@ void Parser::d_err_page(std::string &d_key, std::string &d_val, HTTPServer &srv)
     srv.pushErrPage(std::atoi(err_page[0].c_str()), err_page[1]);
 }
 
-void Parser::d_body_size(std::string &d_key, std::string &d_val, HTTPServer &srv)
+void Parser::d_body_size(std::string &d_val, HTTPServer &srv)
 {
     for(size_t i = 0; i < d_val.size(); i++)
         if (!std::isdigit(d_val[i]))
@@ -502,43 +517,75 @@ void Parser::d_body_size(std::string &d_key, std::string &d_val, HTTPServer &srv
     srv.setSize(d_val);
 }
 
-
-void Parser::l_root(std::string &d_key, std::string &d_val, Location &loc)
+void Parser::d_redirect(std::string &d_val, HTTPServer &srv)
 {
-    // std::cout << d_key << " ___ " << d_val << std::endl;
+    std::vector<std::string> redirect;
+    std::stringstream loc_redirection(d_val);
+    std::string k_or_v;
+    while (std::getline(loc_redirection, k_or_v, ' '))
+        redirect.push_back(k_or_v);
+    if (redirect.size() != 2)
+        throw HTTPCoreException("Error_page: Keys and Values are not correct");
+    for(size_t i = 0; i < redirect[0].size(); i++)
+        if (!std::isdigit(redirect[0][i]))
+            throw HTTPCoreException("Error_page: Key should be an INTEGER");
+    int status = std::atoi(redirect[0].c_str());
+    if (status == 301)
+    {
+        srv.setRedirection(std::atoi(redirect[0].c_str()), redirect[1]);
+        srv.setR(true);
+    }
+}
+
+void Parser::d_cgi(std::string &d_val, HTTPServer &src)
+{
+    std::vector<std::string> cgi;
+    std::stringstream src_cgi(d_val);
+    std::string k_or_v;
+    while (std::getline(src_cgi, k_or_v, ' '))
+        cgi.push_back(k_or_v);
+    if (cgi.size() != 2)
+        throw HTTPCoreException("Cgi: Keys and Values are not correct");
+    for(size_t i = 0; i < cgi[0].size(); i++)
+        if (access(cgi[1].c_str(), X_OK) == -1)
+            throw HTTPCoreException(strerror(errno));
+    src.setCgi(cgi[0], cgi[1]);
+}
+
+void Parser::l_root(std::string &d_val, Location &loc)
+{
+    size_t spaceFound = d_val.find(" ");
+    if (spaceFound != std::string::npos)
+        throw HTTPCoreException("Root: directive should has one value");
     loc.setRoot(d_val);
 }
 
-void Parser::l_index(std::string &d_key, std::string &d_val, Location &loc)
+void Parser::l_index(std::string &d_val, Location &loc)
 {
-    // std::cout << d_key << " ___ " << d_val << std::endl;
     std::stringstream loc_indexes(d_val);
     std::string index;
     while (std::getline(loc_indexes, index, ' '))
         loc.pushIndex(index);
 }
 
-void Parser::l_autoindex(std::string &d_key, std::string &d_val, Location &loc)
+void Parser::l_autoindex(std::string &d_val, Location &loc)
 {
-    // std::cout << d_key << " ___ " << d_val << std::endl;
     if (d_val == "on" || d_val == "off")
         loc.setAutoindex(d_val);
     else
         throw HTTPCoreException("Autoindex: undefined set of BOOLEAN value");
 }
 
-void Parser::l_methods(std::string &d_key, std::string &d_val, Location &loc)
+void Parser::l_methods(std::string &d_val, Location &loc)
 {
-    // std::cout << d_key << " ___ " << d_val << std::endl;
     std::stringstream loc_methods(d_val);
     std::string method;
     while (std::getline(loc_methods, method, ' '))
         loc.pushMethods(method);
 }
 
-void Parser::l_err_page(std::string &d_key, std::string &d_val, Location &loc)
+void Parser::l_err_page(std::string &d_val, Location &loc)
 {
-    std::cout << d_key << " ___ " << d_val << std::endl;
     std::vector<std::string> err_page;
     std::stringstream loc_err_page(d_val);
     std::string k_or_v;
@@ -549,13 +596,11 @@ void Parser::l_err_page(std::string &d_key, std::string &d_val, Location &loc)
     for(size_t i = 0; i < err_page[0].size(); i++)
         if (!std::isdigit(err_page[0][i]))
             throw HTTPCoreException("Error_page: Key should be an INTEGER");
-    std::cout << err_page[0] << std::endl;
     loc.pushErrPage(std::atoi(err_page[0].c_str()), err_page[1]);
 }
 
-void Parser::l_redirect(std::string &d_key, std::string &d_val, Location &loc)
+void Parser::l_redirect(std::string &d_val, Location &loc)
 {
-    std::cout << d_key << " || " << d_val << std::endl;
     std::vector<std::string> redirect;
     std::stringstream loc_redirection(d_val);
     std::string k_or_v;
@@ -568,55 +613,35 @@ void Parser::l_redirect(std::string &d_key, std::string &d_val, Location &loc)
             throw HTTPCoreException("Error_page: Key should be an INTEGER");
     int status = std::atoi(redirect[0].c_str());
     if (status == 301)
+    {
         loc.setRedirection(std::atoi(redirect[0].c_str()), redirect[1]);
+        loc.setR(true);
+    }
 }
 
-void Parser::d_redirect(std::string &d_key, std::string &d_val, HTTPServer &srv)
-{
-    std::cout << d_key << " || " << d_val << std::endl;
-    std::vector<std::string> redirect;
-    std::stringstream loc_redirection(d_val);
-    std::string k_or_v;
-    while (std::getline(loc_redirection, k_or_v, ' '))
-        redirect.push_back(k_or_v);
-    if (redirect.size() != 2)
-        throw HTTPCoreException("Error_page: Keys and Values are not correct");
-    for(size_t i = 0; i < redirect[0].size(); i++)
-        if (!std::isdigit(redirect[0][i]))
-            throw HTTPCoreException("Error_page: Key should be an INTEGER");
-    int status = std::atoi(redirect[0].c_str());
-    if (status == 301)
-        srv.setRedirection(std::atoi(redirect[0].c_str()), redirect[1]);
-}
 
-void Parser::d_cgi(std::string &d_key, std::string &d_val, HTTPServer &src)
+void Parser::l_cgi(std::string &d_val, Location &loc)
 {
-    std::cout << d_key << " || " << d_val << std::endl;
     std::vector<std::string> cgi;
     std::stringstream src_cgi(d_val);
     std::string k_or_v;
     while (std::getline(src_cgi, k_or_v, ' '))
         cgi.push_back(k_or_v);
     if (cgi.size() != 2)
-        throw HTTPCoreException("cgi: Keys and Values are not correct");
-    for(size_t i = 0; i < cgi[0].size(); i++)
-        if (access(cgi[1].c_str(), X_OK) == -1)
-            throw HTTPCoreException(strerror(errno));
-    src.setCgi(cgi[0], cgi[1]);
-}
-
-void Parser::l_cgi(std::string &d_key, std::string &d_val, Location &loc)
-{
-    std::cout << d_key << " || " << d_val << std::endl;
-    std::vector<std::string> cgi;
-    std::stringstream src_cgi(d_val);
-    std::string k_or_v;
-    while (std::getline(src_cgi, k_or_v, ' '))
-        cgi.push_back(k_or_v);
-    if (cgi.size() != 2)
-        throw HTTPCoreException("cgi: Keys and Values are not correct");
+        throw HTTPCoreException("Cgi: Keys and Values are not correct");
     for(size_t i = 0; i < cgi[0].size(); i++)
         if (access(cgi[1].c_str(), X_OK) == -1)
             throw HTTPCoreException(strerror(errno));
     loc.setCgi(cgi[0], cgi[1]);
+}
+
+void Parser::d_upload_dir(std::string &d_val, HTTPServer &srv)
+{
+    std::cout << d_val << std::endl;
+}
+
+void Parser::l_upload_dir(std::string &d_val, Location &loc)
+{
+    
+    std::cout << d_val << std::endl;
 }

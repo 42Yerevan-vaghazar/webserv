@@ -20,6 +20,7 @@
 #define DEFAULT_MASK            "0.0.0.0"
 #define CONFIGS "./conf/"
 #define DFLT CONFIGS"webserv.conf"
+#define HTTP_VERSION "HTTP/1.1"
 
 typedef int         sock_t;
 #include "HTTPCoreException.hpp"

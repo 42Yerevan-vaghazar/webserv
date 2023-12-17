@@ -1,5 +1,6 @@
 <?php
 
-echo "<h1>HELLO WORLD</h1>";
+echo $_POST["email"];
+echo $_POST["name"];
 
 ?>

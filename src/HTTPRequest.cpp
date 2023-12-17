@@ -122,34 +122,9 @@ std::string HTTPRequest::findInMap(std::string key) const
     return (nill);
 }
 
-// void HTTPRequest::get(HTTPServer &srv)
-// {
-//     // std::cout << "GET method" << std::endl;
-// }
-
-// void HTTPRequest::post(HTTPServer &srv)
-// {
-//     if (!(contentType = findInMap("Content-Type")).empty())
-//     {
-//         type = trim(contentType.substr(0, contentType.find(";")));
-//         // HTTPRequest::contentReceiveMethod(fd);
-//     }
-//     else if (!(transferEncoding = findInMap("Transfer-Encoding")).empty())
-//     {
-//         std::cout << "Data transfers chunck by chunk" << std::endl;
-//     }
-// }
-
-// void HTTPRequest::delet(HTTPServer &srv)
-// {
-//     std::cout << "method is DELETE" << std::endl;
-// }
-
-
 void HTTPRequest::multipart(void)
 {
     std::map<std::string, std::string>::iterator it =  httpHeaders.find("Content-Type");
-    std::cout << "multipart function " << std::endl;
 
     if(it == httpHeaders.end())
     {
@@ -179,15 +154,7 @@ void HTTPRequest::multipart(void)
         size_t contentStart = _body.find("\r\n\r\n", filenameStart) + strlen("\r\n\r\n");
         std::string fileContent = _body.substr(contentStart, boundaryPos - contentStart - strlen("\r\n"));
         _uploadedFiles[filename] = fileContent;
-        // std::cout << "fileContent = " << fileContent << "$" << std::endl;
     } while (boundaryPos != endPos);
-
-    // std::unordered_map<std::string, std::string>::iterator it1 = _uploadedFiles.begin();
-    // while (it1 != _uploadedFiles.end()) {
-    //     std::cout << it1->first << "$" <<std::endl;
-    //     std::cout << it1->second  << "$" <<std::endl;
-    //     ++it1;
-    // }
 }
 
 void HTTPRequest::showHeaders( void ) const

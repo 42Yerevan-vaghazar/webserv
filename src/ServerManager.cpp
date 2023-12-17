@@ -43,8 +43,6 @@ void ServerManager::start() {
         Client *client = NULL;
     
         event = EvManager::listen();
-        // std::cout << "event.second = " << event.second << std::endl;
-        // std::cout << "event.first = " << event.first << std::endl;
         if (newClient(event.second)) {
             continue ;
         }
@@ -60,10 +58,8 @@ void ServerManager::start() {
         try
         {
             if (event.first == EvManager::eof) {
-                // std::cout << "\nEV_EOF\n" << std::endl;
                 closeConnetcion(client->getFd());
             } else if (event.first == EvManager::read || client->isRequestReady() == false) {
-                // std::cout << "\nEVFILT_READ\n" << std::endl;
                 if (client->getHttpRequest().empty()) {
                     EvManager::addEvent(client->getFd(), EvManager::write);
                 }
@@ -71,7 +67,6 @@ void ServerManager::start() {
                     closeConnetcion(client->getFd());
                 }
                 if (client->isRequestReady()) {
-                    // std::cout << " client->getHttpRequest() = " << client->getHttpRequest() << std::endl;
                     client->parse();
                     client->setResponse(generateResponse(*client));
                 }
@@ -116,15 +111,14 @@ std::string ServerManager::generateErrorResponse(const ResponseError& e, Client 
         }
     }
     
-
     size_t pos = fileContent.find("404");
     if (pos != std::string::npos) {
         fileContent.replace(pos, strlen("404"), std::to_string(e.getStatusCode()) + " " + e.what());
     } else {
         fileContent = "Error" + std::to_string(e.getStatusCode());
     };
-    response = client.getVersion() + " ";
-    response += std::to_string(e.getStatusCode());
+    response = HTTP_VERSION;
+    response += " " + std::to_string(e.getStatusCode());
     response += "\r\n";
     client.addHeader(std::pair<std::string, std::string>("Content-Length", std::to_string(fileContent.size())));
     client.buildHeader();

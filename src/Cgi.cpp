@@ -34,7 +34,7 @@ int Cgi::execute(const Client &client) {
         close(fd_from_child[1]);
         dup2(fd_from_parent[0], 0);
         close(fd_from_parent[0]);
-        std::cout << "execve = " << execve(argv[0], argv, envp) << std::endl;
+        execve(argv[0], argv, envp);
         perror("execve: ");
         exit(1);
     }

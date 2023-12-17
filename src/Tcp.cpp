@@ -80,7 +80,6 @@ sock_t Tcp::accept( void )
 {
     socklen_t clntSize = sizeof(clntAddr);
     sock_t client = ::accept(fd, (struct sockaddr *)&clntAddr, &clntSize);
-    // std::cout << pton(htonl(((struct sockaddr_in*)&clntAddr)->sin_addr.s_addr)) << std::endl;
     if (fcntl(client, F_SETFL, O_NONBLOCK, FD_CLOEXEC) < 0)
         throw HTTPCoreException(strerror(errno));
     if (client < 0)

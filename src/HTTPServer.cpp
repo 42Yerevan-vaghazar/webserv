@@ -353,7 +353,6 @@ std::string HTTPServer::get(Client &client) {
     // TODO body is large 413
     // TODO The URI requested is long  414
     // TODO header is large 431
-    std::cout << "path = " << path << std::endl;
     if (access(path.c_str(), R_OK) == 0) {
         std::string fileContent;
         if (client.isCgi() == true) {
@@ -433,7 +432,6 @@ std::string HTTPServer::post(Client &client) {
         // TODO if multipart data not detected throw precondition failed
         const std::unordered_map<std::string, std::string> &uploadedFiles = client.getUploadedFiles();
         std::unordered_map<std::string, std::string>::const_iterator it = uploadedFiles.cbegin();
-        // std::cout << "filename = " << fileName << std::endl;
         for (; it != uploadedFiles.cend(); ++it) {
             const std::string &fileName = it->first;
             const std::string &fileContent = it->second;
@@ -525,10 +523,8 @@ std::string	HTTPServer::directory_listing(const std::string &path, std::string d
 			table += "\">";
 			table += name;
 			table += "</a>";
-			//std::cout << "name = " << name << std::endl;
 			if (stat((relPath + name).c_str(), &buf) == 0)
 			{
-				//std::cout << "name.c_str() = " << name.c_str() << std::endl;
 				table += "<span>";
 				timeinfo = localtime(&(buf.st_mtime));
 				strftime(time_buf, 100, "%d-%b-%Y %H:%S", timeinfo);

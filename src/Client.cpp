@@ -138,15 +138,29 @@ void Client::parse()
 
 bool Client::sendResponse() {
     size_t sendSize = WRITE_BUFFER < _response.size() ? WRITE_BUFFER : _response.size();
+
+    if (_response.empty() == true) {
+        if (_isCgi == true) {
+            char buf[sendSize];
+            int rfd = read(_cgiPipeFd, buf, sendSize);
+            if (rfd == -1) {
+                return (0);
+            }
+            if (rfd == 0) {
+                _cgiPipeFd = -1;
+            }
+            buf[rfd] = '\0';
+            _response = buf;
+        }
+        _isResponseReady = false;
+    }
+
     if (send(fd, _response.c_str(), sendSize, 0) == -1) {
         return (false); // TODO is send function return -1 seting EAGAIN in errno
     }
     _response.erase(0, sendSize);
     // _response.clear();
-    if (_response.empty() == true) {
-        _isResponseReady = false;
-    }
-    return (_response.empty());
+    return (_response.empty() && _cgiPipeFd == -1);
 }
 
 void Client::setResponse(const std::string &response) {

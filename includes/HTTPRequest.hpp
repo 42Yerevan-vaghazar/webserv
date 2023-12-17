@@ -26,7 +26,7 @@ class HTTPRequest
 		~HTTPRequest();
     public:
         std::string findInMap(std::string key) const;
-        void showHeaders( void );
+        void showHeaders( void ) const;
         std::string const &getMethod( void ) const;
         std::string const &getPath( void ) const;
         std::string const &getDisplayPath( void ) const;

@@ -358,11 +358,13 @@ std::string HTTPServer::get(Client &client) {
         std::string fileContent;
         if (client.isCgi() == true) {
             int fd = Cgi::execute(client);
-            char buf[2000];
-            buf[read(fd, buf, 2000)] = '\0';
-            
-            std::cout << buf;
             fileContent = buf;
+            int posBody = fileContent.find("<");
+            if (posBody == std::string::npos) {
+                throw ResponseError(500, "not found");  // TODO change it to actual status
+            }
+            fileContent.erase(0, posBody);
+            client.addHeader(std::pair<std::string, std::string>("Content-Type", "text/html")); // TODO check actual type
         } else {
             try
             {
@@ -374,16 +376,14 @@ std::string HTTPServer::get(Client &client) {
                     fileContent = fileToString(path);
                 }
             }
-            catch(const ResponseError& e)
-            {
+            catch(const ResponseError& e) {
                 throw e;
-            }
-            catch(const std::exception& e)
+            } catch(const std::exception& e)
             {
                 throw ResponseError(500, "Internal Server Error");
             }
+            client.addHeader(std::pair<std::string, std::string>("Content-Type", "text/" + client.getExtension())); // TODO check actual type
         }
-        client.addHeader(std::pair<std::string, std::string>("Content-Type", "text/" + client.getExtension())); // TODO check actual type
         client.addHeader(std::pair<std::string, std::string>("Content-Length", std::to_string(fileContent.size())));
         client.buildHeader();
         return (client.getResponse() + fileContent);

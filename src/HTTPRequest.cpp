@@ -115,8 +115,9 @@ void HTTPRequest::charChange(std::string &str, char s, char d)
 std::string HTTPRequest::findInMap(std::string key) const
 {
     std::map<std::string, std::string>::const_iterator in = httpHeaders.find(key);
-    if (in != httpHeaders.end())
+    if (in != httpHeaders.end()) {
         return (in->second);
+    }
     std::string nill;
     return (nill);
 }
@@ -189,9 +190,9 @@ void HTTPRequest::multipart(void)
     // }
 }
 
-void HTTPRequest::showHeaders( void )
+void HTTPRequest::showHeaders( void ) const
 {
-    std::map<std::string, std::string>::iterator it;
+    std::map<std::string, std::string>::const_iterator it;
     for(it = httpHeaders.begin(); it != httpHeaders.end(); it++)
     {
         std::cout << it->first << " = " << it->second << std::endl;

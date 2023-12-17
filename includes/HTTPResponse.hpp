@@ -31,6 +31,7 @@ class HTTPResponse
     protected:
         std::string _response;
         std::unordered_map<std::string, std::string> _responseHeader;
+        int _cgiPipeFd;
     private:
         std::string reserve;
 };

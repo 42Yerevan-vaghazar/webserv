@@ -15,6 +15,7 @@
 HTTPResponse::HTTPResponse( void )
 {
     _responseHeader["server"] = "webserv";
+    _cgiPipeFd = -1;
 }
 
 HTTPResponse::~HTTPResponse()
@@ -78,5 +79,6 @@ void HTTPResponse::buildHeader() {
             _response += it->second;
             _response += "\r\n";
     }
-    _response +=  "\r\n";
+    _response += "\r\n";
+
 }

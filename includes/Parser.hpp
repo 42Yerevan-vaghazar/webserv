@@ -84,6 +84,8 @@ class Parser
         void d_err_page(std::string &d_key, std::string &d_val, HTTPServer &srv);
         void d_server_name(std::string &d_key, std::string &d_val, HTTPServer &srv);
         void d_body_size(std::string &d_key, std::string &d_val, HTTPServer &srv);
+        void d_redirect(std::string &d_key, std::string &d_val, HTTPServer &srv);
+        void d_cgi(std::string &d_key, std::string &d_val, HTTPServer &srv);
     private:
         void l_root(std::string &d_key, std::string &d_val, Location &srv);
         void l_index(std::string &d_key, std::string &d_val, Location &srv);
@@ -91,6 +93,7 @@ class Parser
         void l_methods(std::string &d_key, std::string &d_val, Location &srv);
         void l_err_page(std::string &d_key, std::string &d_val, Location &srv);
         void l_redirect(std::string &d_key, std::string &d_val, Location &loc);
+        void l_cgi(std::string &d_key, std::string &d_val, Location &loc);
 };
 typedef std::map<std::string, void (Parser::*)(std::string &, std::string &, HTTPServer &)>::iterator FuncDir;
 typedef std::map<std::string, void (Parser::*)(std::string &, std::string &, Location &)>::iterator LocDir;

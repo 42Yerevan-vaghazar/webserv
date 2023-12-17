@@ -153,3 +153,7 @@ void Client::setResponse(const std::string &response) {
     _response = response;
     _isResponseReady = true;
 }
+
+const HTTPServer &Client::getSrv( void ) const {
+    return (_srv);
+};

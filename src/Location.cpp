@@ -15,7 +15,6 @@
 Location::Location(std::string const &location)
 {
 	this->location = location;
-	this->redirect = false;
 }
 
 Location::~Location()
@@ -23,26 +22,26 @@ Location::~Location()
 	
 }
 
-void Location::setRedirection(int status, std::string redirectPath)
-{
-	redirection.insert(std::make_pair(status, redirectPath));
-}
+// void Location::setRedirection(int status, std::string redirectPath)
+// {
+// 	redirection.insert(std::make_pair(status, redirectPath));
+// }
 
-std::map<int, std::string> const &Location::getRedirection( void ) const
-{
-	return (redirection);
-}
+// std::map<int, std::string> const &Location::getRedirection( void ) const
+// {
+// 	return (redirection);
+// }
 
 std::string const &Location::getLocation( void ) const
 {
 	return (this->location);
 }
 
-std::string Location::getRedirection(int status) const
-{
-	std::string nill;
-	std::map<int, std::string>::const_iterator it = redirection.find(status);
-	if (it != redirection.end())
-		return (it->second);
-	return (nill);
-}
+// std::string Location::getRedirection(int status) const
+// {
+// 	std::string nill;
+// 	std::map<int, std::string>::const_iterator it = redirection.find(status);
+// 	if (it != redirection.end())
+// 		return (it->second);
+// 	return (nill);
+// }

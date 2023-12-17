@@ -330,8 +330,9 @@ void HTTPRequest::checkPath(HTTPServer const &srv)
     
     }
     setExtension(_relativePath);
-    if (_extension == "php" || _extension == "python") {
+    if (srv.getCgi(_extension).first.empty() == false) {
         _isCgi = true;
+        std::cout << "_isCgi = true;\n";
     }
 }
 

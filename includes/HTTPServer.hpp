@@ -14,7 +14,7 @@
 #define HTTPSERVER_HPP
 #include "Libs.hpp"
 #include "Tcp.hpp"
-#include "core.hpp"
+#include "IListener.hpp"
 #include "ServerCore.hpp"
 #include "ServerManager.hpp"
 #include "ResponseError.hpp"
@@ -24,10 +24,8 @@ class HTTPRequest;
 class ServerManager;
 class Location;
 class Client;
-class HTTPServer : public Tcp, public IListener, public ServerCore 
+class HTTPServer : public Tcp, public IListener, public ServerCore
 {
-    public:
-        typedef std::map<sock_t, Client *> Map_Client;
     public:
         HTTPServer( void );
         ~HTTPServer();

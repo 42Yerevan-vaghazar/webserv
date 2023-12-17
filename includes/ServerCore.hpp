@@ -20,6 +20,7 @@ class HTTPRequest;
 struct ServerCore
 {
     public:
+        ServerCore();
         std::string const &getRoot( void ) const;
         std::vector<std::string> getIndexFiles( void ) const;
         std::vector<std::string> getMethods( void ) const;
@@ -36,6 +37,15 @@ struct ServerCore
         void setRoot(std::string const &root);
         void setAutoindex(std::string const &sw);
         void setSize(std::string const &bodySize);
+
+
+        void setRedirection(int status, std::string redirectPath);
+        std::map<int, std::string> const &getRedirection( void ) const;
+        std::string getRedirection(int status) const;
+        void setCgi(std::string cgiName, std::string cgiPath);
+        std::pair<std::string, std::string> getCgi( std::string const &cgiType) const;
+
+
     protected:
         std::string root;                                       // [root]               www/server1/
         std::vector<std::string> index;                         // [index]              index.html barev.html index.htm ....
@@ -43,8 +53,9 @@ struct ServerCore
         std::map<int, std::string> error_page;                  // [error_page]         404 [root]/error_pages/404.html 
         bool _autoindex;                                         // [_autoindex]          on (true) | off (false)
         unsigned long int client_body_size;                // [client_body_size]   200m -> 200.000.000byte -> 200mb
+        bool _redirect;
+        std::map<int, std::string> _redirections;
         std::map<std::string, std::string> _cgis;           // Example: cgi [php] [/usr/bin/php-cgi;]   // TODO get from config
         std::string _uploadDir;                             // Example: upload_dir /Imgs/;     // TODO get from config'
-        
 };
 #endif

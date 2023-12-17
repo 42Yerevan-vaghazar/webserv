@@ -12,6 +12,13 @@
 
 #include "ServerCore.hpp"
 
+ServerCore::ServerCore() {
+	_autoindex = false;
+	_redirect = false;
+	client_body_size = 0;
+};
+
+
 int ServerCore::getClientBodySize( void )
 {
 	return (client_body_size);
@@ -108,3 +115,35 @@ bool ServerCore::getAutoindex( void ) const
 {
 	return (_autoindex);
 }
+
+void ServerCore::setRedirection(int status, std::string redirectPath)
+{
+	_redirections.insert(std::make_pair(status, redirectPath));
+}
+
+std::map<int, std::string> const &ServerCore::getRedirection( void ) const
+{
+	return (_redirections);
+}
+
+std::string ServerCore::getRedirection(int status) const
+{
+	std::string nill;
+	std::map<int, std::string>::const_iterator it = _redirections.find(status);
+	if (it != _redirections.end())
+		return (it->second);
+	return (nill);
+}
+
+void ServerCore::setCgi(std::string cgiName, std::string cgiPath)
+{
+	_cgis.insert(std::make_pair(cgiName, cgiPath));
+}
+
+std::pair<std::string, std::string> ServerCore::getCgi( std::string const &cgiType) const {
+	std::string nill;
+	std::map<std::string, std::string>::const_iterator it = _cgis.find(cgiType);
+	if (it != _cgis.end())
+		return (std::make_pair(it->first, it->second));
+	return (std::make_pair("", ""));
+};

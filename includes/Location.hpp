@@ -22,12 +22,7 @@ class Location : public ServerCore
         ~Location();
     public:
         std::string const &getLocation( void ) const;
-        // void setRedirection(int status, std::string redirectPath);
-        // std::map<int, std::string> const &getRedirection( void ) const;
-        // std::string getRedirection(int status) const;
     private:
-        // bool redirect;
-        // std::map<int, std::string> redirection;
         std::string location;
         std::map<std::string, Location> nestedLocations;
 };

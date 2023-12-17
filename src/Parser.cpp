@@ -6,7 +6,7 @@
 /*   By: dmartiro <dmartiro@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/02 00:30:12 by dmartiro          #+#    #+#             */
-/*   Updated: 2023/12/17 14:40:41 by dmartiro         ###   ########.fr       */
+/*   Updated: 2023/12/17 15:29:27 by dmartiro         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,7 +25,7 @@ Parser::Parser(const char *confFile)
     directives["root"] = &Parser::d_root;
     directives["index"] = &Parser::d_index;
     directives["autoindex"] = &Parser::d_autoindex;
-    directives["methods"] = &Parser::d_methods;
+    directives["allow_methods"] = &Parser::d_methods;
     directives["error_page"] = &Parser::d_err_page;
     directives["client_body_size"] = &Parser::d_body_size;
     directives["return"] = &Parser::d_redirect;
@@ -35,13 +35,14 @@ Parser::Parser(const char *confFile)
     location_directives["root"] = &Parser::l_root;
     location_directives["index"] = &Parser::l_index;
     location_directives["autoindex"] = &Parser::l_autoindex;
-    location_directives["methods"] = &Parser::l_methods;
+    location_directives["allow_methods"] = &Parser::l_methods;
     location_directives["error_page"] = &Parser::l_err_page;
     location_directives["return"] = &Parser::l_redirect;
-    // location_directives["client_body_size"] = &Parser::l_body_size;
+    location_directives["client_body_size"] = &Parser::l_body_size;
     location_directives["cgi"] = &Parser::l_cgi;
     location_directives["upload_dir"] = &Parser::l_upload_dir;
 }
+
 
 Parser::~Parser()
 {
@@ -56,13 +57,12 @@ void Parser::start(ServerManager &mgn)
     Parser::intermediate_code_generation();
     Parser::syntax_analysis();
     Parser::fill_servers(mgn);
-
-
-    std::map<std::string, Location>::const_iterator it = mgn[0].getLocations().begin();
+    // std::map<std::string, Location>::const_iterator it = mgn[0].getLocations().begin();
     // std::cout << it->second.getRoot() << std::endl;
     // std::cout << it->second.getAutoindex() << std::endl;
     // std::cout << it->second.getErrPage(403) << std::endl;
-    // std::cout << it->second.getRedirection(301) << std::endl; 
+    // std::cout << it->second.getRedirection(301) << std::endl;
+    
     // std::list<Token>::iterator tok = tokens.begin();
     // for(; tok != tokens.end(); tok++)
     //     std::cout << tok->type << " : " << "|" << tok->token << "|" << std::endl;
@@ -379,6 +379,7 @@ void Parser::location(std::list<Token>::iterator& node, HTTPServer &srv)
     srv.push(location_Components[1], loc);
 }
 
+
 void Parser::l_directive(std::list<Token>::iterator &node, Location &loc)
 {
     std::string d_key;
@@ -429,12 +430,15 @@ void Parser::s_directive(std::list<Token>::iterator& node, HTTPServer &srv)
         throw HTTPCoreException("Directive Value: Value Can't be NULL");
     node->token[i] = ' ';
     
-    // std::cout << "|" << d_key << "|" << " : " << "|" << d_val << "|" << std::endl;
     FuncDir f = directives.find(d_key);
-    // std::cout << "f->first = " << f->first << std::endl;
     if (f != directives.end())
+    {
+        std::cout << "|" << d_key << "|" << " : " << "|" << d_val << "|" << std::endl;
+        std::cout << "f->first = " << f->first << std::endl << std::endl;
         (this->*(f->second))(d_val, srv);
+    }
 }
+
 
 void Parser::make_pair(size_t i, std::list<Token>::iterator& node, HTTPServer &srv)
 {
@@ -511,6 +515,9 @@ void Parser::d_err_page(std::string &d_val, HTTPServer &srv)
 
 void Parser::d_body_size(std::string &d_val, HTTPServer &srv)
 {
+    size_t spaceFound = d_val.find(" ");
+    if (spaceFound != std::string::npos)
+        throw HTTPCoreException("Client_Body_Size: Directive should has one value");
     for(size_t i = 0; i < d_val.size(); i++)
         if (!std::isdigit(d_val[i]))
             throw HTTPCoreException("Body_size: Size should be an INTEGER");
@@ -552,11 +559,20 @@ void Parser::d_cgi(std::string &d_val, HTTPServer &src)
     src.setCgi(cgi[0], cgi[1]);
 }
 
+void Parser::d_upload_dir(std::string &d_val, HTTPServer &srv)
+{
+    size_t spaceFound = d_val.find(" ");
+    if (spaceFound != std::string::npos)
+        throw HTTPCoreException("Upload_Dir: No Matching directive value syntax");
+    srv.setUploadDir(d_val);
+}
+
+
 void Parser::l_root(std::string &d_val, Location &loc)
 {
     size_t spaceFound = d_val.find(" ");
     if (spaceFound != std::string::npos)
-        throw HTTPCoreException("Root: directive should has one value");
+        throw HTTPCoreException("Root: No Matching directive value syntax");
     loc.setRoot(d_val);
 }
 
@@ -599,6 +615,17 @@ void Parser::l_err_page(std::string &d_val, Location &loc)
     loc.pushErrPage(std::atoi(err_page[0].c_str()), err_page[1]);
 }
 
+void Parser::l_body_size(std::string &d_val, Location &loc)
+{
+    size_t spaceFound = d_val.find(" ");
+    if (spaceFound != std::string::npos)
+        throw HTTPCoreException("Client_Body_Size: Directive should has one value");
+    for(size_t i = 0; i < d_val.size(); i++)
+        if (!std::isdigit(d_val[i]))
+            throw HTTPCoreException("Body_size: Size should be an INTEGER");
+    loc.setSize(d_val);
+}
+
 void Parser::l_redirect(std::string &d_val, Location &loc)
 {
     std::vector<std::string> redirect;
@@ -619,7 +646,6 @@ void Parser::l_redirect(std::string &d_val, Location &loc)
     }
 }
 
-
 void Parser::l_cgi(std::string &d_val, Location &loc)
 {
     std::vector<std::string> cgi;
@@ -635,13 +661,10 @@ void Parser::l_cgi(std::string &d_val, Location &loc)
     loc.setCgi(cgi[0], cgi[1]);
 }
 
-void Parser::d_upload_dir(std::string &d_val, HTTPServer &srv)
-{
-    std::cout << d_val << std::endl;
-}
-
 void Parser::l_upload_dir(std::string &d_val, Location &loc)
 {
-    
-    std::cout << d_val << std::endl;
+    size_t spaceFound = d_val.find(" ");
+    if (spaceFound != std::string::npos)
+        throw HTTPCoreException("Upload_Dir: No Matching directive value syntax");
+    loc.setUploadDir(d_val);
 }

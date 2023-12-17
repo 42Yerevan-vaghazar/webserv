@@ -105,7 +105,10 @@ void ServerCore::setSize(std::string const &bodySize)
 	if (*ptr != '\0') {
 		throw std::logic_error("client_body_size out of range unsigned long int max");
 	}
-	this->client_body_size = toLong;
+	if (errno == ERANGE && toLong == ULLONG_MAX)
+		this->client_body_size = 200;
+	else
+		this->client_body_size = toLong * 1048576 / 1;
 }
 
 void ServerCore::setUploadDir(std::string const &upload_dir)

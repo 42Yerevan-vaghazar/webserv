@@ -1,8 +1,10 @@
 #include "Cgi.hpp"
 #include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 std::map<std::string, std::string> Cgi::_env;
 
- #include <unistd.h>
+#include <unistd.h>
 int Cgi::execute(const Client &client) {
     char **argv = new char *[3];
     std::string argv1 = getcwd(NULL, 0) + std::string("/") + client.getSrv().getCgi(client.getExtension()).second;

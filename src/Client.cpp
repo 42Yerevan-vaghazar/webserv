@@ -132,16 +132,16 @@ bool Client::sendResponse() {
     size_t sendSize = WRITE_BUFFER < _response.size() ? WRITE_BUFFER : _response.size();
 
 
-    if (_response.empty() == true) {
-        _isResponseReady = false;
-    }
-
     if (send(fd, _response.c_str(), sendSize, 0) == -1) {
         return (false); // TODO is send function return -1 seting EAGAIN in errno
     }
     _response.erase(0, sendSize);
+
+    if (_response.empty() == true) {
+        _isResponseReady = false;
+    }
     // _response.clear();
-    return (_response.empty() && _cgiPipeFd == -1);
+    return (_response.empty());
 }
 
 void Client::setResponse(const std::string &response) {

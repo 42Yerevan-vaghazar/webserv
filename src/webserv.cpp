@@ -20,7 +20,6 @@ int main(int ac, char **av, char **env)
     (void)av;
     try
     {   
-        //Cgi::execute("www/server1/index.php", "php", env);
         ServerManager mgn(ac == 2 ? av[1] : DFLT);
         std::cout << "mgn.size() = " << mgn.size() << std::endl;
         for (size_t i = 0; i < mgn.size(); i++)

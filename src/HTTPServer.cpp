@@ -13,6 +13,7 @@
 #include "HTTPServer.hpp"
 #include <unordered_map>
 #include "HelperFunctions.hpp"
+#include "Cgi.hpp"
 
 size_t longestMatch(std::string const &s1, std::string const &s2);
 
@@ -126,13 +127,16 @@ const Location* HTTPServer::find(std::string const &prefix) const
     return (NULL);
 }
 
-
-
-
 std::vector<std::string> const &HTTPServer::getServerNames( void ) const
 {
     return (ServerName);
 }
+
+std::map<std::string, Location> const &HTTPServer::getLocations( void ) const
+{
+    return (locations);
+}
+
 
 sock_t HTTPServer::getfd( void ) const
 {
@@ -352,23 +356,32 @@ std::string HTTPServer::get(Client &client) {
     std::cout << "path = " << path << std::endl;
     if (access(path.c_str(), R_OK) == 0) {
         std::string fileContent;
-        try
-        {
-            if (this->getAutoindex() == true && HTTPRequest::isDir(path)) {
-                fileContent = directory_listing(path, client.getDisplayPath());
-            } else if (HTTPRequest::isDir(path)) {  //  TODO Set a default file to answer if the request is a directory.
-                throw ResponseError(404, "not found");
-            } else {
-                fileContent = fileToString(path);
+        if (client.isCgi() == true) {
+            int fd = Cgi::execute(client);
+            char buf[2000];
+            buf[read(fd, buf, 2000)] = '\0';
+            
+            std::cout << buf;
+            fileContent = buf;
+        } else {
+            try
+            {
+                if (this->getAutoindex() == true && HTTPRequest::isDir(path)) {
+                    fileContent = directory_listing(path, client.getDisplayPath());
+                } else if (HTTPRequest::isDir(path)) {  //  TODO Set a default file to answer if the request is a directory.
+                    throw ResponseError(404, "not found");
+                } else {
+                    fileContent = fileToString(path);
+                }
             }
-        }
-        catch(const ResponseError& e)  // TODO lava?
-        {
-            throw e;
-        }
-        catch(const std::exception& e)
-        {
-            throw ResponseError(500, "Internal Server Error");
+            catch(const ResponseError& e)
+            {
+                throw e;
+            }
+            catch(const std::exception& e)
+            {
+                throw ResponseError(500, "Internal Server Error");
+            }
         }
         client.addHeader(std::pair<std::string, std::string>("Content-Type", "text/" + client.getExtension())); // TODO check actual type
         client.addHeader(std::pair<std::string, std::string>("Content-Length", std::to_string(fileContent.size())));

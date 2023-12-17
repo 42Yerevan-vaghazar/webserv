@@ -86,8 +86,8 @@ std::string ServerCore::getErrPage(int key) const
 {
 	std::string nill;
 	std::map<int, std::string>::const_iterator it = error_page.find(key);
-	if (it != error_page.end() && HTTPRequest::isExist(it->second))
-			return (it->second);
+	if (it != error_page.end())
+		return (it->second);
 	return (nill);
 }
 

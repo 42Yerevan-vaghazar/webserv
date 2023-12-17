@@ -4,11 +4,9 @@
 
 <?php
 $txt1 = "Sum of x and y is:";
-$x = 1234;
-$y = 4321;
 
 echo "<h3>" . $txt1 . "</h3>";
-echo $x + $y;
+echo $_ENV["x"] + $_ENV["y"];
 ?>
 
 </body>

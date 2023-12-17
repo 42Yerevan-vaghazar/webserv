@@ -12,23 +12,12 @@
 
 #include "Client.hpp"
 
-// Client::Client( void )
-// {
-//     this->rd = 0;
-// }
-
 Client::Client(sock_t clfd, sock_t srfd, HTTPServer &srv) : _srv(srv)
 {
     this->fd = clfd;
     this->serverFd = srfd;
     this->rd = 0;
 }
-
-// Client::Client(sock_t clfd)
-// {
-//     this->fd = clfd;
-//     this->serverFd = -1;
-// }
 
 Client::~Client()
 {
@@ -44,17 +33,10 @@ sock_t Client::getServerFd( void ) const
     return (this->serverFd);
 }
 
-// const HTTPRequest &Client::getRequest() const {
-//     return (_request);
-// }
+std::string Client::getServerPort( void ) const {
+    return (_srv.getPort());
+};
 
-// HTTPResponse &Client::getResponse() {
-//     return (_response);
-// };
-
-// std::string &Client::getResponse() {
-//     return (_response);
-// }
 int Client::receiveRequest() {
     char buf[READ_BUFFER];
     errno = 0;

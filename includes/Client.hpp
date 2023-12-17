@@ -29,6 +29,7 @@ class Client : public HTTPRequest, public HTTPResponse
     public:
         sock_t getFd( void ) const;
         sock_t getServerFd( void ) const;
+        std::string getServerPort( void ) const;
         // const HTTPRequest &getRequest() const;
         // HTTPResponse &getResponse();
         int receiveRequest();

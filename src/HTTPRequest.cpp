@@ -29,6 +29,7 @@ HTTPRequest::HTTPRequest(void)
     _isRequestReady = false;
     _isOpenConnection = false;
     _isResponseReady = false;
+    _isCgi = false;
     //boundary = "&"; // !IMPORTANT: if GET request: the boundary is (&) else if POST request: boundary is read from (Headers)
 }
 
@@ -111,9 +112,9 @@ void HTTPRequest::charChange(std::string &str, char s, char d)
     }
 }
 
-std::string HTTPRequest::findInMap(std::string key)
+std::string HTTPRequest::findInMap(std::string key) const
 {
-    std::map<std::string, std::string>::iterator in = httpHeaders.find(key);
+    std::map<std::string, std::string>::const_iterator in = httpHeaders.find(key);
     if (in != httpHeaders.end())
         return (in->second);
     std::string nill;
@@ -291,7 +292,7 @@ void HTTPRequest::checkPath(HTTPServer const &srv)
     location = srv.find(_path);
     if (location)
     {
-        if (true) {
+        if (false) {
             checkRedirect(location->getLocation(), "_path"); // TODO change path to redirect path defined in congige file
         }
 
@@ -309,7 +310,7 @@ void HTTPRequest::checkPath(HTTPServer const &srv)
         }
     }
     else {
-        if (true && _path == "/") {
+        if (false && _path == "/") {
             checkRedirect("/", "_path"); // TODO change path to redirect path defined in congige file
         }
         _relativePath = middle_slash(srv.getRoot(), '/', _path);
@@ -329,6 +330,9 @@ void HTTPRequest::checkPath(HTTPServer const &srv)
     
     }
     setExtension(_relativePath);
+    if (_extension == "php" || _extension == "python") {
+        _isCgi = true;
+    }
 }
 
 std::vector<std::string> HTTPRequest::pathChunking(std::string const &rPath)
@@ -434,4 +438,21 @@ std::string const &HTTPRequest::getRedirectPath() const {
 
 void HTTPRequest::setRedirectPath(const std::string &path) {
     _redirectPath = path;
+};
+
+std::string const &HTTPRequest::getQueryString() const
+{
+    return queryString;
+}
+
+void HTTPRequest::setCgiPath(const std::string &cgiPath) {
+    _cgiPath = cgiPath;
+};
+
+std::string const &HTTPRequest::getCgiPath() const {
+    return (_cgiPath);
+};
+
+bool HTTPRequest::isCgi() const {
+    return (_isCgi);
 };

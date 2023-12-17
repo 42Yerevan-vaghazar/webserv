@@ -47,6 +47,7 @@ class HTTPServer : public Tcp, public IListener, public ServerCore
         const Location* findMatching(std::string const &realPath) const;
         bool exist(sock_t fd);
         std::vector<std::string> const &getServerNames( void ) const;
+        std::map<std::string, Location> const &getLocations( void ) const;
     public:
         void request(Client &cl);
     private:

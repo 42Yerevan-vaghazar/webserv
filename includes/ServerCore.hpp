@@ -43,5 +43,8 @@ struct ServerCore
         std::map<int, std::string> error_page;                  // [error_page]         404 [root]/error_pages/404.html 
         bool _autoindex;                                         // [_autoindex]          on (true) | off (false)
         unsigned long int client_body_size;                // [client_body_size]   200m -> 200.000.000byte -> 200mb
+        std::map<std::string, std::string> _cgis;           // Example: cgi [php] [/usr/bin/php-cgi;]   // TODO get from config
+        std::string _uploadDir;                             // Example: upload_dir /Imgs/;     // TODO get from config'
+        
 };
 #endif

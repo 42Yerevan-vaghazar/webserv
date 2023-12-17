@@ -109,6 +109,7 @@ void ServerCore::setSize(std::string const &bodySize)
 		this->client_body_size = 200;
 	else
 		this->client_body_size = toLong * 1048576 / 1;
+	std::cout << "client_body_size = " << client_body_size << std::endl;
 }
 
 bool ServerCore::getAutoindex( void ) const

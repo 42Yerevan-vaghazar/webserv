@@ -358,12 +358,22 @@ std::string HTTPServer::get(Client &client) {
         std::string fileContent;
         if (client.isCgi() == true) {
             int fd = Cgi::execute(client);
-            fileContent = buf;
-            int posBody = fileContent.find("<");
+            char buf[READ_BUFFER];
+            int rsize = 1;
+            while (rsize != 0 && rsize != -1) {
+                rsize = read(fd, buf, READ_BUFFER - 1);
+                if (rsize == -1) {
+                    throw ResponseError(500, "Internal Server Error rsize == -1");
+                }
+                buf[rsize] = '\0';
+                fileContent.append(buf);
+            }
+            int posBody = fileContent.find("\r\n\r\n");
             if (posBody == std::string::npos) {
-                throw ResponseError(500, "not found");  // TODO change it to actual status
+                throw ResponseError(500, "Internal Server Error int posBody = fileContent.find");
             }
             fileContent.erase(0, posBody);
+            client.setCgiPipeFd(fd);
             client.addHeader(std::pair<std::string, std::string>("Content-Type", "text/html")); // TODO check actual type
         } else {
             try
@@ -397,30 +407,53 @@ std::string HTTPServer::get(Client &client) {
 std::string HTTPServer::post(Client &client) {
     
     std::cout << "\n--- in Post function \n" << std::endl;
-    // TODO if cgi exstention detected go through cgi and give body as stdin else get files
-    // TODO if multipart data not detected throw precondition failed
-    const std::unordered_map<std::string, std::string> &uploadedFiles = client.getUploadedFiles();
-    std::unordered_map<std::string, std::string>::const_iterator it = uploadedFiles.cbegin();
-    // std::cout << "filename = " << fileName << std::endl;
-    for (; it != uploadedFiles.cend(); ++it) {
-        const std::string &fileName = it->first;
-        const std::string &fileContent = it->second;
-        std::ofstream ofs("./www/server1/data_base/" + fileName);
-        
-        if (ofs.is_open() == false) {
-            throw ResponseError(507 , "Insufficient Storage");
+    std::string fileContentCgi = "ok";
+    if (client.isCgi() == true) {
+        int fd = Cgi::execute(client);
+        char buf[READ_BUFFER];
+        int rsize = 1;
+        while (rsize != 0 && rsize != -1) {
+            rsize = read(fd, buf, READ_BUFFER - 1);
+            if (rsize == -1) {
+                throw ResponseError(500, "Internal Server Error rsize == -1");
+            }
+            buf[rsize] = '\0';
+            fileContentCgi.append(buf);
         }
-        ofs << fileContent;
-        if (ofs.good() == false) {
-            throw ResponseError(507 , "Insufficient Storage");
+        int posBody = fileContentCgi.find("<");
+        if (posBody == std::string::npos) {
+            throw ResponseError(500, "Internal Server Error fileContentCgi.find(<)");
         }
-        ofs.close();
+        fileContentCgi.erase(0, posBody);
+        client.setCgiPipeFd(fd);
+        client.addHeader(std::pair<std::string, std::string>("Content-Type", "text/html")); // TODO check actual type
+    } else {
+
+        // TODO if cgi exstention detected go through cgi and give body as stdin else get files
+        // TODO if multipart data not detected throw precondition failed
+        const std::unordered_map<std::string, std::string> &uploadedFiles = client.getUploadedFiles();
+        std::unordered_map<std::string, std::string>::const_iterator it = uploadedFiles.cbegin();
+        // std::cout << "filename = " << fileName << std::endl;
+        for (; it != uploadedFiles.cend(); ++it) {
+            const std::string &fileName = it->first;
+            const std::string &fileContent = it->second;
+            std::ofstream ofs("./www/server1/data_base/" + fileName);
+            
+            if (ofs.is_open() == false) {
+                throw ResponseError(507 , "Insufficient Storage");
+            }
+            ofs << fileContent;
+            if (ofs.good() == false) {
+                throw ResponseError(507 , "Insufficient Storage");
+            }
+            ofs.close();
+        }
     }
     std::string response;
     client.addHeader(std::pair<std::string, std::string>("content-type", "text/plain"));
     client.buildHeader();
     response = client.getResponse();
-    response += "ok";
+    response.append(fileContentCgi);
     return (response);
 };
 

@@ -28,6 +28,7 @@ class HTTPResponse
         std::unordered_map<std::string, std::string> &getResponseHeader();
         void addHeader(const std::pair<std::string, std::string> &);
         void buildHeader();
+        void setCgiPipeFd(int fd);
     protected:
         std::string _response;
         std::unordered_map<std::string, std::string> _responseHeader;

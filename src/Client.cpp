@@ -41,11 +41,9 @@ int Client::receiveRequest() {
     char buf[READ_BUFFER];
     errno = 0;
     int rdSize = recv(fd, buf, sizeof(buf), 0);
-    if (rdSize == -1) { // TODO Checking the value of errno is strictly forbidden after a read or a write operation.
-    // TODO add time information for client and throw request timout error response 408 Request Timeout
+    if (rdSize == -1) { 
         return (0);
     }
-    // std::cout << "rdSize = " << rdSize << std::endl;
     if (rdSize == 0) {
         return (-1);
     }
@@ -61,6 +59,7 @@ int Client::receiveRequest() {
             _bodySize = 0;
         } else {
             _bodySize = std::stoi(httpRequest.substr(httpRequest.find("Content-Length: ") + strlen("Content-Length: "), 10));  // TODO throw 413 if the bodt size of payload is bigger then limits predefined configs;
+            // if (_bodySize > )
         }
 
         std::string tmpBody = httpRequest.substr(headerEndPos + 3);
@@ -122,9 +121,9 @@ void Client::parse()
     }
     httpRequest.clear();
     std::cout << "method = " << method << std::endl;
-    if (method == "POST") {
-        multipart();
-    }
+    // if (method == "POST") {
+    //     multipart();
+    // }
     
     HTTPRequest::checkPath(this->_srv);
     //    std::cout << "method = " << method << std::endl;
@@ -139,20 +138,28 @@ void Client::parse()
 bool Client::sendResponse() {
     size_t sendSize = WRITE_BUFFER < _response.size() ? WRITE_BUFFER : _response.size();
 
+
     if (_response.empty() == true) {
-        if (_isCgi == true) {
-            char buf[sendSize];
-            int rfd = read(_cgiPipeFd, buf, sendSize);
-            if (rfd == -1) {
-                return (0);
-            }
-            if (rfd == 0) {
-                _cgiPipeFd = -1;
-            }
-            buf[rfd] = '\0';
-            _response = buf;
-        }
-        _isResponseReady = false;
+        // if (_isCgi == true) {
+        //     std::cout << "_isCgi == true\n";
+        //     char buf[WRITE_BUFFER];
+        //     std::cout << "_cgiPipeFd = " << _cgiPipeFd << std::endl;
+        //     int rfd = read(_cgiPipeFd, buf, WRITE_BUFFER - 1);
+        //     std::cout << "rfd = " << rfd << std::endl;
+        //     buf[rfd] = '\0';
+        //     if (rfd == -1) {
+        //         return (0);
+        //     }
+        //     if (rfd == 0) {
+        //         _cgiPipeFd = -1;
+        //     }
+        //     buf[rfd] = '\0';
+        //     _response = buf;
+        //     sendSize = _response.size();
+        //     std::cout << "_response\n";
+        // } else {
+            _isResponseReady = false;
+        // }
     }
 
     if (send(fd, _response.c_str(), sendSize, 0) == -1) {

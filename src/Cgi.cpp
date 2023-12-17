@@ -1,5 +1,5 @@
 #include "Cgi.hpp"
-
+#include <unistd.h>
 std::map<std::string, std::string> Cgi::_env;
 
  #include <unistd.h>
@@ -11,27 +11,29 @@ int Cgi::execute(const Client &client) {
     argv[1] = const_cast<char *>(argv2.c_str());
     argv[2] = NULL;
 
-    int fd[2];
+    int fd_from_child[2];
+    int fd_from_parent[2];
 
-    if (pipe(fd) == -1) {
+    if (pipe(fd_from_child) == -1 || pipe(fd_from_parent)) {
         delete [] argv;
         throw std::runtime_error(std::string("pipe:") + strerror(errno));
     }
+    write(fd_from_parent[1], client.getBody().c_str(), client.getBody().size());
+    close(fd_from_parent[1]);
     int pid = fork();
+
     if (pid == -1) {
         delete [] argv;
         throw std::runtime_error(std::string("fork:") + strerror(errno));
     }
     char **envp = Cgi::initEnv(client);
-    // int i = 0;
-    // while (envp[i]) {
-    //     printf("%s\n", envp[i++]);
-    // }
 
     if (pid == 0) {
-        dup2(fd[1], 1);
-        close(fd[0]);
-        close(fd[1]);
+        dup2(fd_from_child[1], 1);
+        close(fd_from_child[0]);
+        close(fd_from_child[1]);
+        dup2(fd_from_parent[0], 0);
+        close(fd_from_parent[0]);
         std::cout << "execve = " << execve(argv[0], argv, envp) << std::endl;
         perror("execve: ");
         exit(1);
@@ -44,8 +46,8 @@ int Cgi::execute(const Client &client) {
             throw std::runtime_error("execute: failed");
         }
     }
-    close(fd[1]);
-    return (fd[0]);
+    close(fd_from_child[1]);
+    return (fd_from_child[0]);
 };
 
 char **Cgi::initEnv(Client const &client)

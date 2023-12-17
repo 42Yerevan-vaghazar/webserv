@@ -1,0 +1,29 @@
+
+$('video').playbackRate = 2.5
+ $('video').playbackRate=x
+
+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
+
+
+
+docker-compose down  # Stop container on current dir if there is a docker-compose.yml
+docker rm -fv $(docker ps -aq)  # Remove all containers
+sudo lsof -i -P -n | grep <port number>  # List who's using the port
+
+kill -9 <process id>
+
+sudo systemctl disable ssh.service
+
+sudo systemctl stop ssh.service
+
+
+docker exec -it mariadb mysql -u root
+
+show databases;
+
+-fno-elide-constructors
+
+ios_base::sync_with_stdio(false);
+
+
+48

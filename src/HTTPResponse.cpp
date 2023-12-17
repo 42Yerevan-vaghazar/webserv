@@ -82,3 +82,7 @@ void HTTPResponse::buildHeader() {
     _response += "\r\n";
 
 }
+
+void HTTPResponse::setCgiPipeFd(int fd) {
+    _cgiPipeFd = fd;
+};

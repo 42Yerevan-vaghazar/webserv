@@ -39,7 +39,6 @@ Parser::Parser(const char *confFile)
     // location_directives["client_body_size"] = &Parser::l_body_size;
     location_directives["return"] = &Parser::l_redirect;
     location_directives["cgi"] = &Parser::l_cgi;
-
 }
 
 Parser::~Parser()
@@ -419,6 +418,8 @@ void Parser::s_directive(std::list<Token>::iterator& node, HTTPServer &srv)
         throw HTTPCoreException("Directive Value: Value Can't be NULL");
     node->token[i] = ' ';
     FuncDir f = directives.find(d_key);
+    std::cout << "f->first = " << f->first << std::endl;
+
     if (f != directives.end())
         (this->*(f->second))(d_key, d_val, srv);
 }

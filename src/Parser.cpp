@@ -510,7 +510,7 @@ void Parser::d_err_page(std::string &d_val, HTTPServer &srv)
     for(size_t i = 0; i < err_page[0].size(); i++)
         if (!std::isdigit(err_page[0][i]))
             throw HTTPCoreException("Error_page: Key should be an INTEGER");
-    srv.pushErrPage(std::atoi(err_page[0].c_str()), err_page[1]);
+    srv.pushErrPage(std::atoi(err_page[0].c_str()), srv.getRoot() + err_page[1]);
 }
 
 void Parser::d_body_size(std::string &d_val, HTTPServer &srv)

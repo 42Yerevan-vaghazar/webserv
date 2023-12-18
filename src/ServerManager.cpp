@@ -93,39 +93,33 @@ void ServerManager::start() {
 std::string ServerManager::generateErrorResponse(const ResponseError& e, Client &client) {
     // TODO automate it   404, 405, 411, 412, 413, 414, 431, 500, 501, 505, 503, 507, 508
     std::string response;
-    std::string fileContent;
+    std::string resBody;
 
     if (e.getStatusCode() == 301) {
         client.addHeader(std::make_pair("Location", client.getRedirectPath()));
     }
     try
     {
-        fileContent = fileToString("./www/server1/error_pages/404.html");
+        resBody = fileToString(client.getSrv().getErrPage(e.getStatusCode()));
     }
-    catch(const std::exception& e)
+    catch(...)
     {
-        if (e.what() == std::string("can not open file")) {
-            throw ResponseError(500, "Internal Server Error");
-        }
-        if (e.what() == std::string("is not a directory")) {
-            throw ResponseError(500, "Internal Server Error");
-        }
+        resBody += "<html>";
+		resBody += "<head><title>" + std::to_string(e.getStatusCode()) + " " + e.what() + "</title></head>";
+		resBody += "<body>";
+		resBody += "<center><h1>" + std::to_string(e.getStatusCode()) + " " + e.what() + "</h1></center><hr>";
+		resBody += "</body>";
+		resBody += "</html>";
     }
-    
-    size_t pos = fileContent.find("404");
-    if (pos != std::string::npos) {
-        fileContent.replace(pos, strlen("404"), std::to_string(e.getStatusCode()) + " " + e.what());
-    } else {
-        fileContent = "Error" + std::to_string(e.getStatusCode());
-    };
+
     response = HTTP_VERSION;
     response += " " + std::to_string(e.getStatusCode());
     response += "\r\n";
     client.addHeader(std::pair<std::string, std::string>("Content-Type", "text/html")); // TODO check actual type
-    client.addHeader(std::pair<std::string, std::string>("Content-Length", std::to_string(fileContent.size())));
+    client.addHeader(std::pair<std::string, std::string>("Content-Length", std::to_string(resBody.size())));
     client.buildHeader();
     response += client.getResponse();
-    response +=  fileContent;
+    response +=  resBody;
     return (response);
 }
 

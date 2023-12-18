@@ -18,7 +18,7 @@ int Cgi::execute(const Client &client) {
 
     if (pipe(fd_from_child) == -1 || pipe(fd_from_parent)) {
         delete [] argv;
-        throw std::runtime_error(std::string("pipe:") + strerror(errno));
+        throw ResponseError(500, "Internal Server Error");
     }
     write(fd_from_parent[1], client.getBody().c_str(), client.getBody().size());
     close(fd_from_parent[1]);
@@ -26,7 +26,7 @@ int Cgi::execute(const Client &client) {
 
     if (pid == -1) {
         delete [] argv;
-        throw std::runtime_error(std::string("fork:") + strerror(errno));
+        throw ResponseError(500, "Internal Server Error");
     }
     char **envp = Cgi::initEnv(client);
 
@@ -40,15 +40,15 @@ int Cgi::execute(const Client &client) {
         perror("execve: ");
         exit(1);
     }
+    close(fd_from_child[1]);
     delete [] argv;
     int status;
     waitpid(pid, &status, 0);
     if (WIFEXITED(status)) {
         if (WEXITSTATUS(status) != 0) {
-            throw std::runtime_error("execute: failed");
+            throw ResponseError(400, "Bad Request");
         }
     }
-    close(fd_from_child[1]);
     return (fd_from_child[0]);
 };
 

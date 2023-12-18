@@ -128,7 +128,7 @@ void HTTPRequest::multipart(void)
 
     if(it == httpHeaders.end())
     {
-        throw ResponseError(428, "Precondition Required");
+        throw ResponseError(411, "Length Required");
     }
     std::string contentType = it->second;
     contentType.erase(0, contentType.find(";")+1);

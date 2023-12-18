@@ -72,6 +72,7 @@ void HTTPResponse::addHeader(const std::pair<std::string, std::string> &pair) {
 
 
 void HTTPResponse::buildHeader() {
+    _response.clear();
     for (std::unordered_map<std::string, std::string>::iterator it = _responseHeader.begin();
         it != _responseHeader.end(); ++it) {
             _response += it->first;

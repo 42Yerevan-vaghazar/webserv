@@ -52,8 +52,8 @@ void ServerManager::start() {
                 break;
             }
         }
-        if (client == NULL) {  //TODO probably it never works
-            throw std::runtime_error("client not found");
+        if (client == NULL) {
+            continue ;
         }
         try
         {
@@ -78,8 +78,7 @@ void ServerManager::start() {
         }
         catch(const ResponseError& e)
         {
-            std::cout << "ResponseError\n";
-            client->setResponse( generateErrorResponse(e, *client));
+            client->setResponse(generateErrorResponse(e, *client));
         }
         catch(const std::exception& e)
         {

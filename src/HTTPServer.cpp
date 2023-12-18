@@ -328,10 +328,10 @@ std::string HTTPServer::post(Client &client) {
         for (; it != uploadedFiles.cend(); ++it) {
             const std::string &fileName = it->first;
             const std::string &fileContent = it->second;
-            std::ofstream ofs("./www/server1/data_base/" + fileName);
+            std::ofstream ofs(client.getSrv().getUploadDir() + fileName);
             
             if (ofs.is_open() == false) {
-                throw ResponseError(507 , "Insufficient Storage");
+                throw ResponseError(500 , "Internal Server Error");
             }
             ofs << fileContent;
             if (ofs.good() == false) {

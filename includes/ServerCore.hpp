@@ -38,6 +38,7 @@ struct ServerCore
         void setAutoindex(std::string const &sw);
         void setSize(std::string const &bodySize);
         void setUploadDir(std::string const &upload_dir);
+        std::string const &getUploadDir(void) const;
     public:
         void setRedirection(int status, std::string redirectPath);
         void setR(bool status);

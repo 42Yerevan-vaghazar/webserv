@@ -116,6 +116,10 @@ void ServerCore::setUploadDir(std::string const &upload_dir)
 	_uploadDir = upload_dir;
 }
 
+std::string const &ServerCore::getUploadDir(void) const {
+	return (_uploadDir);
+};
+
 bool ServerCore::getAutoindex( void ) const
 {
 	return (_autoindex);

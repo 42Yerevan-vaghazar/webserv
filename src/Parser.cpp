@@ -564,7 +564,7 @@ void Parser::d_upload_dir(std::string &d_val, HTTPServer &srv)
     size_t spaceFound = d_val.find(" ");
     if (spaceFound != std::string::npos)
         throw HTTPCoreException("Upload_Dir: No Matching directive value syntax");
-    srv.setUploadDir(d_val);
+    srv.setUploadDir(srv.getRoot() + d_val + "/");
 }
 
 
@@ -666,5 +666,5 @@ void Parser::l_upload_dir(std::string &d_val, Location &loc)
     size_t spaceFound = d_val.find(" ");
     if (spaceFound != std::string::npos)
         throw HTTPCoreException("Upload_Dir: No Matching directive value syntax");
-    loc.setUploadDir(d_val);
+    loc.setUploadDir(loc.getRoot() + d_val + "/");
 }

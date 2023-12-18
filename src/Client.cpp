@@ -49,7 +49,7 @@ int Client::receiveRequest() {
     }
     if (_isHeaderReady == false) {
         httpRequest.append(buf, rdSize);
-        size_t headerEndPos = httpRequest.find("\n\r\n");
+        size_t headerEndPos = httpRequest.find("\r\n\r\n");
         if (headerEndPos == std::string::npos) {
             return 0;
         }
@@ -64,7 +64,7 @@ int Client::receiveRequest() {
             }
         }
 
-        std::string tmpBody = httpRequest.substr(headerEndPos + 3);
+        std::string tmpBody = httpRequest.substr(headerEndPos + strlen("\r\n\r\n"));
         httpRequest.erase(headerEndPos);
         if (_bodySize != 0) {
             _body = tmpBody;
@@ -121,11 +121,13 @@ void Client::parse()
         }
     }
     httpRequest.clear();
-    // if (method == "POST") {
-    //     multipart();
-    // }
-    
     HTTPRequest::checkPath(this->_srv);
+    if (method == "POST") {
+        if (_isCgi == true) {
+
+        }
+        multipart();
+    }
 }
 
 bool Client::sendResponse() {
@@ -147,6 +149,8 @@ bool Client::sendResponse() {
 void Client::setResponse(const std::string &response) {
     _response = response;
     _isResponseReady = true;
+    _isRequestReady = true;
+    _isHeaderReady = true;
 }
 
 const HTTPServer &Client::getSrv( void ) const {

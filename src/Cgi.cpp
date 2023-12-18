@@ -7,9 +7,9 @@ std::map<std::string, std::string> Cgi::_env;
 #include <unistd.h>
 int Cgi::execute(const Client &client) {
     char **argv = new char *[3];
-    std::string argv1 = getcwd(NULL, 0) + std::string("/") + client.getSrv().getCgi(client.getExtension()).second;
+    const std::string &argv1 = getcwd(NULL, 0) + std::string("/") + client.getSrv().getCgi(client.getExtension()).second;
     argv[0] = const_cast<char *>(argv1.c_str());
-    std::string argv2 =  getcwd(NULL, 0) + std::string("/") + client.getPath();
+    const std::string &argv2 =  getcwd(NULL, 0) + std::string("/") + client.getPath();
     argv[1] = const_cast<char *>(argv2.c_str());
     argv[2] = NULL;
 

@@ -108,7 +108,7 @@ void ServerCore::setSize(std::string const &bodySize)
 	if (errno == ERANGE && toLong == ULLONG_MAX)
 		this->client_body_size = 200;
 	else
-		this->client_body_size = toLong * 1048576 / 1;
+		this->client_body_size = toLong;
 }
 
 void ServerCore::setUploadDir(std::string const &upload_dir)

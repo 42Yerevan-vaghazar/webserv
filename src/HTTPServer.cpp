@@ -247,101 +247,29 @@ size_t longestMatch(std::string const &s1, std::string const &s2)
     return (match);
 }
 
+std::string HTTPServer::executeCgi(Client &client) {
+    std::string fileContent;
+    int fd = Cgi::execute(client);
+    char buf[READ_BUFFER];
+    int rsize = 1;
 
-
-
-//ServerCore////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////
-/***************************************************************** */
-
-// int HTTPServer::getClientBodySize( void )
-// {
-// 	return (client_body_size);
-// }
-
-// void HTTPServer::pushIndex(std::string const &fileNameExample)
-// {
-// 	index.push_back(fileNameExample);
-// }
-
-// void HTTPServer::pushMethods(std::string const &method)
-// {
-// 	std::string capitalized = method;
-// 	for(size_t i = 0; i < method.size(); i++)
-// 		capitalized[i] = std::toupper(capitalized[i]);
-// 	methods.push_back(capitalized);
-// }
-
-// std::vector<std::string> HTTPServer::getIndexFiles( void ) const
-// {
-// 	return (this->index);
-// }
-
-// std::vector<std::string> HTTPServer::getMethods( void ) const
-// {
-// 	return (this->methods);
-// }
-
-// void HTTPServer::setRoot(std::string const &root)
-// {
-// 	this->root = root;
-// }
-
-// std::string const &HTTPServer::getRoot( void ) const
-// {
-// 	return (this->root);
-// }
-
-// const char* HTTPServer::findIndex(std::string const &filename) const
-// {
-// 	size_t i = 0;
-// 	for(; i < index.size(); i++)
-// 		if (index[i] == filename)
-// 			return (index[i].c_str());
-// 	return (NULL);
-// }
-
-// const char* HTTPServer::findMethod(std::string const &method) const
-// {
-// 	size_t i = 0;
-// 	for(; i < methods.size(); i++)
-// 		if (methods[i] == method)
-// 			return (methods[i].c_str());
-// 	return (NULL);
-// }
-
-// const char* HTTPServer::findErrorPage(std::string const &status_code)
-// {
-// 	std::map<std::string, std::string>::iterator it = error_page.find(status_code);
-// 	if (it != error_page.end())
-// 		return (it->second.c_str());
-// 	return (NULL);
-// }
-
-// void HTTPServer::setAutoindex(std::string const &sw)
-// {
-// 	(sw == "on") ? this->autoindex = 1 : this->autoindex = 0;
-// }
-
-// void HTTPServer::pushErrPage(std::string const &key, std::string const &errpage_filename)
-// {
-// 	error_page.insert(std::make_pair(key, errpage_filename));
-// }
-
-// void HTTPServer::setSize(std::string const &_bodySize)
-// {
-// 	unsigned long long int toLong = std::strtoull(_bodySize.c_str(), NULL, 10);
-// 	if (errno == ERANGE && toLong == ULLONG_MAX)
-// 		this->client_body_size = 200;
-// 	else
-// 		this->client_body_size = toLong * 1048576 / 1;
-// }
-
-// bool HTTPServer::getAutoindex( void ) const
-// {
-// 	return (autoindex);
-// }
-
+    while (rsize != 0 && rsize != -1) {
+        rsize = read(fd, buf, READ_BUFFER - 1);
+        if (rsize == -1) {
+            throw ResponseError(500, "Internal Server Error rsize == -1");
+        }
+        buf[rsize] = '\0';
+        fileContent.append(buf);
+    }
+    int posBody = fileContent.find("\r\n\r\n");
+    if (posBody == std::string::npos) {
+        throw ResponseError(500, "Internal Server Error int posBody = fileContent.find");
+    }
+    fileContent.erase(0, posBody);
+    client.setCgiPipeFd(fd);
+    client.addHeader(std::pair<std::string, std::string>("Content-Type", "text/html")); // TODO check actual type
+    return (fileContent);
+}
 
 std::string HTTPServer::get(Client &client) {
     const std::string &path = client.getPath();
@@ -356,24 +284,7 @@ std::string HTTPServer::get(Client &client) {
     if (access(path.c_str(), R_OK) == 0) {
         std::string fileContent;
         if (client.isCgi() == true) {
-            int fd = Cgi::execute(client);
-            char buf[READ_BUFFER];
-            int rsize = 1;
-            while (rsize != 0 && rsize != -1) {
-                rsize = read(fd, buf, READ_BUFFER - 1);
-                if (rsize == -1) {
-                    throw ResponseError(500, "Internal Server Error rsize == -1");
-                }
-                buf[rsize] = '\0';
-                fileContent.append(buf);
-            }
-            int posBody = fileContent.find("\r\n\r\n");
-            if (posBody == std::string::npos) {
-                throw ResponseError(500, "Internal Server Error int posBody = fileContent.find");
-            }
-            fileContent.erase(0, posBody);
-            client.setCgiPipeFd(fd);
-            client.addHeader(std::pair<std::string, std::string>("Content-Type", "text/html")); // TODO check actual type
+            fileContent = executeCgi(client);
         } else {
             try
             {
@@ -408,26 +319,8 @@ std::string HTTPServer::post(Client &client) {
     std::cout << "\n--- in Post function \n" << std::endl;
     std::string fileContentCgi = "ok";
     if (client.isCgi() == true) {
-        int fd = Cgi::execute(client);
-        char buf[READ_BUFFER];
-        int rsize = 1;
-        while (rsize != 0 && rsize != -1) {
-            rsize = read(fd, buf, READ_BUFFER - 1);
-            if (rsize == -1) {
-                throw ResponseError(500, "Internal Server Error rsize == -1");
-            }
-            buf[rsize] = '\0';
-            fileContentCgi.append(buf);
-        }
-        int posBody = fileContentCgi.find("<");
-        if (posBody == std::string::npos) {
-            throw ResponseError(500, "Internal Server Error fileContentCgi.find(<)");
-        }
-        fileContentCgi.erase(0, posBody);
-        client.setCgiPipeFd(fd);
-        client.addHeader(std::pair<std::string, std::string>("Content-Type", "text/html")); // TODO check actual type
+        fileContentCgi = executeCgi(client);
     } else {
-
         // TODO if cgi exstention detected go through cgi and give body as stdin else get files
         // TODO if multipart data not detected throw precondition failed
         const std::unordered_map<std::string, std::string> &uploadedFiles = client.getUploadedFiles();

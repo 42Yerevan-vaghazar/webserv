@@ -68,6 +68,8 @@ class HTTPServer : public Tcp, public IListener, public ServerCore
         std::string post(Client &client);
         std::string del(Client &client);
         std::string processing(Client &client);
+
+        std::string executeCgi(Client &client);
     private:
         std::map<std::string, std::string (HTTPServer::*)(Client&)> methodsMap;
     public:

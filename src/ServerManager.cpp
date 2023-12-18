@@ -78,6 +78,7 @@ void ServerManager::start() {
         }
         catch(const ResponseError& e)
         {
+            std::cout << "ResponseError\n";
             client->setResponse( generateErrorResponse(e, *client));
         }
         catch(const std::exception& e)
@@ -120,6 +121,7 @@ std::string ServerManager::generateErrorResponse(const ResponseError& e, Client 
     response = HTTP_VERSION;
     response += " " + std::to_string(e.getStatusCode());
     response += "\r\n";
+    client.addHeader(std::pair<std::string, std::string>("Content-Type", "text/html")); // TODO check actual type
     client.addHeader(std::pair<std::string, std::string>("Content-Length", std::to_string(fileContent.size())));
     client.buildHeader();
     response += client.getResponse();

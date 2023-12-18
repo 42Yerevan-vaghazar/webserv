@@ -433,18 +433,18 @@ void Parser::s_directive(std::list<Token>::iterator& node, HTTPServer &srv)
     FuncDir f = directives.find(d_key);
     if (f != directives.end())
     {
-        std::cout << "|" << d_key << "|" << " : " << "|" << d_val << "|" << std::endl;
-        std::cout << "f->first = " << f->first << std::endl << std::endl;
+        // std::cout << "|" << d_key << "|" << " : " << "|" << d_val << "|" << std::endl;
+        // std::cout << "f->first = " << f->first << std::endl << std::endl;
         (this->*(f->second))(d_val, srv);
     }
 }
 
 
-void Parser::make_pair(size_t i, std::list<Token>::iterator& node, HTTPServer &srv)
-{
-    std::string d_key = node->token.substr(0, i);
-    std::cout << d_key << std::endl;
-}
+// void Parser::make_pair(size_t i, std::list<Token>::iterator& node, HTTPServer &srv)
+// {
+//     std::string d_key = node->token.substr(0, i);
+//     std::cout << d_key << std::endl;
+// }
 
 void Parser::d_listen(std::string &d_val, HTTPServer &srv)
 {

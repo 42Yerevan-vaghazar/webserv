@@ -5,3 +5,4 @@ webserver
 *.json
 tmp
 Server_tmp.hpp
+pushToDavitRepo.sh

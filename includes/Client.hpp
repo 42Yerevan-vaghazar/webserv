@@ -33,7 +33,8 @@ class Client : public HTTPRequest, public HTTPResponse
         // const HTTPRequest &getRequest() const;
         // HTTPResponse &getResponse();
         int receiveRequest();
-        void parse();
+        void parseHeader();
+        void parseBody();
         bool sendResponse();
         void setResponse(const std::string &response);
         const HTTPServer &getSrv( void ) const;

@@ -47,6 +47,18 @@ std::vector<std::string> ServerCore::getMethods( void ) const
 	return (this->methods);
 }
 
+void ServerCore::setServerName(std::string const &serverName) {
+	_serverName = serverName;
+};
+
+std::string const &ServerCore::getServerName(void) const {
+	return (_serverName);
+};
+
+std::string ServerCore::getServerName(void) {
+	return (_serverName);
+};
+
 void ServerCore::setRoot(std::string const &root)
 {
 	this->root = root;

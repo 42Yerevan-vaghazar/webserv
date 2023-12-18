@@ -54,18 +54,21 @@ int Client::receiveRequest() {
             return 0;
         }
         _isHeaderReady = true;
-        size_t pos = httpRequest.find("Content-Length: ");
-        if (pos == std::string::npos) {
-            _bodySize = 0;
-        } else {
-            _bodySize = std::stoi(httpRequest.substr(httpRequest.find("Content-Length: ") + strlen("Content-Length: "), 10));  // TODO throw 413 if the bodt size of payload is bigger then limits predefined configs;
-            if (_bodySize > this->getSrv().getClientBodySize()) {
-                throw ResponseError(413, "Content Too Large");
-            }
-        }
 
         std::string tmpBody = httpRequest.substr(headerEndPos + strlen("\r\n\r\n"));
         httpRequest.erase(headerEndPos);
+        this->parseHeader();
+        std::map<std::string, std::string>::const_iterator it = httpHeaders.find("Content-Length");
+        size_t pos = httpRequest.find("Content-Length: ");
+        if (it == httpHeaders.end()) {
+            _bodySize = 0;
+        } else {
+            char *ptr;
+            _bodySize = std::strtoul(it->second.c_str(), &ptr, 10);
+            if (_bodySize > this->getSrv().getClientBodySize()) { // TODO cant be done here still not determined wich server will serve for client
+                throw ResponseError(413, "Content Too Large");
+            }
+        }
         if (_bodySize != 0) {
             _body = tmpBody;
             if (_bodySize <= _body.size()) {
@@ -89,7 +92,7 @@ int Client::receiveRequest() {
     return 0;
 }
 
-void Client::parse()
+void Client::parseHeader()
 {
     size_t space = 0;
     size_t pos = httpRequest.find("\r\n");
@@ -122,6 +125,10 @@ void Client::parse()
     }
     httpRequest.clear();
     HTTPRequest::checkPath(this->_srv);
+}
+
+void Client::parseBody()
+{
     if (method == "POST") {
         if (_isCgi == true) {
 
@@ -129,6 +136,7 @@ void Client::parse()
         multipart();
     }
 }
+
 
 bool Client::sendResponse() {
     size_t sendSize = WRITE_BUFFER < _response.size() ? WRITE_BUFFER : _response.size();
@@ -154,5 +162,13 @@ void Client::setResponse(const std::string &response) {
 }
 
 const HTTPServer &Client::getSrv( void ) const {
+    std::map<std::string, std::string>::const_iterator it = httpHeaders.find("Host");
+    if (it != httpHeaders.end()) {
+        try
+        {
+            return (_srv.getServerByName(it->second));
+        }
+        catch(const std::exception& e) { }
+    }
     return (_srv);
 };

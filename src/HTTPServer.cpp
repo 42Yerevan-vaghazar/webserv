@@ -103,12 +103,12 @@ void HTTPServer::push(std::string const &prefix, Location locationDirective)
 }
 
 
-void HTTPServer::push_serverName(std::string const &srvName)
-{
-    std::vector<std::string>::iterator it = std::find(ServerName.begin(), ServerName.end(), srvName);
-    if (it == ServerName.end())
-        ServerName.push_back(srvName);
-}
+// void HTTPServer::push_serverName(std::string const &srvName)
+// {
+//     std::vector<std::string>::iterator it = std::find(ServerName.begin(), ServerName.end(), srvName);
+//     if (it == ServerName.end())
+//         ServerName.push_back(srvName);
+// }
 
 const Location* HTTPServer::find(std::string const &prefix) const
 {
@@ -124,10 +124,10 @@ const Location* HTTPServer::find(std::string const &prefix) const
     return (NULL);
 }
 
-std::vector<std::string> const &HTTPServer::getServerNames( void ) const
-{
-    return (ServerName);
-}
+// std::vector<std::string> const &HTTPServer::getServerNames( void ) const
+// {
+//     return (ServerName);
+// }
 
 std::map<std::string, Location> const &HTTPServer::getLocations( void ) const
 {
@@ -156,6 +156,18 @@ void HTTPServer::push(sock_t clFd, Client *clt)
 {
     clnt.insert(std::make_pair(clFd, clt));
 }
+
+void HTTPServer::push(HTTPServer srv) {
+    _srvs.insert(std::make_pair(srv.getServerName(), srv));
+};
+
+const HTTPServer &HTTPServer::getServerByName(std::string const &serverName) const {
+    std::map<std::string, HTTPServer>::const_iterator it = _srvs.find(serverName);
+    if (it == _srvs.end()) {
+        throw std::logic_error("logic_error");
+    }
+    return (it->second);
+};
 
 int HTTPServer::pop(sock_t clFd)
 {
@@ -357,7 +369,9 @@ std::string HTTPServer::processing(Client &client)
 {
     std::map<std::string, std::string(HTTPServer::*)(Client&)>::iterator function = methodsMap.find(client.getMethod());
     if (function != methodsMap.end() && this->findMethod(client.getMethod()) != NULL)
+    {
        return ((this->*(function->second))(client));
+    }
     throw ResponseError(405, "Method Not Allowed");
     return ("");
 }

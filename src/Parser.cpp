@@ -345,8 +345,11 @@ void Parser::create_server(ServerManager &mgn, std::list<Token>::iterator& ch)
             location(next, srv);
         next++;
     }
-    if (!mgn.used(srv)) {
+    int srvIndex = mgn.used(srv);
+    if (srvIndex == -1) {
         mgn.push_back(srv);
+    } else {
+        mgn[srvIndex].push(srv);
     }
     std::cout << "***************" << std::endl;
 }
@@ -471,7 +474,7 @@ void Parser::d_server_name(std::string &d_val, HTTPServer &srv)
     std::stringstream srv_names(d_val);
     std::string name;
     while (std::getline(srv_names, name, ' '))
-        srv.push_serverName(name);
+        srv.setServerName(name);
 }
 
 void Parser::d_index(std::string &d_val, HTTPServer &srv)

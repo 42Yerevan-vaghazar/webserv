@@ -34,6 +34,9 @@ struct ServerCore
         void pushMethods(std::string const &method);
         void pushErrPage(int, std::string const &errpage_filename);
         std::string getErrPage(int key) const;
+        void setServerName(std::string const &serverName);
+        std::string const &getServerName(void) const;
+        std::string getServerName(void);
         void setRoot(std::string const &root);
         void setAutoindex(std::string const &sw);
         void setSize(std::string const &bodySize);
@@ -47,6 +50,7 @@ struct ServerCore
         void setCgi(std::string cgiName, std::string cgiPath);
         std::pair<std::string, std::string> getCgi( std::string const &cgiType) const;
     protected:
+        std::string _serverName;
         std::string root;                                       // [root]               www/server1/
         std::vector<std::string> index;                         // [index]              index.html barev.html index.htm ....
         std::vector<std::string> methods;                       // [allow_methods]      GET | POST | DELETE

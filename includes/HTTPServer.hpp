@@ -38,18 +38,19 @@ class HTTPServer : public Tcp, public IListener, public ServerCore
     public:
         void push(std::string const &prefix, Location locationDirective);
         void push(sock_t clFd, Client *clt);
+        void push(HTTPServer srv);
+        const HTTPServer &getServerByName(std::string const &serverName) const;
         int  pop(sock_t clFd);
-        void push_serverName(std::string const &srvName);
+        // void push_serverName(std::string const &srvName);
     public:
         const Location *find(std::string const &prefix) const;
         const Location* findMatching(std::string const &realPath) const;
         bool exist(sock_t fd);
-        std::vector<std::string> const &getServerNames( void ) const;
+        // std::vector<std::string> const &getServerNames( void ) const;
         std::map<std::string, Location> const &getLocations( void ) const;
-    public:
-        void request(Client &cl);
     private:
-        std::vector<std::string> ServerName;
+        std::map<std::string, HTTPServer> _srvs;
+        // std::vector<std::string> ServerName;
         std::map<sock_t, Client *> clnt;                   // [Clients]
         std::map<std::string, Location> locations;      // <prefix, LocationDirective>  location / {Location}
     public: //ip port interface

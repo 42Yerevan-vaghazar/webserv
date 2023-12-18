@@ -67,7 +67,7 @@ void ServerManager::start() {
                     closeConnetcion(client->getFd());
                 }
                 if (client->isRequestReady()) {
-                    client->parse();
+                    client->parseBody();
                     client->setResponse(generateResponse(*client));
                 }
             } else if (client->isResponseReady() && event.first == EvManager::write) {
@@ -126,7 +126,6 @@ std::string ServerManager::generateErrorResponse(const ResponseError& e, Client 
 
 std::string ServerManager::generateResponse(Client &client) {
     std::string response;
-
     client.addHeader(std::make_pair("server", "webserv"));
     response = client.getVersion();
     response += " " + std::string("200") + " ";
@@ -198,9 +197,9 @@ int ServerManager::used(HTTPServer &srv) const
         if (std::strcmp((*this)[i].getPort(), srv.getPort()) == 0)
         {
             std::cout << "return (-1);\n";
-            return (-1);
+            return (i);
         }
-    return (0);
+    return (-1);
 }
 
 

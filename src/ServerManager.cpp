@@ -96,7 +96,7 @@ std::string ServerManager::generateErrorResponse(const ResponseError& e, Client 
     std::string fileContent;
 
     if (e.getStatusCode() == 301) {
-        client.addHeader(std::make_pair("Location", "/pictures"));
+        client.addHeader(std::make_pair("Location", client.getRedirectPath()));
     }
     try
     {

@@ -260,16 +260,22 @@ void HTTPRequest::checkPath(HTTPServer const &srv)
     location = srv.find(_path);
     if (location)
     {
-        if (false) {
-            checkRedirect(location->getLocation(), "_path"); // TODO change path to redirect path defined in congige file
+        if (location->getRedirection().empty() == false) {
+            // std::cout << "slocation.begin()->seco`nd = " << srv.getRedirection().begin()->second << std::endl;
+
+            checkRedirect(location->getLocation(), location->getRedirection().begin()->second); // TODO change path to redirect path defined in congige file
         }
 
         pathChunks = pathChunking(_path);
-        _relativePath = middle_slash(location->getRoot(), '/', pathChunks[pathChunks.size() - 1]);
+        _relativePath = srv.getRoot() + middle_slash(location->getRoot(), '/', pathChunks[pathChunks.size() - 1]);
         std::vector<std::string> indexes = location->getIndexFiles();
 
         for (size_t i = 0; i < indexes.size(); i++) {
-            std::string path = _relativePath + indexes[i];
+            std::string path = _relativePath;
+            if (path.back() != '/') {
+                path += "/";
+            }
+            path += indexes[i];
 
             if (access(path.c_str(), R_OK) == 0) {
                 _relativePath = path;
@@ -278,8 +284,9 @@ void HTTPRequest::checkPath(HTTPServer const &srv)
         }
     }
     else {
-        if (false && _path == "/") {
-            checkRedirect("/", "_path"); // TODO change path to redirect path defined in congige file
+        if (srv.getRedirection().empty() == false && _path == "/") {
+            // std::cout << "srv.getRedirection().begin()->seco`nd = " << srv.getRedirection().begin()->second << std::endl;
+            checkRedirect("/", srv.getRedirection().begin()->second); // TODO change path to redirect path defined in congige file
         }
         _relativePath = middle_slash(srv.getRoot(), '/', _path);
         if (_path == "/") {
@@ -295,7 +302,6 @@ void HTTPRequest::checkPath(HTTPServer const &srv)
                 }
             }
         }
-    
     }
     setExtension(_relativePath);
     if (srv.getCgi(_extension).first.empty() == false) {

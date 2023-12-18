@@ -82,7 +82,7 @@ void ServerManager::start() {
         }
         catch(const std::exception& e)
         {
-            std::cerr << e.what() << '\n';
+            std::cerr << e.what() << std::endl;
             exit(1);
         }
     }
@@ -113,6 +113,8 @@ std::string ServerManager::generateErrorResponse(const ResponseError& e, Client 
 
     response = HTTP_VERSION;
     response += " " + std::to_string(e.getStatusCode());
+    response += " ";
+    response += e.what();
     response += "\r\n";
     client.addHeader(std::pair<std::string, std::string>("Content-Type", "text/html")); // TODO check actual type
     client.addHeader(std::pair<std::string, std::string>("Content-Length", std::to_string(resBody.size())));

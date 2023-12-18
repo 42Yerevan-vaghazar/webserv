@@ -26,9 +26,6 @@ HTTPServer::HTTPServer( void )
     methodsMap["POST"] = &HTTPServer::post;
     methodsMap["DELETE"] = &HTTPServer::del;
     //boundary = "&"; // !IMPORTANT: if GET request: the boundary is (&) else if POST request: boundary is read from (Headers)
-    methods.push_back("GET");
-    methods.push_back("POST");
-    methods.push_back("DELETE");
 }
 
 HTTPServer::~HTTPServer()
@@ -359,7 +356,7 @@ std::string HTTPServer::del(Client &client) {
 std::string HTTPServer::processing(Client &client)
 {
     std::map<std::string, std::string(HTTPServer::*)(Client&)>::iterator function = methodsMap.find(client.getMethod());
-    if (function != methodsMap.end())
+    if (function != methodsMap.end() && this->findMethod(client.getMethod()) != NULL)
        return ((this->*(function->second))(client));
     throw ResponseError(405, "Method Not Allowed");
     return ("");

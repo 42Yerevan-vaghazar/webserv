@@ -3,7 +3,6 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 std::map<std::string, std::string> Cgi::_env;
-
 #include <unistd.h>
 int Cgi::execute(const Client &client) {
     char **argv = new char *[3];
@@ -12,10 +11,8 @@ int Cgi::execute(const Client &client) {
     const std::string &argv2 =  getcwd(NULL, 0) + std::string("/") + client.getPath();
     argv[1] = const_cast<char *>(argv2.c_str());
     argv[2] = NULL;
-
     int fd_from_child[2];
     int fd_from_parent[2];
-
     if (pipe(fd_from_child) == -1 || pipe(fd_from_parent)) {
         delete [] argv;
         throw ResponseError(500, "Internal Server Error");

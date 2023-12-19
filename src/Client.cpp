@@ -124,7 +124,7 @@ void Client::parseHeader()
         }
     }
     httpRequest.clear();
-    HTTPRequest::checkPath(this->_srv);
+    HTTPRequest::checkPath(this->getSrv());
 }
 
 void Client::parseBody()
@@ -169,6 +169,18 @@ const HTTPServer &Client::getSrv( void ) const {
             return (_srv.getServerByName(it->second));
         }
         catch(const std::exception& e) { }
+    }
+    return (_srv);
+};
+
+HTTPServer Client::getSrv( void ) {
+    std::map<std::string, std::string>::iterator it = httpHeaders.find("Host");
+    if (it != httpHeaders.end()) {
+        try
+        {
+            return (_srv.getServerByName(it->second));
+        }
+        catch(const std::exception& e) {}
     }
     return (_srv);
 };

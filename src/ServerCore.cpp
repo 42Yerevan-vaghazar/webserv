@@ -173,3 +173,7 @@ std::pair<std::string, std::string> ServerCore::getCgi( std::string const &cgiTy
 		return (std::make_pair(it->first, it->second));
 	return (std::make_pair("", ""));
 };
+
+void ServerCore::dropMethods() {
+	methods.clear();
+};

@@ -497,6 +497,7 @@ void Parser::d_methods(std::string &d_val, HTTPServer &srv)
 {
     std::stringstream srv_methods(d_val);
     std::string method;
+    srv.dropMethods();
     while (std::getline(srv_methods, method, ' '))
         srv.pushMethods(method);
 }

@@ -38,6 +38,7 @@ class Client : public HTTPRequest, public HTTPResponse
         bool sendResponse();
         void setResponse(const std::string &response);
         const HTTPServer &getSrv( void ) const;
+        HTTPServer getSrv( void );
     private:
         int rd;
         sock_t fd;

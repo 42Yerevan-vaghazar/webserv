@@ -26,6 +26,9 @@ HTTPServer::HTTPServer( void )
     methodsMap["POST"] = &HTTPServer::post;
     methodsMap["DELETE"] = &HTTPServer::del;
     //boundary = "&"; // !IMPORTANT: if GET request: the boundary is (&) else if POST request: boundary is read from (Headers)
+    methods.push_back("GET");
+    methods.push_back("POST");
+    methods.push_back("DEL");
 }
 
 HTTPServer::~HTTPServer()

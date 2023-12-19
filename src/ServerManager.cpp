@@ -83,7 +83,6 @@ void ServerManager::start() {
         catch(const std::exception& e)
         {
             std::cerr << e.what() << std::endl;
-            exit(1);
         }
     }
 };
@@ -137,7 +136,7 @@ std::string ServerManager::generateResponse(Client &client) {
         if (it == this->end()) {  // TODO never work
             throw std::runtime_error("std::find(this->begin(), this->end(), client.getFd());");
         }
-        response += it->processing(client);
+        response += client.getSrv().processing(client);
     }
     catch(const ResponseError& e)
     {
@@ -201,8 +200,6 @@ int ServerManager::used(HTTPServer &srv) const
         }
     return (-1);
 }
-
-
 
 sock_t ServerManager::findServerBySocket(sock_t issetfd) 
 {

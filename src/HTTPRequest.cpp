@@ -236,7 +236,7 @@ void HTTPRequest::setExtension(const std::string &path) {
     if (tmpExtension.find("/") == std::string::npos) {
         _extension = tmpExtension;
     }
-    std::cout << "_extension = " << _extension << "$" << std::endl;
+    // std::cout << "_extension = " << _extension << "$" << std::endl;
 }
 
 void HTTPRequest::checkRedirect(const std::string &path, const std::string &redirectPath) {

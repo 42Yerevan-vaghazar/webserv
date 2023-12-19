@@ -17,7 +17,7 @@ function submitForm() {
 
 function fileUpload() {
     const formData = new FormData(document.getElementById('fileInput'));
-    fetch('/upload', {
+    fetch('/script.php', {
         method: 'POST',
         body: formData
     })

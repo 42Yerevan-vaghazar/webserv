@@ -474,7 +474,7 @@ void Parser::d_server_name(std::string &d_val, HTTPServer &srv)
     std::stringstream srv_names(d_val);
     std::string name;
     while (std::getline(srv_names, name, ' '))
-        srv.setServerName(name);
+        srv.push__serverName(name);
 }
 
 void Parser::d_index(std::string &d_val, HTTPServer &srv)

@@ -106,12 +106,12 @@ void HTTPServer::push(std::string const &prefix, Location locationDirective)
 }
 
 
-// void HTTPServer::push_serverName(std::string const &srvName)
-// {
-//     std::vector<std::string>::iterator it = std::find(ServerName.begin(), ServerName.end(), srvName);
-//     if (it == ServerName.end())
-//         ServerName.push_back(srvName);
-// }
+void HTTPServer::push__serverName(std::string const &srvName)
+{
+    std::vector<std::string>::iterator it = std::find(_serverName.begin(), _serverName.end(), srvName);
+    if (it == _serverName.end())
+        _serverName.push_back(srvName);
+}
 
 const Location* HTTPServer::find(std::string const &prefix) const
 {
@@ -127,10 +127,10 @@ const Location* HTTPServer::find(std::string const &prefix) const
     return (NULL);
 }
 
-// std::vector<std::string> const &HTTPServer::getServerNames( void ) const
-// {
-//     return (ServerName);
-// }
+std::vector<std::string> const &HTTPServer::get_serverNames( void ) const
+{
+    return (_serverName);
+}
 
 std::map<std::string, Location> const &HTTPServer::getLocations( void ) const
 {
@@ -160,16 +160,19 @@ void HTTPServer::push(sock_t clFd, Client *clt)
     clnt.insert(std::make_pair(clFd, clt));
 }
 
-void HTTPServer::push(HTTPServer srv) {
-    _srvs.insert(std::make_pair(srv.getServerName(), srv));
+void HTTPServer::push(HTTPServer &srv) {
+    _srvs.push_back(srv);
 };
 
-const HTTPServer &HTTPServer::getServerByName(std::string const &serverName) const {
-    std::map<std::string, HTTPServer>::const_iterator it = _srvs.find(serverName);
-    if (it == _srvs.end()) {
-        throw std::logic_error("logic_error");
+HTTPServer *HTTPServer::getSubServerByName(std::string const &serverName) {
+    for (size_t i = 0; i < _srvs.size(); ++i) {
+        const std::vector<std::string> &srvNames =  _srvs[i].get_serverNames();
+        std::vector<std::string>::const_iterator it = std::find(srvNames.cbegin(),srvNames.cend(), serverName);
+        if (it != srvNames.end()) {
+            return (&_srvs[i]);
+        }
     }
-    return (it->second);
+    return (NULL);
 };
 
 int HTTPServer::pop(sock_t clFd)
@@ -190,7 +193,7 @@ bool HTTPServer::exist(sock_t fd)
 }
 
 
-bool HTTPServer::operator==(HTTPServer const &sibling)
+bool HTTPServer::operator==(HTTPServer const &sibling) const
 {
     if (std::strcmp(this->getIp(), sibling.getIp()) == 0 \
         && std::strcmp(this->getPort(),sibling.getPort()) == 0)
@@ -198,7 +201,7 @@ bool HTTPServer::operator==(HTTPServer const &sibling)
     return (false);
 }
 
-bool HTTPServer::operator==(sock_t fd)
+bool HTTPServer::operator==(sock_t fd) const
 {
     if (clnt.find(fd) != clnt.end()) {
       return (true);

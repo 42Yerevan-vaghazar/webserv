@@ -38,19 +38,19 @@ class HTTPServer : public Tcp, public IListener, public ServerCore
     public:
         void push(std::string const &prefix, Location locationDirective);
         void push(sock_t clFd, Client *clt);
-        void push(HTTPServer srv);
-        const HTTPServer &getServerByName(std::string const &serverName) const;
+        void push(HTTPServer &srv);
         int  pop(sock_t clFd);
-        // void push_serverName(std::string const &srvName);
+        void push__serverName(std::string const &srvName);
     public:
         const Location *find(std::string const &prefix) const;
         const Location* findMatching(std::string const &realPath) const;
         bool exist(sock_t fd);
-        // std::vector<std::string> const &getServerNames( void ) const;
+        std::vector<std::string> const &get_serverNames( void ) const;
         std::map<std::string, Location> const &getLocations( void ) const;
+        HTTPServer *getSubServerByName(std::string const &_serverName);
     private:
-        std::map<std::string, HTTPServer> _srvs;
-        // std::vector<std::string> ServerName;
+        std::vector<HTTPServer> _srvs;
+        std::vector<std::string> _serverName;
         std::map<sock_t, Client *> clnt;                   // [Clients]
         std::map<std::string, Location> locations;      // <prefix, LocationDirective>  location / {Location}
     public: //ip port interface
@@ -62,8 +62,8 @@ class HTTPServer : public Tcp, public IListener, public ServerCore
 		virtual uint16_t getNPort( void ) const;
         std::string	directory_listing(const std::string &path, std::string displayPath);
     public:
-        bool operator==(HTTPServer const &);
-        bool operator==(sock_t);
+        bool operator==(HTTPServer const &) const;
+        bool operator==(sock_t) const;
     public:
         std::string get(Client &client);
         std::string post(Client &client);
@@ -73,7 +73,6 @@ class HTTPServer : public Tcp, public IListener, public ServerCore
         std::string executeCgi(Client &client);
     private:
         std::map<std::string, std::string (HTTPServer::*)(Client&)> methodsMap;
-    public:
 };
 
 #endif

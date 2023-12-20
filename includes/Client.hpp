@@ -46,7 +46,8 @@ class Client : public HTTPRequest, public HTTPResponse
         // std::string _httpRequest;
         // std::string _body;
         std::string _response;
-        HTTPServer &_srv;
+        HTTPServer &_defaultSrv;
+        HTTPServer *_subSrv;
         // HTTPRequest _request;
         // HTTPResponse _response;
     private:

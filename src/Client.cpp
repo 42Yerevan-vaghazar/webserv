@@ -12,11 +12,12 @@
 
 #include "Client.hpp"
 
-Client::Client(sock_t clfd, sock_t srfd, HTTPServer &srv) : _srv(srv)
+Client::Client(sock_t clfd, sock_t srfd, HTTPServer &srv) : _defaultSrv(srv)
 {
     this->fd = clfd;
     this->serverFd = srfd;
     this->rd = 0;
+    _subSrv = NULL;
 }
 
 Client::~Client()
@@ -34,7 +35,7 @@ sock_t Client::getServerFd( void ) const
 }
 
 std::string Client::getServerPort( void ) const {
-    return (_srv.getPort());
+    return (_defaultSrv.getPort());
 };
 
 int Client::receiveRequest() {
@@ -124,6 +125,10 @@ void Client::parseHeader()
         }
     }
     httpRequest.clear();
+    std::map<std::string, std::string>::iterator it = httpHeaders.find("Host");
+    if (it != httpHeaders.end()) {
+        _subSrv = _defaultSrv.getSubServerByName(it->second);
+    }
     HTTPRequest::checkPath(this->getSrv());
 }
 
@@ -162,25 +167,15 @@ void Client::setResponse(const std::string &response) {
 }
 
 const HTTPServer &Client::getSrv( void ) const {
-    std::map<std::string, std::string>::const_iterator it = httpHeaders.find("Host");
-    if (it != httpHeaders.end()) {
-        try
-        {
-            return (_srv.getServerByName(it->second));
-        }
-        catch(const std::exception& e) { }
+    if (_subSrv) {
+        return (*_subSrv);
     }
-    return (_srv);
+    return (_defaultSrv);
 };
 
 HTTPServer Client::getSrv( void ) {
-    std::map<std::string, std::string>::iterator it = httpHeaders.find("Host");
-    if (it != httpHeaders.end()) {
-        try
-        {
-            return (_srv.getServerByName(it->second));
-        }
-        catch(const std::exception& e) {}
+    if (_subSrv) {
+        return (*_subSrv);
     }
-    return (_srv);
+    return (_defaultSrv);
 };

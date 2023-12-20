@@ -144,27 +144,35 @@ void Client::parseBody()
 
 
 bool Client::sendResponse() {
-    size_t sendSize = WRITE_BUFFER < _response.size() ? WRITE_BUFFER : _response.size();
+    if (_responseLine.empty() == false) {
+        size_t sendSize = WRITE_BUFFER < _responseLine.size() ? WRITE_BUFFER : _responseLine.size();
+        if (send(fd, _responseLine.c_str(), sendSize, 0) == -1) {
+            return (false); // TODO is send function return -1 seting EAGAIN in errno
+        }
+        _responseLine.erase(0, sendSize);
 
-
-    if (send(fd, _response.c_str(), sendSize, 0) == -1) {
-        return (false); // TODO is send function return -1 seting EAGAIN in errno
     }
-    _response.erase(0, sendSize);
-
-    if (_response.empty() == true) {
+    else if (_header.empty() == false) {
+        size_t sendSize = WRITE_BUFFER < _header.size() ? WRITE_BUFFER : _header.size();
+        if (send(fd, _header.c_str(), sendSize, 0) == -1) {
+            return (false); // TODO is send function return -1 seting EAGAIN in errno
+        }
+        _header.erase(0, sendSize);
+    } else if (_responseBody.empty() == false) {
+        size_t sendSize = WRITE_BUFFER < _responseBody.size() ? WRITE_BUFFER : _responseBody.size();
+        if (send(fd, _responseBody.c_str(), sendSize, 0) == -1) {
+            return (false); // TODO is send function return -1 seting EAGAIN in errno
+        }
+        _responseBody.erase(0, sendSize);
+    }
+    if (_responseBody.empty() == true) {
         _isResponseReady = false;
     }
     // _response.clear();
-    return (_response.empty());
+    return (_responseBody.empty() && _header.empty() && _responseLine.empty());
 }
 
-void Client::setResponse(const std::string &response) {
-    _response = response;
-    _isResponseReady = true;
-    _isRequestReady = true;
-    _isHeaderReady = true;
-}
+
 
 const HTTPServer &Client::getSrv( void ) const {
     if (_subSrv) {
@@ -173,9 +181,13 @@ const HTTPServer &Client::getSrv( void ) const {
     return (_defaultSrv);
 };
 
-HTTPServer Client::getSrv( void ) {
+HTTPServer &Client::getSrv( void ) {
     if (_subSrv) {
         return (*_subSrv);
     }
     return (_defaultSrv);
+};
+
+void Client::setResponseLine(std::string const &line) {
+    _responseLine = line;
 };

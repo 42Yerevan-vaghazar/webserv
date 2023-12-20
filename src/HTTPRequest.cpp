@@ -28,7 +28,6 @@ HTTPRequest::HTTPRequest(void)
     _isBodyReady = false;
     _isRequestReady = false;
     _isOpenConnection = false;
-    _isResponseReady = false;
     _isCgi = false;
     //boundary = "&"; // !IMPORTANT: if GET request: the boundary is (&) else if POST request: boundary is read from (Headers)
 }
@@ -42,7 +41,12 @@ std::string const &HTTPRequest::getMethod( void ) const
     return (method);
 }
 
-std::string HTTPRequest::getBody() const
+const std::string &HTTPRequest::getRequestBody() const
+{
+    return (_body);
+}
+
+std::string &HTTPRequest::getRequestBody()
 {
     return (_body);
 }
@@ -76,10 +80,6 @@ const std::unordered_map<std::string, std::string> &HTTPRequest::getUploadedFile
 
 bool HTTPRequest::isRequestReady() const {
     return (_isRequestReady);
-}
-
-bool HTTPRequest::isResponseReady() const {
-    return (_isResponseReady);
 }
 
 std::string HTTPRequest::rtrim(const std::string &str)
@@ -134,19 +134,19 @@ void HTTPRequest::multipart(void)
     contentType.erase(0, contentType.find(";")+1);
     size_t posEqualsign = contentType.find("=");
     if (posEqualsign == std::string::npos) {
-        throw ResponseError(428, "Precondition Required");
+        throw ResponseError(428, "Precondition Required posEqualsign");
     }
     boundary = "--" + contentType.substr(posEqualsign + 1);
     boundaryEnd = boundary + "--";
 
     size_t boundaryPos = _body.find(boundary);
     size_t endPos = _body.find(boundaryEnd);
-
+    // std::cout << "_body = " << _body << std::endl;
     do {
         size_t filenameStart = _body.find("filename", boundaryPos);
 
         if(filenameStart == std::string::npos) {
-            throw ResponseError(428, "Precondition Required");
+            throw ResponseError(428, "Precondition Required filenameStart == std::string::npos");
         }
         filenameStart += strlen("filename") + 2;
         std::string filename = _body.substr(filenameStart, _body.find("\"", filenameStart) - filenameStart);

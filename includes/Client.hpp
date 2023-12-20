@@ -36,20 +36,20 @@ class Client : public HTTPRequest, public HTTPResponse
         void parseHeader();
         void parseBody();
         bool sendResponse();
-        void setResponse(const std::string &response);
+        void setResponseLine(std::string const &);
         const HTTPServer &getSrv( void ) const;
-        HTTPServer getSrv( void );
+        HTTPServer &getSrv( void );
     private:
         int rd;
         sock_t fd;
         sock_t serverFd;
         // std::string _httpRequest;
-        // std::string _body;
-        std::string _response;
         HTTPServer &_defaultSrv;
         HTTPServer *_subSrv;
         // HTTPRequest _request;
         // HTTPResponse _response;
+        std::string _responseLine;
+        bool workingOnResponseStatus;
     private:
         struct sockaddr_in ClientInfo;
         struct sockaddr ClientAddress;

@@ -38,9 +38,9 @@ class HTTPRequest
         void setRedirectPath(const std::string &path);
         void setCgiPath(const std::string &cgiPath);
         std::string const &getCgiPath() const;
-        std::string getBody() const;
+        const std::string &getRequestBody() const;
+        std::string &getRequestBody();
         bool isRequestReady() const;
-        bool isResponseReady() const;
         bool isCgi() const;
     public:
         static bool isDir(std::string const &filePath);
@@ -112,13 +112,12 @@ class HTTPRequest
         void setExtension(const std::string &path);
         void checkRedirect(const std::string &path, const std::string &redirectPath);
     protected:
-        std::string response;
+        // std::string response;
     protected:
         bool _isHeaderReady;
         bool _isBodyReady;
         bool _isRequestReady;
         bool _isOpenConnection;
-        bool _isResponseReady;
         bool _isCgi;
         size_t _maxSizeRequest;
         std::unordered_map<std::string, std::string> _uploadedFiles;

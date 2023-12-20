@@ -330,26 +330,26 @@ void Parser::tolower(std::string &s)
 
 void Parser::create_server(ServerManager &mgn, std::list<Token>::iterator& ch)
 {
-    HTTPServer srv;
+    HTTPServer *srv = new HTTPServer();
     std::list<Token>::iterator tmpCh = ch;
     std::list<Token>::iterator next = ch;
     next++;
     while (next != tokens.end())
     {
         if (next->type == DIRECTIVE)
-            s_directive(next, srv);
+            s_directive(next, *srv);
         if (next->type == CONTEXT && context_keyword(next->token) == "server") {
             break;
         }
         if (next->type == CONTEXT)
-            location(next, srv);
+            location(next, *srv);
         next++;
     }
-    int srvIndex = mgn.used(srv);
+    int srvIndex = mgn.used(*srv);
     if (srvIndex == -1) {
         mgn.push_back(srv);
     } else {
-        mgn[srvIndex].push(srv);
+        mgn[srvIndex]->push(*srv);
     }
     std::cout << "***************" << std::endl;
 }

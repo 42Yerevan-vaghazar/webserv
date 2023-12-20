@@ -34,10 +34,15 @@ class HTTPServer : public Tcp, public IListener, public ServerCore
          sock_t getfd( void ) const;
     public:
         Client *getClient(sock_t fd);
-        void removeClient(sock_t fd);
+        Client *getInnerFd(int fd);
+        void addInnerFd(int fd, Client &client );
+        void removeInnerFd(int fd);
+        void readFromFd(int fd, std::string &str);
+        void writeInFd(int fd, std::string &str);
     public:
         void push(std::string const &prefix, Location locationDirective);
         void push(sock_t clFd, Client *clt);
+        void removeClient(sock_t fd);
         void push(HTTPServer &srv);
         int  pop(sock_t clFd);
         void push__serverName(std::string const &srvName);
@@ -49,9 +54,10 @@ class HTTPServer : public Tcp, public IListener, public ServerCore
         std::map<std::string, Location> const &getLocations( void ) const;
         HTTPServer *getSubServerByName(std::string const &_serverName);
     private:
-        std::vector<HTTPServer> _srvs;
+        std::vector<HTTPServer > _srvs;
         std::vector<std::string> _serverName;
         std::map<sock_t, Client *> clnt;                   // [Clients]
+        std::map<int, Client *> _innerFds;                   // [Clients inner fds]
         std::map<std::string, Location> locations;      // <prefix, LocationDirective>  location / {Location}
     public: //ip port interface
 		virtual void setPort(std::string const &port);

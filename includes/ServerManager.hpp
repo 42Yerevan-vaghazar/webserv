@@ -24,7 +24,7 @@ class Client;
 class HTTPServer;
 class Error;
 
-class ServerManager : public std::vector<HTTPServer>
+class ServerManager : public std::vector<HTTPServer *>
 {
     public:
         ServerManager(const char *configfile);
@@ -37,8 +37,6 @@ class ServerManager : public std::vector<HTTPServer>
     public:
         HTTPServer  *getServerBySocket(sock_t fd); 
         HTTPServer  *getServerByClientSocket(sock_t fd);  //Վերադարձնումա են սերվերը որի մեջ fd-ով client գոյություն ունի
-        sock_t findServerBySocket(sock_t issetfd);
-        sock_t findClientBySocket(sock_t issetfd);
         sock_t getmax( void ) const;
         int used(HTTPServer &srv) const;
     public:
@@ -50,8 +48,8 @@ class ServerManager : public std::vector<HTTPServer>
         // std::vector<Client> clnt;
     public:
         void start();
-        std::string generateResponse(Client &client);
-        std::string generateErrorResponse(const ResponseError& e, Client &client);
+        void generateResponse(Client &client);
+        void generateErrorResponse(const ResponseError& e, Client &client);
     private:
         bool closeConnetcion(sock_t fd);
         bool newClient(int fd);

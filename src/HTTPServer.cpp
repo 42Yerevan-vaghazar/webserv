@@ -14,6 +14,7 @@
 #include <unordered_map>
 #include "HelperFunctions.hpp"
 #include "Cgi.hpp"
+#include "EvManager.hpp"
 
 size_t longestMatch(std::string const &s1, std::string const &s2);
 
@@ -227,6 +228,31 @@ void HTTPServer::removeClient(sock_t fd)
     return ;
 }
 
+int a = 0;
+
+Client *HTTPServer:: getInnerFd(int fd) {
+    std::map<int, Client *  >::iterator it = _innerFds.find(fd);
+    if (it != _innerFds.end()) {
+        return(it->second);
+    }
+    for (size_t i = 0; i < _srvs.size(); ++i) { // TODO check it
+        std::map<int, Client *  >::iterator it = _srvs[i]._innerFds.find(fd);
+        if (it != _innerFds.end()) {
+            return(it->second);
+        }
+    }
+    return (NULL);
+};
+
+void HTTPServer::addInnerFd(int fd, Client &client ) {
+    _innerFds.insert(std::make_pair<int, Client * >(fd, &client));
+};
+
+void HTTPServer::removeInnerFd(int fd) {
+    _innerFds.erase(fd);
+};
+
+
 const Location* HTTPServer::findMatching(std::string const &realPath) const
 {
     std::map<std::string, Location>::const_iterator loc;
@@ -277,10 +303,9 @@ std::string HTTPServer::executeCgi(Client &client) {
         fileContent.append(buf);
     }
     int posBody = fileContent.find("\r\n\r\n");
-    if (posBody == std::string::npos) {
-        throw ResponseError(500, "Internal Server Error int posBody = fileContent.find");
+    if (posBody != std::string::npos) {
+        fileContent.erase(0, posBody);
     }
-    fileContent.erase(0, posBody);
     client.setCgiPipeFd(fd);
     client.addHeader(std::pair<std::string, std::string>("Content-Type", "text/html")); // TODO check actual type
     return (fileContent);
@@ -299,16 +324,22 @@ std::string HTTPServer::get(Client &client) {
     if (access(path.c_str(), R_OK) == 0) {
         std::string fileContent;
         if (client.isCgi() == true) {
-            fileContent = executeCgi(client);
+            int fd = Cgi::execute(client);
+            std::cout << "fd = " << fd << std::endl;
+            EvManager::addEvent(fd, EvManager::read);
+            this->addInnerFd(fd, client);
+            client.addHeader(std::pair<std::string, std::string>("Content-Type", "text/html")); // TODO check actual type
         } else {
             try
             {
                 if (this->getAutoindex() == true && HTTPRequest::isDir(path)) {
-                    fileContent = directory_listing(path, client.getDisplayPath());
+                    client.setBody(directory_listing(path, client.getDisplayPath()));
                 } else if (HTTPRequest::isDir(path)) {  //  TODO Set a default file to answer if the request is a directory.
                     throw ResponseError(404, "not found");
                 } else {
-                    fileContent = fileToString(path);
+                    int fd = open(path.c_str(), O_RDONLY);
+                    EvManager::addEvent(fd, EvManager::read);
+                    this->addInnerFd(fd, client);
                 }
             }
             catch(const ResponseError& e) {
@@ -319,9 +350,7 @@ std::string HTTPServer::get(Client &client) {
             }
             client.addHeader(std::pair<std::string, std::string>("Content-Type", "text/" + client.getExtension())); // TODO check actual type
         }
-        client.addHeader(std::pair<std::string, std::string>("Content-Length", std::to_string(fileContent.size())));
-        client.buildHeader();
-        return (client.getResponse() + fileContent);
+        return (client.getResponse());
     } else {
         throw ResponseError(404, "not found");
         // TODO automate it   404, 405, 408, 411, 412, 413, 414, 431, 500, 501, 505, 503, 507, 508
@@ -330,37 +359,33 @@ std::string HTTPServer::get(Client &client) {
 };
 
 std::string HTTPServer::post(Client &client) {
+    const std::string &path = client.getPath();
     
     std::cout << "\n--- in Post function \n" << std::endl;
-    std::string fileContentCgi = "ok";
+    std::cout << "path = " << path << std::endl;
     if (client.isCgi() == true) {
-        fileContentCgi = executeCgi(client);
+        int fd = Cgi::execute(client);
+        std::cout << "fd = " << fd << std::endl;
+        EvManager::addEvent(fd, EvManager::write);
+        this->addInnerFd(fd, client);
+        return "";
     } else {
-        // TODO if cgi exstention detected go through cgi and give body as stdin else get files
         // TODO if multipart data not detected throw precondition failed
         const std::unordered_map<std::string, std::string> &uploadedFiles = client.getUploadedFiles();
         std::unordered_map<std::string, std::string>::const_iterator it = uploadedFiles.cbegin();
         for (; it != uploadedFiles.cend(); ++it) {
             const std::string &fileName = it->first;
             const std::string &fileContent = it->second;
-            std::ofstream ofs(client.getSrv().getUploadDir() + fileName);
-            
-            if (ofs.is_open() == false) {
+            int fd = open((client.getSrv().getUploadDir() + fileName).c_str(),  O_WRONLY | O_TRUNC | O_CREAT, S_IRWXU);
+            if (fd == -1) {
                 throw ResponseError(500 , "Internal Server Error");
             }
-            ofs << fileContent;
-            if (ofs.good() == false) {
-                throw ResponseError(507 , "Insufficient Storage");
-            }
-            ofs.close();
+            EvManager::addEvent(fd, EvManager::write);
+            this->addInnerFd(fd, client);
         }
     }
-    std::string response;
     client.addHeader(std::pair<std::string, std::string>("content-type", "text/plain"));
-    client.buildHeader();
-    response = client.getResponse();
-    response.append(fileContentCgi);
-    return (response);
+    return ("");
 };
 
 std::string HTTPServer::del(Client &client) {

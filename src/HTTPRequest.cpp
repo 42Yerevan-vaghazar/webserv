@@ -74,7 +74,7 @@ std::string HTTPRequest::getHttpRequest() const {
     return (httpRequest);
 }
 
-const std::unordered_map<std::string, std::string> &HTTPRequest::getUploadedFiles() const {
+std::unordered_map<std::string, std::string> &HTTPRequest::getUploadedFiles() {
     return(_uploadedFiles);
 }
 

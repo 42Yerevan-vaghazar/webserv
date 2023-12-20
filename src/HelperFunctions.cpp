@@ -39,11 +39,13 @@ bool readFromFd(int fd, std::string &str) {
 };
 
 bool writeInFd(int fd, std::string &str) {
+    size_t writeSize = str.size() < WRITE_SIZE ?  str.size() : WRITE_SIZE;
 
-    int readSize = write(fd, str.c_str(), WRITE_SIZE);
+    int readSize = write(fd, str.c_str(), writeSize);
     if (readSize == -1) {
         return (false);
     }
-    str.erase(0, WRITE_SIZE);
+    str.erase(0, readSize);
+    std::cout << "str.empty() = " << str.empty() << std::endl;
     return (str.empty());
 };

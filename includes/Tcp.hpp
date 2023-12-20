@@ -27,7 +27,7 @@ class Tcp
 		void bindSocket( void );
 		void listenSocket( void );
 	protected:
-		int fd;
+		int _fd;
 		int backlog;
 	protected:
 		struct addrinfo rules;

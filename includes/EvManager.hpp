@@ -22,8 +22,8 @@ class EvManager
 
     public:
         enum Flag {
-            read,
             write,
+            read,
             eof,
             error,
             def

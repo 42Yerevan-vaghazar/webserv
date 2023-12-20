@@ -19,6 +19,7 @@
 #include "ServerManager.hpp"
 #include "ResponseError.hpp"
 #include <errno.h>
+#include "InnerFd.hpp"
 
 class HTTPRequest;
 class ServerManager;
@@ -34,8 +35,8 @@ class HTTPServer : public Tcp, public IListener, public ServerCore
          sock_t getfd( void ) const;
     public:
         Client *getClient(sock_t fd);
-        Client *getInnerFd(int fd);
-        void addInnerFd(int fd, Client &client );
+        InnerFd *getInnerFd(int fd);
+        void addInnerFd(InnerFd *);
         void removeInnerFd(int fd);
         void readFromFd(int fd, std::string &str);
         void writeInFd(int fd, std::string &str);
@@ -57,7 +58,7 @@ class HTTPServer : public Tcp, public IListener, public ServerCore
         std::vector<HTTPServer > _srvs;
         std::vector<std::string> _serverName;
         std::map<sock_t, Client *> clnt;                   // [Clients]
-        std::map<int, Client *> _innerFds;                   // [Clients inner fds]
+        std::map<int, InnerFd *> _innerFds;                   // [Clients inner fds]
         std::map<std::string, Location> locations;      // <prefix, LocationDirective>  location / {Location}
     public: //ip port interface
 		virtual void setPort(std::string const &port);

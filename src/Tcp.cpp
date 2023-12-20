@@ -12,7 +12,7 @@
 
 #include "Tcp.hpp"
 
-Tcp::Tcp( void ) : fd(-1), backlog(-1)
+Tcp::Tcp( void ) : _fd(-1), backlog(-1)
 {
 	memset(&this->rules, 0, sizeof(rules));
 	memset(&this->Socket, 0, sizeof(Socket));
@@ -55,31 +55,31 @@ void Tcp::setup(const char* ip, const char* port)
 
 void Tcp::createSocket( void )
 {
-    fd = socket(addrList->ai_family, addrList->ai_socktype, addrList->ai_protocol);
-    if (fd < 0)
+    _fd = socket(addrList->ai_family, addrList->ai_socktype, addrList->ai_protocol);
+    if (_fd < 0)
         throw HTTPCoreException(strerror(errno));
 }
 
 void Tcp::bindSocket( void )
 {
     int l = 1;
-    setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &l, sizeof(l));
-    if (fcntl(fd, F_SETFL, O_NONBLOCK, FD_CLOEXEC) < 0)
+    setsockopt(_fd, SOL_SOCKET, SO_REUSEADDR, &l, sizeof(l));
+    if (fcntl(_fd, F_SETFL, O_NONBLOCK, FD_CLOEXEC) < 0)
         throw HTTPCoreException(strerror(errno));
-    if (bind(fd, SocketAddress, addrList->ai_addrlen) < 0)
+    if (bind(_fd, SocketAddress, addrList->ai_addrlen) < 0)
         throw HTTPCoreException(strerror(errno));
 }
 
 void Tcp::listenSocket( void )
 {
-    if (listen(fd, 32) < 0)
+    if (listen(_fd, 32) < 0)
         throw HTTPCoreException(strerror(errno));
 }
 
 sock_t Tcp::accept( void )
 {
     socklen_t clntSize = sizeof(clntAddr);
-    sock_t client = ::accept(fd, (struct sockaddr *)&clntAddr, &clntSize);
+    sock_t client = ::accept(_fd, (struct sockaddr *)&clntAddr, &clntSize);
     if (fcntl(client, F_SETFL, O_NONBLOCK, FD_CLOEXEC) < 0)
         throw HTTPCoreException(strerror(errno));
     if (client < 0)

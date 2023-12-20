@@ -165,10 +165,6 @@ bool Client::sendResponse() {
         }
         _responseBody.erase(0, sendSize);
     }
-    if (_responseBody.empty() == true) {
-        _isResponseReady = false;
-    }
-    // _response.clear();
     return (_responseBody.empty() && _header.empty() && _responseLine.empty());
 }
 

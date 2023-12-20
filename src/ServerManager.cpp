@@ -13,6 +13,7 @@
 #include "ServerManager.hpp"
 #include "EvManager.hpp"
 #include "HelperFunctions.hpp"
+#include "InnerFd.hpp"
 
 bool ServerManager::newClient(int fd) {
     for (int i = 0; i < this->size(); ++i) {
@@ -31,6 +32,8 @@ bool ServerManager::newClient(int fd) {
     return (false);
 }
 
+
+
 void ServerManager::start() {
     EvManager::start();
 
@@ -43,30 +46,39 @@ void ServerManager::start() {
         Client *client = NULL;
     
         event = EvManager::listen();
+        // std::cout << "event = " << event.first << std::endl;
+        // std::cout << "second = " << event.second << std::endl;
         if (newClient(event.second)) {
             continue ;
         }
         for (size_t i = 0; i < this->size(); ++i)
         {
-            Client *client = (*this)[i]->getInnerFd(event.second);
-            if (client) {
+            InnerFd *innerFd = (*this)[i]->getInnerFd(event.second);
+            if (innerFd) {
+                Client *client = innerFd->_client;
                 // std::cout << "client = " << client << std::endl;
-                if (event.first == EvManager::read || client->isResponseReady() == false) {
+                if (innerFd->_flag ==  EvManager::read) {
                     if (client->getResponseBody().empty()) {
-                        EvManager::addEvent(event.second, EvManager::write);
+                        EvManager::addEvent(innerFd->_fd, EvManager::write);
                     }
-                    if (readFromFd(event.second, client->getResponseBody()) == true) {
+                    if (readFromFd(innerFd->_fd, innerFd->_str) == true) {
                         client->addHeader(std::pair<std::string, std::string>("Content-Length", std::to_string(client->getResponseBody().size())));
                         client->buildHeader();
                         client->isResponseReady() = true;
-                        EvManager::delEvent(event.second, EvManager::read);
-                        EvManager::delEvent(event.second, EvManager::write);
+                        EvManager::delEvent(innerFd->_fd, EvManager::read);
+                        EvManager::delEvent(innerFd->_fd, EvManager::write);
                         client->getSrv().removeInnerFd(event.first);
+                        close(innerFd->_fd);
                     };
-                }
-                if (event.first == EvManager::write) {
-                    if (writeInFd(event.second, client->getRequestBody()) == true) {
-
+                } else if (innerFd->_flag == EvManager::write) {
+                    if (writeInFd(innerFd->_fd, innerFd->_str) == true) {
+                        client->addHeader(std::pair<std::string, std::string>("Content-Length", std::to_string(client->getResponseBody().size())));
+                        client->buildHeader();
+                        client->isResponseReady() = true;
+                        EvManager::delEvent(innerFd->_fd, EvManager::read);
+                        EvManager::delEvent(innerFd->_fd, EvManager::write);
+                        client->getSrv().removeInnerFd(innerFd->_fd);
+                        close(innerFd->_fd);
                     };
                 }
                 continue ;
@@ -86,7 +98,8 @@ void ServerManager::start() {
         {
             if (event.first == EvManager::eof) {
                 closeConnetcion(client->getFd());
-            } else if (event.first == EvManager::read || client->isRequestReady() == false) {
+            } else if ((event.first == EvManager::read || client->isRequestReady() == false)
+                        && client->isResponseReady() == false) {
                 if (client->getHttpRequest().empty()) {
                     EvManager::addEvent(client->getFd(), EvManager::write);
                 }

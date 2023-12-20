@@ -15,6 +15,7 @@
 #include "HelperFunctions.hpp"
 #include "Cgi.hpp"
 #include "EvManager.hpp"
+#include "InnerFd.hpp"
 
 size_t longestMatch(std::string const &s1, std::string const &s2);
 
@@ -141,7 +142,7 @@ std::map<std::string, Location> const &HTTPServer::getLocations( void ) const
 
 sock_t HTTPServer::getfd( void ) const
 {
-    return (this->fd);
+    return (this->_fd);
 }
 
 void HTTPServer::up(ServerManager &mgn)
@@ -228,15 +229,14 @@ void HTTPServer::removeClient(sock_t fd)
     return ;
 }
 
-int a = 0;
 
-Client *HTTPServer:: getInnerFd(int fd) {
-    std::map<int, Client *  >::iterator it = _innerFds.find(fd);
+InnerFd *HTTPServer:: getInnerFd(int fd) {
+    std::map<int, InnerFd *  >::iterator it = _innerFds.find(fd);
     if (it != _innerFds.end()) {
         return(it->second);
     }
     for (size_t i = 0; i < _srvs.size(); ++i) { // TODO check it
-        std::map<int, Client *  >::iterator it = _srvs[i]._innerFds.find(fd);
+        std::map<int, InnerFd *  >::iterator it = _srvs[i]._innerFds.find(fd);
         if (it != _innerFds.end()) {
             return(it->second);
         }
@@ -244,11 +244,16 @@ Client *HTTPServer:: getInnerFd(int fd) {
     return (NULL);
 };
 
-void HTTPServer::addInnerFd(int fd, Client &client ) {
-    _innerFds.insert(std::make_pair<int, Client * >(fd, &client));
+void HTTPServer::addInnerFd(InnerFd *obj) {
+    // std::cout << " fd = " << fd << std::endl; // TODO how does it work
+    _innerFds.insert(std::make_pair<int, InnerFd * >(obj->_fd, obj));
 };
 
 void HTTPServer::removeInnerFd(int fd) {
+    std::map<int, InnerFd *>::iterator it = _innerFds.find(fd);
+    if (it != _innerFds.end()) {
+        delete it->second;
+    }
     _innerFds.erase(fd);
 };
 
@@ -327,7 +332,7 @@ std::string HTTPServer::get(Client &client) {
             int fd = Cgi::execute(client);
             std::cout << "fd = " << fd << std::endl;
             EvManager::addEvent(fd, EvManager::read);
-            this->addInnerFd(fd, client);
+            this->addInnerFd(new InnerFd(fd, client, client.getResponseBody(),  EvManager::read));
             client.addHeader(std::pair<std::string, std::string>("Content-Type", "text/html")); // TODO check actual type
         } else {
             try
@@ -338,8 +343,11 @@ std::string HTTPServer::get(Client &client) {
                     throw ResponseError(404, "not found");
                 } else {
                     int fd = open(path.c_str(), O_RDONLY);
+                    if (fd == -1) {
+                        throw ResponseError(500, "Internal Server Error");
+                    }
                     EvManager::addEvent(fd, EvManager::read);
-                    this->addInnerFd(fd, client);
+                    this->addInnerFd(new InnerFd(fd, client, client.getResponseBody(),  EvManager::read));
                 }
             }
             catch(const ResponseError& e) {
@@ -366,22 +374,23 @@ std::string HTTPServer::post(Client &client) {
     if (client.isCgi() == true) {
         int fd = Cgi::execute(client);
         std::cout << "fd = " << fd << std::endl;
-        EvManager::addEvent(fd, EvManager::write);
-        this->addInnerFd(fd, client);
+        EvManager::addEvent(fd, EvManager::read);
+        this->addInnerFd(new InnerFd(fd, client, client.getResponseBody(), EvManager::read));
         return "";
     } else {
         // TODO if multipart data not detected throw precondition failed
-        const std::unordered_map<std::string, std::string> &uploadedFiles = client.getUploadedFiles();
-        std::unordered_map<std::string, std::string>::const_iterator it = uploadedFiles.cbegin();
+        std::unordered_map<std::string, std::string> &uploadedFiles = client.getUploadedFiles();
+        std::unordered_map<std::string, std::string>::iterator it = uploadedFiles.begin();
         for (; it != uploadedFiles.cend(); ++it) {
             const std::string &fileName = it->first;
-            const std::string &fileContent = it->second;
+            std::string &fileContent = it->second;
             int fd = open((client.getSrv().getUploadDir() + fileName).c_str(),  O_WRONLY | O_TRUNC | O_CREAT, S_IRWXU);
             if (fd == -1) {
                 throw ResponseError(500 , "Internal Server Error");
             }
+            std::cout << "barev\n";
             EvManager::addEvent(fd, EvManager::write);
-            this->addInnerFd(fd, client);
+            this->addInnerFd(new InnerFd(fd, client, fileContent, EvManager::write));
         }
     }
     client.addHeader(std::pair<std::string, std::string>("content-type", "text/plain"));

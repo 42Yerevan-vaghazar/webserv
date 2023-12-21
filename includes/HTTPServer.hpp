@@ -45,7 +45,7 @@ class HTTPServer : public Tcp, public IListener, public ServerCore
         void push(sock_t clFd, Client *clt);
         void removeClient(sock_t fd);
         void push(HTTPServer &srv);
-        int  pop(sock_t clFd);
+        // int  pop(sock_t clFd);
         void push__serverName(std::string const &srvName);
     public:
         const Location *find(std::string const &prefix) const;

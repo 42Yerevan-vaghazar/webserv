@@ -28,7 +28,7 @@ bool readFromFd(int fd, std::string &str) {
     char buf[READ_SIZE];
     int readSize = read(fd, buf, READ_SIZE);
     if (readSize == -1) {
-        return (false);
+        return (true);
     }
     if (readSize == 0) {
         return (true);

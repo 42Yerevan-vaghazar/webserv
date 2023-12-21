@@ -177,17 +177,17 @@ HTTPServer *HTTPServer::getSubServerByName(std::string const &serverName) {
     return (NULL);
 };
 
-int HTTPServer::pop(sock_t clFd)
-{
-    std::map<sock_t, Client*>::iterator it = clnt.find(clFd);
-    if (it != clnt.end())
-    {
-        delete it->second;
-        clnt.erase(it);
-        return (0);
-    }
-    return (-1);
-}
+// int HTTPServer::pop(sock_t clFd)
+// {
+//     std::map<sock_t, Client*>::iterator it = clnt.find(clFd);
+//     if (it != clnt.end())
+//     {
+//         delete it->second;
+//         clnt.erase(it);
+//         return (0);
+//     }
+//     return (-1);
+// }
 
 bool HTTPServer::exist(sock_t fd)
 {
@@ -246,10 +246,12 @@ InnerFd *HTTPServer:: getInnerFd(int fd) {
 
 void HTTPServer::addInnerFd(InnerFd *obj) {
     // std::cout << " fd = " << fd << std::endl; // TODO how does it work
-    _innerFds.insert(std::make_pair<int, InnerFd * >(obj->_fd, obj));
+    // _innerFds.insert(std::make_pair<int, InnerFd * >(obj->_fd, obj));
+    _innerFds[obj->_fd] = obj;
 };
 
 void HTTPServer::removeInnerFd(int fd) {
+    std::cout << "fd = " << fd << std::endl;
     std::map<int, InnerFd *>::iterator it = _innerFds.find(fd);
     if (it != _innerFds.end()) {
         delete it->second;

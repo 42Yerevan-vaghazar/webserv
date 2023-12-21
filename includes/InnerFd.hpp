@@ -6,8 +6,9 @@ class Client;
 
 struct InnerFd
 {
-    InnerFd(int fd, Client  &client, std::string &str, int flag) : _str(str) {
+    InnerFd(int fd, Client  &client, std::string &str, int flag) {
         _fd = fd;
+        _str = &str;
         _client = &client;
         _flag = flag;
     };
@@ -38,7 +39,7 @@ struct InnerFd
 
     int _fd;
     Client * _client;
-    std::string &_str;
+    std::string *_str;
     int _flag;
 };
 // TODO move to cpp

@@ -17,7 +17,7 @@ function submitForm() {
 
 function fileUpload() {
     const formData = new FormData(document.getElementById('fileInput'));
-    fetch('', {
+    fetch('/uploader.py', {
         method: 'POST',
         body: formData
     })

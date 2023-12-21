@@ -326,8 +326,6 @@ void HTTPServer::get(Client &client) {
             this->addInnerFd(new InnerFd(fd, client, client.getResponseBody(),  EvManager::read));
             client.addHeader(std::pair<std::string, std::string>("Content-Type", "text/html")); // TODO check actual type
         } else {
-            try
-            {
                 if (this->getAutoindex() == true && HTTPRequest::isDir(path)) {
                     client.setBody(directory_listing(path, client.getDisplayPath()));
                 } else if (HTTPRequest::isDir(path)) {  //  TODO Set a default file to answer if the request is a directory.
@@ -340,13 +338,6 @@ void HTTPServer::get(Client &client) {
                     EvManager::addEvent(fd, EvManager::read);
                     this->addInnerFd(new InnerFd(fd, client, client.getResponseBody(),  EvManager::read));
                 }
-            }
-            catch(const ResponseError& e) {
-                throw e;
-            } catch(const std::exception& e)
-            {
-                throw ResponseError(500, "Internal Server Error");
-            }
             client.addHeader(std::pair<std::string, std::string>("Content-Type", "text/" + client.getExtension())); // TODO check actual type
         }
     } else {
@@ -371,7 +362,6 @@ void HTTPServer::post(Client &client) {
         for (; it != uploadedFiles.cend(); ++it) {
             const std::string &fileName = it->first;
             std::string &fileContent = it->second;
-            std::cout << "fileContent.size() = " << fileContent.size() << std::endl;
             int fd = open((client.getSrv().getUploadDir() + fileName).c_str(),  O_WRONLY | O_TRUNC | O_CREAT, S_IRWXU);
             if (fd == -1) {
                 throw ResponseError(500 , "Internal Server Error");

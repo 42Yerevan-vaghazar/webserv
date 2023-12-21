@@ -15,6 +15,7 @@
 #include "Libs.hpp"
 #include "HTTPRequest.hpp"
 #include "ServerManager.hpp"
+#include <ctime>
 
 class HTTPServer;
 class Client : public HTTPRequest, public HTTPResponse
@@ -51,6 +52,8 @@ class Client : public HTTPRequest, public HTTPResponse
         // HTTPResponse _response;
         std::string _responseLine;
         bool workingOnResponseStatus;
+        // std::time_t _lastSeen;
+        // std::time_t _cgiStart;
     private:
         struct sockaddr_in ClientInfo;
         struct sockaddr ClientAddress;

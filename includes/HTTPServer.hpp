@@ -21,6 +21,8 @@
 #include <errno.h>
 #include "InnerFd.hpp"
 
+class InnerFd;
+
 class HTTPRequest;
 class ServerManager;
 class Location;

@@ -140,10 +140,8 @@ void HTTPRequest::multipart(void)
     }
     boundary = "--" + contentType.substr(posEqualsign + 1);
     boundaryEnd = boundary + "--";
-
     size_t boundaryPos = _body.find(boundary);
     size_t endPos = _body.find(boundaryEnd);
-    // std::cout << "_body = " << _body << std::endl;
     do {
         size_t filenameStart = _body.find("filename", boundaryPos);
 
@@ -156,7 +154,7 @@ void HTTPRequest::multipart(void)
         size_t contentStart = _body.find("\r\n\r\n", filenameStart) + strlen("\r\n\r\n");
         std::string fileContent = _body.substr(contentStart, boundaryPos - contentStart - strlen("\r\n"));
         _uploadedFiles[filename] = fileContent;
-    } while (boundaryPos != endPos);
+    } while (boundaryPos < endPos);
 }
 
 void HTTPRequest::showHeaders( void ) const

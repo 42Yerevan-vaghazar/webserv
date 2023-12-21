@@ -334,7 +334,6 @@ void HTTPServer::get(Client &client) {
                     throw ResponseError(404, "not found");
                 } else {
                     int fd = open(path.c_str(), O_RDONLY);
-                    std::cout << "fd = " << fd << std::endl;
                     if (fd == -1) {
                         throw ResponseError(500, "Internal Server Error");
                     }
@@ -372,6 +371,7 @@ void HTTPServer::post(Client &client) {
         for (; it != uploadedFiles.cend(); ++it) {
             const std::string &fileName = it->first;
             std::string &fileContent = it->second;
+            std::cout << "fileContent.size() = " << fileContent.size() << std::endl;
             int fd = open((client.getSrv().getUploadDir() + fileName).c_str(),  O_WRONLY | O_TRUNC | O_CREAT, S_IRWXU);
             if (fd == -1) {
                 throw ResponseError(500 , "Internal Server Error");
@@ -384,7 +384,6 @@ void HTTPServer::post(Client &client) {
 };
 
 void HTTPServer::del(Client &client) {
-    std::string response;
     if (std::remove(client.getPath().c_str()) == -1) {
         throw ResponseError(404, "not found");
     };
@@ -393,7 +392,7 @@ void HTTPServer::del(Client &client) {
 void HTTPServer::processing(Client &client)
 {
     std::map<std::string, void (HTTPServer::*)(Client&)>::iterator function = methodsMap.find(client.getMethod());
-    if (function != methodsMap.end() && printf("stex\n") && this->findMethod(client.getMethod()) != NULL)
+    if (function != methodsMap.end() && this->findMethod(client.getMethod()) != NULL)
     {
        (this->*(function->second))(client);
     } else {

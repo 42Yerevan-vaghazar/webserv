@@ -39,12 +39,39 @@ std::string Client::getServerPort( void ) const {
     return (_defaultSrv.getPort());
 };
 
+void Client::readChunkedRequest() {
+    char *ptr;
+    if (_isChunkNewLineCuted == false) {
+        int pos = _requestBuf.find("\r\n");
+        if (pos != std::string::npos && pos == 0) {
+            _requestBuf.erase(0, strlen("\r\n"));
+            _isChunkNewLineCuted = true;
+        }
+    }
+    if (_chunkSize == std::string::npos && _requestBuf.find("\r\n") != std::string::npos && _isChunkNewLineCuted == true) {
+        _chunkSize =  std::strtoul(_requestBuf.c_str(), &ptr, 16);
+        if (_chunkSize == 0) {
+            _isBodyReady = true;
+            _isRequestReady = true;
+            return ;
+        }
+        size_t posEndl = _requestBuf.find("\r\n");
+        _requestBuf.erase(0, posEndl + strlen("\r\n"));
+    }
+    size_t existChunkSize = _chunkSize < _requestBuf.size() ? _chunkSize : _requestBuf.size();
+    _body.append(_requestBuf.c_str(), existChunkSize);
+    if (existChunkSize == _chunkSize) {
+        _isChunkNewLineCuted = false;
+        _chunkSize = std::string::npos;
+    }
+}
+
 int Client::receiveRequest() {
     char buf[READ_BUFFER];
     errno = 0;
     int rdSize = recv(fd, buf, sizeof(buf), 0);
     if (rdSize == -1) { 
-         _isBodyReady = true;
+        _isBodyReady = true;
         _isRequestReady = true;
         return (0);
     }
@@ -62,6 +89,7 @@ int Client::receiveRequest() {
         httpRequest  = _requestBuf.substr(0, headerEndPos);
         _requestBuf.erase(0, headerEndPos + strlen("\r\n\r\n"));
         this->parseHeader();
+        // this->showHeaders();
         std::map<std::string, std::string>::const_iterator it = httpHeaders.find("Content-Length");
         if (it != httpHeaders.end()) {
             char *ptr;
@@ -79,35 +107,15 @@ int Client::receiveRequest() {
                 throw ResponseError(400, "Bad Request");
             }
         }
+        return (0);
     } 
     if (_isChunked) {
-        char *ptr;
-        if (_isChunkNewLineCuted == false) {
-            int pos = _requestBuf.find("\r\n");
-            if (pos != std::string::npos && pos == 0) {
-                _requestBuf.erase(0, strlen("\r\n"));
-                _isChunkNewLineCuted = true;
-            }
-        }
-        if (_chunkSize == std::string::npos && _requestBuf.find("\r\n") != std::string::npos && _isChunkNewLineCuted == true) {
-            _chunkSize =  std::strtoul(_requestBuf.c_str(), &ptr, 16);
-            if (_chunkSize == 0) {
-                _isBodyReady = true;
-                _isRequestReady = true;
-                return (0);
-            }
-            size_t posEndl = _requestBuf.find("\r\n");
-            _requestBuf.erase(0, posEndl + strlen("\r\n"));
-        }
-        size_t existChunkSize = _chunkSize < _requestBuf.size() ? _chunkSize : _requestBuf.size();
-        _body.append(_requestBuf.c_str(), existChunkSize);
-        if (existChunkSize == _chunkSize) {
-            _isChunkNewLineCuted = false;
-            _chunkSize = std::string::npos;
-        }
+        readChunkedRequest();
+        return (0);
     }      
     else {
         _body.append(_requestBuf.c_str(), _requestBuf.size());
+        _requestBuf.clear();
         if (_bodySize <= _body.size()) {
             _body.erase(_bodySize);
             _isBodyReady = true;

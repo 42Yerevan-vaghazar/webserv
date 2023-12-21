@@ -42,7 +42,6 @@ bool checkInnerFd(HTTPServer &srv, int fd) {
                 if (client->getResponseBody().empty()) {
                     EvManager::addEvent(innerFd->_fd, EvManager::write);
                 }
-                // std::cout << "stex\n";
                 if (readFromFd(innerFd->_fd, *innerFd->_str) == true) {
                     client->addHeader(std::pair<std::string, std::string>("Content-Length", std::to_string(client->getResponseBody().size())));
                     client->buildHeader();
@@ -81,7 +80,7 @@ void ServerManager::start() {
         Client *client = NULL;
     
         event = EvManager::listen();
-        std::cout << "event = " << event.first << std::endl;
+        // std::cout << "event = " << event.first << std::endl;
         // std::cout << "second = " << event.second << std::endl;
         if (newClient(event.second)) {
             continue ;
@@ -110,7 +109,7 @@ void ServerManager::start() {
             }
             if (event.first == EvManager::eof) {
                 closeConnetcion(client->getFd());
-            } else if ((event.first == EvManager::read || client->isRequestReady() == false)
+            } else if ((client->isRequestReady() == false)
                         && client->isResponseReady() == false) {
                 if (client->getHttpRequest().empty()) {
                     EvManager::addEvent(client->getFd(), EvManager::write);

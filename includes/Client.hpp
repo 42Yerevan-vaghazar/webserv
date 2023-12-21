@@ -40,6 +40,7 @@ class Client : public HTTPRequest, public HTTPResponse
         const HTTPServer &getSrv( void ) const;
         HTTPServer &getSrv( void );
     private:
+        void readChunkedRequest();
         int rd;
         sock_t fd;
         sock_t serverFd;

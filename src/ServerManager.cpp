@@ -32,7 +32,41 @@ bool ServerManager::newClient(int fd) {
     return (false);
 }
 
-
+bool checkInnerFd(HTTPServer &srv, int fd) {
+        InnerFd *innerFd = srv.getInnerFd(fd);
+        if (innerFd) {
+            Client *client = innerFd->_client;
+            // std::cout << "client = " << client << std::endl;
+            if (innerFd->_flag ==  EvManager::read) {
+                if (client->getResponseBody().empty()) {
+                    EvManager::addEvent(innerFd->_fd, EvManager::write);
+                }
+                // std::cout << "stex\n";
+                if (readFromFd(innerFd->_fd, *innerFd->_str) == true) {
+                    client->addHeader(std::pair<std::string, std::string>("Content-Length", std::to_string(client->getResponseBody().size())));
+                    client->buildHeader();
+                    client->isResponseReady() = true;
+                    EvManager::delEvent(innerFd->_fd, EvManager::read);
+                    EvManager::delEvent(innerFd->_fd, EvManager::write);
+                    close(innerFd->_fd);
+                    client->getSrv().removeInnerFd(innerFd->_fd);
+                };
+            } else if (innerFd->_flag == EvManager::write) {
+                if (writeInFd(innerFd->_fd, *innerFd->_str) == true) {
+                    client->addHeader(std::pair<std::string, std::string>("Content-Length", std::to_string(client->getResponseBody().size())));
+                    client->buildHeader();
+                    client->isResponseReady() = true;
+                    EvManager::delEvent(innerFd->_fd, EvManager::read);
+                    EvManager::delEvent(innerFd->_fd, EvManager::write);
+                    close(innerFd->_fd);
+                    client->getSrv().removeInnerFd(innerFd->_fd);
+                    std::cout << "inner file writed" << std::endl;
+                };
+            }
+            return (true);
+        }
+    return (false);
+}
 
 void ServerManager::start() {
     EvManager::start();
@@ -46,57 +80,33 @@ void ServerManager::start() {
         Client *client = NULL;
     
         event = EvManager::listen();
-        // std::cout << "event = " << event.first << std::endl;
+        std::cout << "event = " << event.first << std::endl;
         // std::cout << "second = " << event.second << std::endl;
         if (newClient(event.second)) {
             continue ;
         }
-        for (size_t i = 0; i < this->size(); ++i)
-        {
-            InnerFd *innerFd = (*this)[i]->getInnerFd(event.second);
-            if (innerFd) {
-                Client *client = innerFd->_client;
-                // std::cout << "client = " << client << std::endl;
-                if (innerFd->_flag ==  EvManager::read) {
-                    if (client->getResponseBody().empty()) {
-                        EvManager::addEvent(innerFd->_fd, EvManager::write);
-                    }
-                    // std::cout << "stex\n";
-                    if (readFromFd(innerFd->_fd, *innerFd->_str) == true) {
-                        client->addHeader(std::pair<std::string, std::string>("Content-Length", std::to_string(client->getResponseBody().size())));
-                        client->buildHeader();
-                        client->isResponseReady() = true;
-                        EvManager::delEvent(innerFd->_fd, EvManager::read);
-                        EvManager::delEvent(innerFd->_fd, EvManager::write);
-                        close(innerFd->_fd);
-                        client->getSrv().removeInnerFd(event.second);
-                    };
-                } else if (innerFd->_flag == EvManager::write) {
-                    if (writeInFd(innerFd->_fd, *innerFd->_str) == true) {
-                        client->addHeader(std::pair<std::string, std::string>("Content-Length", std::to_string(client->getResponseBody().size())));
-                        client->buildHeader();
-                        client->isResponseReady() = true;
-                        EvManager::delEvent(innerFd->_fd, EvManager::read);
-                        EvManager::delEvent(innerFd->_fd, EvManager::write);
-                        close(innerFd->_fd);
-                        client->getSrv().removeInnerFd(innerFd->_fd);
-                    };
-                }
-                continue ;
-            }
-        }
-
-        for (int i = 0; i < this->size(); ++i) {
-            client = (*this)[i]->getClient(event.second);
-            if (client) {
-                break;
-            }
-        }
-        if (client == NULL) {
-            continue ;
-        }
         try
         {
+            bool found = false;
+
+            for (size_t i = 0; i < this->size(); ++i) {
+                found = checkInnerFd(*(*this)[i], event.second);
+                if (found == true) {
+                    break ;
+                }
+            }
+            if (found == true) {
+                continue ;
+            }
+            for (int i = 0; i < this->size(); ++i) {
+                client = (*this)[i]->getClient(event.second);
+                if (client) {
+                    break;
+                }
+            }
+            if (client == NULL) {
+                continue ;
+            }
             if (event.first == EvManager::eof) {
                 closeConnetcion(client->getFd());
             } else if ((event.first == EvManager::read || client->isRequestReady() == false)
@@ -106,14 +116,19 @@ void ServerManager::start() {
                 }
                 if (client->receiveRequest() == -1) {
                     closeConnetcion(client->getFd());
+                    continue ;
                 }
                 if (client->isRequestReady()) {
+                    std::cout << "request received " << std::endl;
+                    std::cout << client->getRequestBody().size() << std::endl;
                     client->parseBody();
                     generateResponse(*client);
                 }
             } else if (client->isResponseReady() && event.first == EvManager::write) {
                 if (client->sendResponse() == true) {
+                    std::cout << "sendResponse send" << std::endl;
                     closeConnetcion(client->getFd());
+                    continue ;
                 }
             }
         }

@@ -245,9 +245,7 @@ InnerFd *HTTPServer:: getInnerFd(int fd) {
 };
 
 void HTTPServer::addInnerFd(InnerFd *obj) {
-    // std::cout << " fd = " << fd << std::endl; // TODO how does it work
-    _innerFds.insert(std::make_pair(obj->_fd, obj));
-    // _innerFds[obj->_fd] = obj;
+    _innerFds.insert(std::pair<int, InnerFd *>(obj->_fd, obj));
 };
 
 void HTTPServer::removeInnerFd(int fd) {
@@ -331,7 +329,6 @@ std::string HTTPServer::get(Client &client) {
         std::string fileContent;
         if (client.isCgi() == true) {
             int fd = Cgi::execute(client);
-            std::cout << "fd = " << fd << std::endl;
             EvManager::addEvent(fd, EvManager::read);
             this->addInnerFd(new InnerFd(fd, client, client.getResponseBody(),  EvManager::read));
             client.addHeader(std::pair<std::string, std::string>("Content-Type", "text/html")); // TODO check actual type
@@ -374,7 +371,6 @@ std::string HTTPServer::post(Client &client) {
     std::cout << "path = " << path << std::endl;
     if (client.isCgi() == true) {
         int fd = Cgi::execute(client);
-        std::cout << "fd = " << fd << std::endl;
         EvManager::addEvent(fd, EvManager::read);
         this->addInnerFd(new InnerFd(fd, client, client.getResponseBody(), EvManager::read));
         return "";
@@ -389,7 +385,6 @@ std::string HTTPServer::post(Client &client) {
             if (fd == -1) {
                 throw ResponseError(500 , "Internal Server Error");
             }
-            std::cout << "barev\n";
             EvManager::addEvent(fd, EvManager::write);
             this->addInnerFd(new InnerFd(fd, client, fileContent, EvManager::write));
         }

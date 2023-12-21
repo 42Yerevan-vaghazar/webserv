@@ -4,9 +4,7 @@
 #include <HelperFunctions.hpp>
 #include <unistd.h>
 #include <iostream>
-
-#define READ_SIZE 100
-#define WRITE_SIZE 100
+#include "DefaultSetup.hpp"
 
 std::string fileToString(std::string const &fileName) {
     std::ifstream file(fileName);
@@ -25,8 +23,8 @@ std::string fileToString(std::string const &fileName) {
 }
 
 bool readFromFd(int fd, std::string &str) {
-    char buf[READ_SIZE];
-    int readSize = read(fd, buf, READ_SIZE);
+    char buf[READ_BUFFER];
+    int readSize = read(fd, buf, READ_BUFFER);
     if (readSize == -1) {
         return (true);
     }
@@ -38,13 +36,12 @@ bool readFromFd(int fd, std::string &str) {
 };
 
 bool writeInFd(int fd, std::string &str) {
-    size_t writeSize = str.size() < WRITE_SIZE ?  str.size() : WRITE_SIZE;
+    size_t writeSize = str.size() < WRITE_BUFFER ?  str.size() : WRITE_BUFFER;
 
     int readSize = write(fd, str.c_str(), writeSize);
     if (readSize == -1) {
         return (false);
     }
     str.erase(0, readSize);
-    std::cout << "str.empty() = " << str.empty() << std::endl;
     return (str.empty());
 };

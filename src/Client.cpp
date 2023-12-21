@@ -6,11 +6,12 @@
 /*   By: maharuty <maharuty@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/24 10:29:55 by dmartiro          #+#    #+#             */
-/*   Updated: 2023/12/12 21:55:22 by maharuty         ###   ########.fr       */
+/*   Updated: 2023/12/21 01:45:16 by maharuty         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Client.hpp"
+#include "ResponseError.hpp"
 
 Client::Client(sock_t clfd, sock_t srfd, HTTPServer &srv) : _defaultSrv(srv)
 {
@@ -43,56 +44,80 @@ int Client::receiveRequest() {
     errno = 0;
     int rdSize = recv(fd, buf, sizeof(buf), 0);
     if (rdSize == -1) { 
+         _isBodyReady = true;
+        _isRequestReady = true;
         return (0);
     }
     if (rdSize == 0) {
         return (-1);
     }
+    _requestBuf.append(buf, rdSize);
     if (_isHeaderReady == false) {
-        httpRequest.append(buf, rdSize);
-        size_t headerEndPos = httpRequest.find("\r\n\r\n");
+        size_t headerEndPos = _requestBuf.find("\r\n\r\n");
         if (headerEndPos == std::string::npos) {
             return 0;
         }
         _isHeaderReady = true;
 
-        std::string tmpBody = httpRequest.substr(headerEndPos + strlen("\r\n\r\n"));
-        httpRequest.erase(headerEndPos);
+        httpRequest  = _requestBuf.substr(0, headerEndPos);
+        _requestBuf.erase(0, headerEndPos + strlen("\r\n\r\n"));
         this->parseHeader();
         std::map<std::string, std::string>::const_iterator it = httpHeaders.find("Content-Length");
-        size_t pos = httpRequest.find("Content-Length: ");
-        if (it == httpHeaders.end()) {
-            _bodySize = 0;
-        } else {
+        if (it != httpHeaders.end()) {
             char *ptr;
             _bodySize = std::strtoul(it->second.c_str(), &ptr, 10);
-            if (_bodySize > this->getSrv().getClientBodySize()) { // TODO cant be done here still not determined wich server will serve for client
+            if (_bodySize > this->getSrv().getClientBodySize()) {
                 throw ResponseError(413, "Content Too Large");
             }
         }
-        if (_bodySize != 0) {
-            _body = tmpBody;
-            if (_bodySize <= _body.size()) {
-                _body.erase(_bodySize);
+        it = httpHeaders.find("Transfer-Encoding");
+        if (it != httpHeaders.end() && (it->second.find("Chunked") != std::string::npos ||  it->second.find("chunked") != std::string::npos)) {
+            if (it->second.find("Chunked") != std::string::npos ||  it->second.find("chunked") != std::string::npos) {
+                _isChunked = true;
+                std::cout << "chunked = true " << std::endl;
+            } else {
+                throw ResponseError(400, "Bad Request");
+            }
+        }
+    } 
+    if (_isChunked) {
+        char *ptr;
+        if (_isChunkNewLineCuted == false) {
+            int pos = _requestBuf.find("\r\n");
+            if (pos != std::string::npos && pos == 0) {
+                _requestBuf.erase(0, strlen("\r\n"));
+                _isChunkNewLineCuted = true;
+            }
+        }
+        if (_chunkSize == std::string::npos && _requestBuf.find("\r\n") != std::string::npos && _isChunkNewLineCuted == true) {
+            _chunkSize =  std::strtoul(_requestBuf.c_str(), &ptr, 16);
+            if (_chunkSize == 0) {
                 _isBodyReady = true;
                 _isRequestReady = true;
+                return (0);
             }
-            
-        } else {
+            size_t posEndl = _requestBuf.find("\r\n");
+            _requestBuf.erase(0, posEndl + strlen("\r\n"));
+        }
+        size_t existChunkSize = _chunkSize < _requestBuf.size() ? _chunkSize : _requestBuf.size();
+        _body.append(_requestBuf.c_str(), existChunkSize);
+        if (existChunkSize == _chunkSize) {
+            _isChunkNewLineCuted = false;
+            _chunkSize = std::string::npos;
+        }
+    }      
+    else {
+        _body.append(_requestBuf.c_str(), _requestBuf.size());
+        if (_bodySize <= _body.size()) {
+            _body.erase(_bodySize);
             _isBodyReady = true;
             _isRequestReady = true;
         }
-        return 0;
-    }
-    _body.append(buf, rdSize);
-    if (_bodySize <= _body.size()) {
-        _body.erase(_bodySize);
-        _isBodyReady = true;
-        _isRequestReady = true;
     }
     return 0;
 }
-
+// echo -ne '6\r\nHello,\r\n6\r\nworld!\r\n\r\n' | curl -X POST http://localhost:3000/chunked-H "Transfer-Encoding: chunked" --data @-
+// curl -H "Transfer-Encoding: chunked" http://localhost:3000/--data --data-binary "This is the second chunk." --data-binary "And this is the third chunk."
 void Client::parseHeader()
 {
     size_t space = 0;
@@ -136,12 +161,11 @@ void Client::parseBody()
 {
     if (method == "POST") {
         if (_isCgi == true) {
-
+            
         }
         multipart();
     }
 }
-
 
 bool Client::sendResponse() {
     if (_responseLine.empty() == false) {
@@ -167,8 +191,6 @@ bool Client::sendResponse() {
     }
     return (_responseBody.empty() && _header.empty() && _responseLine.empty());
 }
-
-
 
 const HTTPServer &Client::getSrv( void ) const {
     if (_subSrv) {

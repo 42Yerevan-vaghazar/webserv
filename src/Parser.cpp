@@ -364,7 +364,7 @@ void Parser::location(std::list<Token>::iterator& node, HTTPServer &srv)
         location_Components.push_back(comp);
     if (location_Components.size() != 2 || location_Components[0] != "location")
         throw HTTPCoreException("Location: Syntax is not valid");
-    location_Components.clear();
+    // location_Components.clear(); TODO DAVIT NAYEL
     comp.clear();
     Location loc(location_Components[1]);
     while (node->type != OPENBRACE)

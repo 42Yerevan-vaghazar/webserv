@@ -87,6 +87,7 @@ class HTTPRequest
         std::string version;
         std::string headers;
         std::string _body;
+        std::string _requestBuf;
     protected:
         int statusCode;
         std::string _redirectPath;
@@ -119,6 +120,9 @@ class HTTPRequest
         bool _isRequestReady;
         bool _isOpenConnection;
         bool _isCgi;
+        bool _isChunked;
+        bool _isChunkNewLineCuted;
+        size_t _chunkSize;
         size_t _maxSizeRequest;
         std::unordered_map<std::string, std::string> _uploadedFiles;
     public:

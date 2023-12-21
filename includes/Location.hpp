@@ -23,6 +23,6 @@ class Location : public ServerCore
     public:
         std::string const &getLocation( void ) const;
     private:
-        std::string location;
+        std::string _location;
         std::map<std::string, Location> nestedLocations;
 };

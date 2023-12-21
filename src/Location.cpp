@@ -14,7 +14,7 @@
 
 Location::Location(std::string const &location)
 {
-	this->location = location;
+	this->_location = location;
 }
 
 Location::~Location()
@@ -24,5 +24,5 @@ Location::~Location()
 
 std::string const &Location::getLocation( void ) const
 {
-	return (this->location);
+	return (this->_location);
 }

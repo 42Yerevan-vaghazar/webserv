@@ -29,6 +29,8 @@ HTTPRequest::HTTPRequest(void)
     _isRequestReady = false;
     _isOpenConnection = false;
     _isCgi = false;
+    _isChunkNewLineCuted = true;
+    _chunkSize = std::string::npos;
     //boundary = "&"; // !IMPORTANT: if GET request: the boundary is (&) else if POST request: boundary is read from (Headers)
 }
 

@@ -13,8 +13,8 @@
 #ifndef DEFAULT_SETUP_HPP
 #define DEFAULT_SETUP_HPP
 
-#define READ_BUFFER             150000
-#define WRITE_BUFFER            150000
+#define READ_BUFFER             500
+#define WRITE_BUFFER            500
 #define DEFAULT_HTTP_PERM_PORT  "80"
 #define DEFAULT_HTTP_PORT       "8080"
 #define DEFAULT_MASK            "0.0.0.0"

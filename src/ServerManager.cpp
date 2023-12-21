@@ -131,6 +131,9 @@ void ServerManager::start() {
                     continue ;
                 }
             }
+            if (client->isCgi() == true) {
+                client->checkCgi();
+            }
         }
         catch(const ResponseError& e)
         {

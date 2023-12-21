@@ -292,29 +292,6 @@ size_t longestMatch(std::string const &s1, std::string const &s2)
     return (match);
 }
 
-std::string HTTPServer::executeCgi(Client &client) {
-    std::string fileContent;
-    int fd = Cgi::execute(client);
-    char buf[READ_BUFFER];
-    int rsize = 1;
-
-    while (rsize != 0 && rsize != -1) {
-        rsize = read(fd, buf, READ_BUFFER - 1);
-        if (rsize == -1) {
-            throw ResponseError(500, "Internal Server Error rsize == -1");
-        }
-        buf[rsize] = '\0';
-        fileContent.append(buf);
-    }
-    int posBody = fileContent.find("\r\n\r\n");
-    if (posBody != std::string::npos) {
-        fileContent.erase(0, posBody);
-    }
-    client.setCgiPipeFd(fd);
-    client.addHeader(std::pair<std::string, std::string>("Content-Type", "text/html")); // TODO check actual type
-    return (fileContent);
-}
-
 void HTTPServer::get(Client &client) {
     const std::string &path = client.getPath();
 
@@ -353,8 +330,9 @@ void HTTPServer::post(Client &client) {
     std::cout << "path = " << path << std::endl;
     if (client.isCgi() == true) {
         int fd = Cgi::execute(client);
-        EvManager::addEvent(fd, EvManager::read);
-        this->addInnerFd(new InnerFd(fd, client, client.getResponseBody(), EvManager::read));
+        client.setCgiPipeFd(fd);
+        // EvManager::addEvent(fd, EvManager::read);
+        // this->addInnerFd(new InnerFd(fd, client, client.getResponseBody(), EvManager::read));
     } else {
         // TODO if multipart data not detected throw precondition failed
         std::unordered_map<std::string, std::string> &uploadedFiles = client.getUploadedFiles();

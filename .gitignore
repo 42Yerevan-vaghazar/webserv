@@ -6,3 +6,4 @@ webserver
 tmp
 Server_tmp.hpp
 pushToDavitRepo.sh
+data_base

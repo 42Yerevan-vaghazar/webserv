@@ -16,6 +16,11 @@
 #include "HTTPRequest.hpp"
 #include "ServerManager.hpp"
 #include <ctime>
+#include "HelperFunctions.hpp"
+#include <signal.h>
+#include "EvManager.hpp"
+
+#define CGI_TIMEOUT 500 // milsec
 
 class HTTPServer;
 class Client : public HTTPRequest, public HTTPResponse
@@ -40,6 +45,10 @@ class Client : public HTTPRequest, public HTTPResponse
         void setResponseLine(std::string const &);
         const HTTPServer &getSrv( void ) const;
         HTTPServer &getSrv( void );
+        void setCgiStartTime();
+        bool checkCgi();
+        void setCgiPipeFd(int fd);
+        void setCgiPID(int fd);
     private:
         void readChunkedRequest();
         int rd;
@@ -52,8 +61,10 @@ class Client : public HTTPRequest, public HTTPResponse
         // HTTPResponse _response;
         std::string _responseLine;
         bool workingOnResponseStatus;
-        // std::time_t _lastSeen;
-        // std::time_t _cgiStart;
+        double	 _lastSeen;
+        double	 _cgiStartTime;
+        int _cgiPipeFd;
+        int _cgiPID;
     private:
         struct sockaddr_in ClientInfo;
         struct sockaddr ClientAddress;

@@ -6,6 +6,7 @@
 #include <iostream>
 #include "DefaultSetup.hpp"
 
+
 std::string fileToString(std::string const &fileName) {
     std::ifstream file(fileName);
 	std::string fileContent;
@@ -46,3 +47,11 @@ bool writeInFd(int fd, std::string &str) {
     str.erase(0, readSize);
     return (str.empty());
 };
+
+long double	get_current_time(void)
+{
+	struct timeval	time;
+
+	gettimeofday(&time, NULL);
+	return ((time.tv_sec * 1000) + (time.tv_usec / 1000));
+}

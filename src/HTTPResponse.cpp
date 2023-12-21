@@ -15,7 +15,6 @@
 HTTPResponse::HTTPResponse( void )
 {
     _responseHeader["server"] = "webserv";
-    _cgiPipeFd = -1;
     _isResponseReady = false;
     _isStarted = false;
 }
@@ -84,10 +83,6 @@ void HTTPResponse::buildHeader() {
     _header += "\r\n";
 
 }
-
-void HTTPResponse::setCgiPipeFd(int fd) {
-    _cgiPipeFd = fd;
-};
 
 std::string &HTTPResponse::getResponseBody() {
     return (_responseBody);

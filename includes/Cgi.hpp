@@ -18,7 +18,7 @@
 class Cgi
 {
     public:
-        static int execute(const Client &client);
+        static int execute(Client &client);
         static char **initEnv(Client const &client);
     private:
         Cgi();

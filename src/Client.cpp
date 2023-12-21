@@ -19,6 +19,8 @@ Client::Client(sock_t clfd, sock_t srfd, HTTPServer &srv) : _defaultSrv(srv)
     this->serverFd = srfd;
     this->rd = 0;
     _subSrv = NULL;
+    _cgiPipeFd = -1;
+    _cgiPID = -1;
 }
 
 Client::~Client()
@@ -219,4 +221,42 @@ HTTPServer &Client::getSrv( void ) {
 
 void Client::setResponseLine(std::string const &line) {
     _responseLine = line;
+};
+
+void Client::setCgiStartTime() {
+    _cgiStartTime = get_current_time();
+};
+
+bool Client::checkCgi() {
+    if (_cgiPID != -1 && get_current_time() - _cgiStartTime > CGI_TIMEOUT) {
+        _isCgi = false;
+        int status;
+        kill(_cgiPID, SIGKILL);
+        waitpid(_cgiPID, &status, 0);
+        std::cout << "status = " << status << std::endl;
+        if (WIFEXITED(status)) {
+            if (WEXITSTATUS(status) != 0) {
+                std::cout << "WEXITSTATUS(status) = " << WEXITSTATUS(status) << std::endl;
+                throw ResponseError(500, "Internal Server Error");
+            }
+        }
+        if (WIFSIGNALED(status)) {
+            if (WTERMSIG(status) == SIGKILL) {
+                throw ResponseError(508, "Loop Detected");
+            }
+            throw ResponseError(500, "Internal Server Error");
+        }
+        EvManager::addEvent(_cgiPipeFd, EvManager::read);
+        this->getSrv().addInnerFd(new InnerFd(_cgiPipeFd, *this, this->getResponseBody(), EvManager::read));
+    }
+    return (true);
+};
+
+
+void Client::setCgiPipeFd(int fd) {
+    _cgiPipeFd = fd;
+};
+
+void Client::setCgiPID(int pid) {
+    _cgiPID = pid;
 };

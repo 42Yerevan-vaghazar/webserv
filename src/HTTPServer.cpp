@@ -246,12 +246,11 @@ InnerFd *HTTPServer:: getInnerFd(int fd) {
 
 void HTTPServer::addInnerFd(InnerFd *obj) {
     // std::cout << " fd = " << fd << std::endl; // TODO how does it work
-    // _innerFds.insert(std::make_pair<int, InnerFd * >(obj->_fd, obj));
-    _innerFds[obj->_fd] = obj;
+    _innerFds.insert(std::make_pair(obj->_fd, obj));
+    // _innerFds[obj->_fd] = obj;
 };
 
 void HTTPServer::removeInnerFd(int fd) {
-    std::cout << "fd = " << fd << std::endl;
     std::map<int, InnerFd *>::iterator it = _innerFds.find(fd);
     if (it != _innerFds.end()) {
         delete it->second;

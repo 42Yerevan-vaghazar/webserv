@@ -5,8 +5,8 @@
 #include <unistd.h>
 #include <iostream>
 
-#define READ_SIZE 2000
-#define WRITE_SIZE 2000
+#define READ_SIZE 100
+#define WRITE_SIZE 100
 
 std::string fileToString(std::string const &fileName) {
     std::ifstream file(fileName);
@@ -34,7 +34,6 @@ bool readFromFd(int fd, std::string &str) {
         return (true);
     }
     str.append(buf, readSize);
-    // std::cout << "str = " << str << std::endl;
     return (false);
 };
 

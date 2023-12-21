@@ -46,8 +46,8 @@ void ServerManager::start() {
         Client *client = NULL;
     
         event = EvManager::listen();
-        std::cout << "event = " << event.first << std::endl;
-        std::cout << "second = " << event.second << std::endl;
+        // std::cout << "event = " << event.first << std::endl;
+        // std::cout << "second = " << event.second << std::endl;
         if (newClient(event.second)) {
             continue ;
         }
@@ -59,7 +59,7 @@ void ServerManager::start() {
                 // std::cout << "client = " << client << std::endl;
                 if (innerFd->_flag ==  EvManager::read) {
                     if (client->getResponseBody().empty()) {
-                        // EvManager::addEvent(innerFd->_fd, EvManager::write);
+                        EvManager::addEvent(innerFd->_fd, EvManager::write);
                     }
                     // std::cout << "stex\n";
                     if (readFromFd(innerFd->_fd, *innerFd->_str) == true) {
@@ -73,13 +73,13 @@ void ServerManager::start() {
                     };
                 } else if (innerFd->_flag == EvManager::write) {
                     if (writeInFd(innerFd->_fd, *innerFd->_str) == true) {
-                        // client->addHeader(std::pair<std::string, std::string>("Content-Length", std::to_string(client->getResponseBody().size())));
-                        // client->buildHeader();
-                        // client->isResponseReady() = true;
-                        // EvManager::delEvent(innerFd->_fd, EvManager::read);
-                        // EvManager::delEvent(innerFd->_fd, EvManager::write);
-                        // client->getSrv().removeInnerFd(innerFd->_fd);
-                        // close(innerFd->_fd);
+                        client->addHeader(std::pair<std::string, std::string>("Content-Length", std::to_string(client->getResponseBody().size())));
+                        client->buildHeader();
+                        client->isResponseReady() = true;
+                        EvManager::delEvent(innerFd->_fd, EvManager::read);
+                        EvManager::delEvent(innerFd->_fd, EvManager::write);
+                        close(innerFd->_fd);
+                        client->getSrv().removeInnerFd(innerFd->_fd);
                     };
                 }
                 continue ;

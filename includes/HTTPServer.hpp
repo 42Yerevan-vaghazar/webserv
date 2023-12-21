@@ -72,14 +72,14 @@ class HTTPServer : public Tcp, public IListener, public ServerCore
         bool operator==(HTTPServer const &) const;
         bool operator==(sock_t) const;
     public:
-        std::string get(Client &client);
-        std::string post(Client &client);
-        std::string del(Client &client);
-        std::string processing(Client &client);
+        void get(Client &client);
+        void post(Client &client);
+        void del(Client &client);
+        void processing(Client &client);
 
         std::string executeCgi(Client &client);
     private:
-        std::map<std::string, std::string (HTTPServer::*)(Client&)> methodsMap;
+        std::map<std::string, void (HTTPServer::*)(Client&)> methodsMap;
 };
 
 #endif

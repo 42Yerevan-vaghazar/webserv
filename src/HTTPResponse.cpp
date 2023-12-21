@@ -17,6 +17,7 @@ HTTPResponse::HTTPResponse( void )
     _responseHeader["server"] = "webserv";
     _cgiPipeFd = -1;
     _isResponseReady = false;
+    _isStarted = false;
 }
 
 HTTPResponse::~HTTPResponse()
@@ -103,4 +104,12 @@ bool HTTPResponse::isResponseReady() const {
 
 bool &HTTPResponse::isResponseReady() {
     return (_isResponseReady);
+}
+
+bool HTTPResponse::isStarted() const {
+    return (_isStarted);
+}
+
+void HTTPResponse::setStartStatus(bool is) {
+    _isStarted = is;
 }

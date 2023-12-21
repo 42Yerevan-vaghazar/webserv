@@ -183,6 +183,9 @@ bool Client::sendResponse() {
         }
         _header.erase(0, sendSize);
     } else if (_responseBody.empty() == false) {
+        // std::cout << "_responseBody = " << _responseBody << std::endl;
+        // std::cout << "size = " << _responseBody.size() << std::endl;
+        // exit(1);
         size_t sendSize = WRITE_BUFFER < _responseBody.size() ? WRITE_BUFFER : _responseBody.size();
         if (send(fd, _responseBody.c_str(), sendSize, 0) == -1) {
             return (false); // TODO is send function return -1 seting EAGAIN in errno

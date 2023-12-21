@@ -25,6 +25,7 @@ std::string fileToString(std::string const &fileName) {
 bool readFromFd(int fd, std::string &str) {
     char buf[READ_BUFFER];
     int readSize = read(fd, buf, READ_BUFFER);
+
     if (readSize == -1) {
         return (true);
     }

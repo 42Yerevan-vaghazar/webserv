@@ -37,6 +37,7 @@ bool checkInnerFd(HTTPServer &srv, int fd) {
         if (innerFd) {
             Client *client = innerFd->_client;
             // std::cout << "client = " << client << std::endl;
+            std::string &str = *innerFd->_str;
             if (innerFd->_flag ==  EvManager::read) {
                 if (client->getResponseBody().empty()) {
                     EvManager::addEvent(innerFd->_fd, EvManager::write);
@@ -118,9 +119,9 @@ void ServerManager::start() {
                     closeConnetcion(client->getFd());
                     continue ;
                 }
-                if (client->isRequestReady()) {
+                if (client->isRequestReady() && client->isStarted() == false) {
+                    client->setStartStatus(true);
                     std::cout << "request received " << std::endl;
-                    std::cout << client->getRequestBody().size() << std::endl;
                     client->parseBody();
                     generateResponse(*client);
                 }
@@ -188,7 +189,7 @@ void ServerManager::generateResponse(Client &client) {
     client.setResponseLine(response);
     try
     {
-        response += client.getSrv().processing(client);
+       client.getSrv().processing(client);
     }
     catch(const ResponseError& e)
     {

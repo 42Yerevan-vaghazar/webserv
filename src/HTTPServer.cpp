@@ -315,16 +315,9 @@ std::string HTTPServer::executeCgi(Client &client) {
     return (fileContent);
 }
 
-std::string HTTPServer::get(Client &client) {
+void HTTPServer::get(Client &client) {
     const std::string &path = client.getPath();
 
-    // TODO unrecognized types "application/octet- stream"
-    // TODO check is method allowed. 405
-    // TODO Content-Length is not defined in case post method called 411
-    // TODO valid request line 412
-    // TODO body is large 413
-    // TODO The URI requested is long  414
-    // TODO header is large 431
     if (access(path.c_str(), R_OK) == 0) {
         std::string fileContent;
         if (client.isCgi() == true) {
@@ -341,6 +334,7 @@ std::string HTTPServer::get(Client &client) {
                     throw ResponseError(404, "not found");
                 } else {
                     int fd = open(path.c_str(), O_RDONLY);
+                    std::cout << "fd = " << fd << std::endl;
                     if (fd == -1) {
                         throw ResponseError(500, "Internal Server Error");
                     }
@@ -356,15 +350,13 @@ std::string HTTPServer::get(Client &client) {
             }
             client.addHeader(std::pair<std::string, std::string>("Content-Type", "text/" + client.getExtension())); // TODO check actual type
         }
-        return (client.getResponse());
     } else {
         throw ResponseError(404, "not found");
         // TODO automate it   404, 405, 408, 411, 412, 413, 414, 431, 500, 501, 505, 503, 507, 508
     }
-    return ("");
 };
 
-std::string HTTPServer::post(Client &client) {
+void HTTPServer::post(Client &client) {
     const std::string &path = client.getPath();
     
     std::cout << "\n--- in Post function \n" << std::endl;
@@ -373,7 +365,6 @@ std::string HTTPServer::post(Client &client) {
         int fd = Cgi::execute(client);
         EvManager::addEvent(fd, EvManager::read);
         this->addInnerFd(new InnerFd(fd, client, client.getResponseBody(), EvManager::read));
-        return "";
     } else {
         // TODO if multipart data not detected throw precondition failed
         std::unordered_map<std::string, std::string> &uploadedFiles = client.getUploadedFiles();
@@ -390,26 +381,24 @@ std::string HTTPServer::post(Client &client) {
         }
     }
     client.addHeader(std::pair<std::string, std::string>("content-type", "text/plain"));
-    return ("");
 };
 
-std::string HTTPServer::del(Client &client) {
+void HTTPServer::del(Client &client) {
     std::string response;
     if (std::remove(client.getPath().c_str()) == -1) {
         throw ResponseError(404, "not found");
     };
-    return (response);
 };
 
-std::string HTTPServer::processing(Client &client)
+void HTTPServer::processing(Client &client)
 {
-    std::map<std::string, std::string(HTTPServer::*)(Client&)>::iterator function = methodsMap.find(client.getMethod());
-    if (function != methodsMap.end() && this->findMethod(client.getMethod()) != NULL)
+    std::map<std::string, void (HTTPServer::*)(Client&)>::iterator function = methodsMap.find(client.getMethod());
+    if (function != methodsMap.end() && printf("stex\n") && this->findMethod(client.getMethod()) != NULL)
     {
-       return ((this->*(function->second))(client));
+       (this->*(function->second))(client);
+    } else {
+        throw ResponseError(405, "Method Not Allowed");
     }
-    throw ResponseError(405, "Method Not Allowed");
-    return ("");
 }
 
 std::string	HTTPServer::directory_listing(const std::string &path, std::string displayPath)

@@ -33,12 +33,15 @@ class HTTPResponse
         void setBody(const std::string &body);
         bool isResponseReady() const;
         bool &isResponseReady();
+        bool isStarted() const;
+        void setStartStatus(bool);
     protected:
         std::string _header;
         std::string _responseBody;
         std::unordered_map<std::string, std::string> _responseHeader;
         int _cgiPipeFd;
         bool _isResponseReady;
+        bool _isStarted;
     private:
         std::string reserve;
 };

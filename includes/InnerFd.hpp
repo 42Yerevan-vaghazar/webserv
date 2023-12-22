@@ -16,4 +16,3 @@ struct InnerFd
     std::string *_str;
     int _flag;
 };
-// TODO move to cpp

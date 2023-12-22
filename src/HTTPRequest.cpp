@@ -240,11 +240,9 @@ void HTTPRequest::setExtension(const std::string &path) {
 }
 
 void HTTPRequest::checkRedirect(const std::string &path, const std::string &redirectPath) {
-    // TODO 508 Loop Detected
-    if (path == redirectPath) {  // TODO change path to redirect path defined in congige file
+    if (path == redirectPath) {
         throw ResponseError(508, "Loop Detected");
     }
-    // TODO set redirect path on client
     this->setRedirectPath(redirectPath);
     throw ResponseError(301, "Moved Permanently");
 }
@@ -254,16 +252,14 @@ void HTTPRequest::checkPath(HTTPServer const &srv)
     size_t use = 0;
     if ((use = _path.find_first_of("?")) != std::string::npos)
     {
-        queryString = _path.substr(use+1); // TODO determine the
+        queryString = _path.substr(use+1);
         _path = _path.substr(0, use);
     }
     location = srv.find(_path);
     if (location)
     {
         if (location->getRedirection().empty() == false) {
-            // std::cout << "slocation.begin()->seco`nd = " << srv.getRedirection().begin()->second << std::endl;
-
-            checkRedirect(location->getLocation(), location->getRedirection().begin()->second); // TODO change path to redirect path defined in congige file
+            checkRedirect(location->getLocation(), location->getRedirection().begin()->second);
         }
 
         pathChunks = pathChunking(_path);
@@ -285,8 +281,7 @@ void HTTPRequest::checkPath(HTTPServer const &srv)
     }
     else {
         if (srv.getRedirection().empty() == false && _path == "/") {
-            // std::cout << "srv.getRedirection().begin()->seco`nd = " << srv.getRedirection().begin()->second << std::endl;
-            checkRedirect("/", srv.getRedirection().begin()->second); // TODO change path to redirect path defined in congige file
+            checkRedirect("/", srv.getRedirection().begin()->second);
         }
         _relativePath = middle_slash(srv.getRoot(), '/', _path);
         if (_path == "/") {

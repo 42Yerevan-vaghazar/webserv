@@ -57,7 +57,7 @@ std::string const &ServerCore::getRoot( void ) const
 	return (this->root);
 }
 
-const char* ServerCore::findIndex(std::string const &filename) const // TODO useless
+const char* ServerCore::findIndex(std::string const &filename) const
 {
 	size_t i = 0;
 	for(; i < index.size(); i++)

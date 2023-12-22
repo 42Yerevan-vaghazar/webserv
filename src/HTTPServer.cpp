@@ -299,13 +299,11 @@ void HTTPServer::get(Client &client) {
         std::string fileContent;
         if (client.isCgi() == true) {
             int fd = Cgi::execute(client);
-            EvManager::addEvent(fd, EvManager::read);
-            this->addInnerFd(new InnerFd(fd, client, client.getResponseBody(),  EvManager::read));
-            client.addHeader(std::pair<std::string, std::string>("Content-Type", "text/html")); // TODO check actual type
+            client.setCgiPipeFd(fd);
         } else {
                 if (this->getAutoindex() == true && HTTPRequest::isDir(path)) {
                     client.setBody(directory_listing(path, client.getDisplayPath()));
-                } else if (HTTPRequest::isDir(path)) {  //  TODO Set a default file to answer if the request is a directory.
+                } else if (HTTPRequest::isDir(path)) {
                     throw ResponseError(404, "not found");
                 } else {
                     int fd = open(path.c_str(), O_RDONLY);
@@ -315,11 +313,10 @@ void HTTPServer::get(Client &client) {
                     EvManager::addEvent(fd, EvManager::read);
                     this->addInnerFd(new InnerFd(fd, client, client.getResponseBody(),  EvManager::read));
                 }
-            client.addHeader(std::pair<std::string, std::string>("Content-Type", "text/" + client.getExtension())); // TODO check actual type
+            client.addHeader(std::pair<std::string, std::string>("Content-Type", "text/" + client.getExtension()));
         }
     } else {
         throw ResponseError(404, "not found");
-        // TODO automate it   404, 405, 408, 411, 412, 413, 414, 431, 500, 501, 505, 503, 507, 508
     }
 };
 
@@ -331,10 +328,7 @@ void HTTPServer::post(Client &client) {
     if (client.isCgi() == true) {
         int fd = Cgi::execute(client);
         client.setCgiPipeFd(fd);
-        // EvManager::addEvent(fd, EvManager::read);
-        // this->addInnerFd(new InnerFd(fd, client, client.getResponseBody(), EvManager::read));
     } else {
-        // TODO if multipart data not detected throw precondition failed
         std::unordered_map<std::string, std::string> &uploadedFiles = client.getUploadedFiles();
         std::unordered_map<std::string, std::string>::iterator it = uploadedFiles.begin();
         for (; it != uploadedFiles.cend(); ++it) {

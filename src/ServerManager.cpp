@@ -19,11 +19,11 @@ bool ServerManager::newClient(int fd) {
     for (int i = 0; i < this->size(); ++i) {
         if ((*this)[i]->getfd() == fd) {
             sock_t clientFd = accept((*this)[i]->getfd(), 0, 0);
+            if (clientFd == -1) {
+                throw std::runtime_error(std::string("accept: ") + strerror(errno));
+            }
             fcntl(clientFd, F_SETFL, O_NONBLOCK, FD_CLOEXEC);
             Client *client = new Client(clientFd, (*this)[i]->getfd(), *(*this)[i]);
-            // if (client.getFd() == -1) {  // TODO is it needed
-            //     throw std::runtime_error(std::string("accept: ") + strerror(errno));
-            // }
             EvManager::addEvent(clientFd, EvManager::read);
             (*this)[i]->push(clientFd, client);
             return (true);
@@ -148,7 +148,6 @@ void ServerManager::start() {
 
 
 void ServerManager::generateErrorResponse(const ResponseError& e, Client &client) {
-    // TODO automate it   404, 405, 411, 412, 413, 414, 431, 500, 501, 505, 503, 507, 508
     std::string response;
     std::string resBody;
     std::cout << "generateErrorResponse\n";
@@ -175,7 +174,7 @@ void ServerManager::generateErrorResponse(const ResponseError& e, Client &client
     response += e.what();
     response += "\r\n";
     client.setResponseLine(response);
-    client.addHeader(std::pair<std::string, std::string>("Content-Type", "text/html")); // TODO check actual type
+    client.addHeader(std::pair<std::string, std::string>("Content-Type", "text/html"));
     client.addHeader(std::pair<std::string, std::string>("Content-Length", std::to_string(resBody.size())));
     client.buildHeader();
     client.setBody(resBody);

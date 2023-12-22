@@ -50,25 +50,8 @@ int Cgi::execute(Client &client) {
     close(pipe_to_child[1]);
     close(pipe_to_child[0]);
     int status;
-    // usleep(100);
     client.setCgiPID(pid);
     client.setCgiStartTime();
-    // sleep(5);
-    // std::cout << "status = " << status << std::endl;
-    // TODO move to generate response function
-    // std::cout << "kill = " << kill(pid, SIGKILL) << std::endl;
-    // std::cout << "kill = " << kill(pid, SIGUSR1) << std::endl;  // TODO throw if everything is fine
-    // waitpid(pid, &status, 0);
-    // std::cout << "status = " << status << std::endl;
-    // if (WIFEXITED(status)) {
-    //     if (WEXITSTATUS(status) != 0) {
-    //         std::cout << "WEXITSTATUS(status) = " << WEXITSTATUS(status) << std::endl;
-    //         throw ResponseError(500, "Internal Server Error");
-    //     }
-    // }
-    // if (WIFSIGNALED(status) && WTERMSIG(status) == SIGKILL) {
-    //     throw ResponseError(508, "Loop Detected");
-    // }
     return (pipe_from_child[0]);
 };
 

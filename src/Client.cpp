@@ -142,7 +142,7 @@ void Client::parseHeader()
     {
         method = trim(request.substr(0, request.find_first_of(" ")));
         request.erase(0, request.find_first_of(" ") + 1);
-        _path = trim(request.substr(0, request.find_first_of(" ")));// TODO handle ? var cases in _path
+        _path = trim(request.substr(0, request.find_first_of(" ")));
         request.erase(0, request.find_first_of(" ") + 1);
         version = trim(request.substr(0, request.find("\r\n")));
     }
@@ -181,7 +181,7 @@ bool Client::sendResponse() {
     if (_responseLine.empty() == false) {
         size_t sendSize = WRITE_BUFFER < _responseLine.size() ? WRITE_BUFFER : _responseLine.size();
         if (send(fd, _responseLine.c_str(), sendSize, 0) == -1) {
-            return (false); // TODO is send function return -1 seting EAGAIN in errno
+            return (false);
         }
         _responseLine.erase(0, sendSize);
 
@@ -189,16 +189,13 @@ bool Client::sendResponse() {
     else if (_header.empty() == false) {
         size_t sendSize = WRITE_BUFFER < _header.size() ? WRITE_BUFFER : _header.size();
         if (send(fd, _header.c_str(), sendSize, 0) == -1) {
-            return (false); // TODO is send function return -1 seting EAGAIN in errno
+            return (false);
         }
         _header.erase(0, sendSize);
     } else if (_responseBody.empty() == false) {
-        // std::cout << "_responseBody = " << _responseBody << std::endl;
-        // std::cout << "size = " << _responseBody.size() << std::endl;
-        // exit(1);
         size_t sendSize = WRITE_BUFFER < _responseBody.size() ? WRITE_BUFFER : _responseBody.size();
         if (send(fd, _responseBody.c_str(), sendSize, 0) == -1) {
-            return (false); // TODO is send function return -1 seting EAGAIN in errno
+            return (false);
         }
         _responseBody.erase(0, sendSize);
     }

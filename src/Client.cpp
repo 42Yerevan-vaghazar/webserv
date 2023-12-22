@@ -28,9 +28,9 @@ Client::Client(sock_t clfd, sock_t srfd, HTTPServer &srv) : _defaultSrv(srv)
 
 Client::~Client()
 {
-    while (InnerFd *ptr = this->getSrv().getInnerFd(fd)) {
-        this->getSrv().removeInnerFd(ptr->_fd);
-    }
+    // while (InnerFd *ptr = this->_defaultSrv.getInnerFd(fd)) {
+    //     this->getSrv().removeInnerFd(ptr->_fd);
+    // }
 }
 
 sock_t Client::getFd( void ) const

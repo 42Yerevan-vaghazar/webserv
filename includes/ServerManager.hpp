@@ -43,7 +43,7 @@ class ServerManager : public std::vector<HTTPServer *>
         void generateResponse(Client &client);
         void generateErrorResponse(const ResponseError& e, Client &client);
     private:
-        bool closeConnetcion(sock_t fd);
+        bool closeConnetcion(Client &client);
         bool newClient(int fd);
 };
 

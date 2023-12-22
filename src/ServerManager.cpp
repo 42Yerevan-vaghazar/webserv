@@ -35,6 +35,7 @@ bool ServerManager::newClient(int fd) {
 bool checkInnerFd(HTTPServer &srv, int fd) {
         InnerFd *innerFd = srv.getInnerFd(fd);
         if (innerFd) {
+            // if ()
             Client *client = innerFd->_client;
             if (innerFd->_flag ==  EvManager::read) {
                 if (client->getResponseBody().empty()) {
@@ -78,14 +79,13 @@ void ServerManager::start() {
     
         event = EvManager::listen();
         // std::cout << "event = " << event.first << std::endl;
-        // std::cout << "second = " << event.second << std::endl;
+        std::cout << "second = " << event.second << std::endl;
         if (newClient(event.second)) {
             continue ;
         }
         try
         {
             bool found = false;
-
             for (size_t i = 0; i < this->size(); ++i) {
                 found = checkInnerFd(*(*this)[i], event.second);
                 if (found == true) {
@@ -95,6 +95,7 @@ void ServerManager::start() {
             if (found == true) {
                 continue ;
             }
+
             for (size_t i = 0; i < this->size(); ++i) {
                 client = (*this)[i]->getClient(event.second);
                 if (client) {
@@ -105,14 +106,14 @@ void ServerManager::start() {
                 continue ;
             }
             if (event.first == EvManager::eof) {
-                closeConnetcion(client->getFd());
+                closeConnetcion(*client);
             } else if ((client->isRequestReady() == false)
                         && client->isResponseReady() == false) {
                 if (client->getHttpRequest().empty()) {
                     EvManager::addEvent(client->getFd(), EvManager::write);
                 }
                 if (client->receiveRequest() == -1) {
-                    closeConnetcion(client->getFd());
+                    closeConnetcion(*client);
                     continue ;
                 }
                 if (client->isRequestReady() && client->isStarted() == false) {
@@ -124,7 +125,7 @@ void ServerManager::start() {
             } else if (client->isResponseReady() && event.first == EvManager::write) {
                 if (client->sendResponse() == true) {
                     // std::cout << "sendResponse send" << std::endl;
-                    closeConnetcion(client->getFd());
+                    closeConnetcion(*client);
                     continue ;
                 }
             } else if (client->isCgi() == true) {
@@ -194,11 +195,15 @@ void ServerManager::generateResponse(Client &client) {
     }
 }
 
-bool ServerManager::closeConnetcion(sock_t fd) {
+bool ServerManager::closeConnetcion(Client &client) {
+    int fd = client.getFd();
     EvManager::delEvent(fd, EvManager::read);
     EvManager::delEvent(fd, EvManager::write);
+
     close(fd);
-    getServerByClientSocket(fd)->removeClient(fd);
+    HTTPServer *srv = getServerByClientSocket(fd);
+    srv->removeInnerFd(fd);
+    srv->removeClient(fd);
     return (true);
 };
 

@@ -235,8 +235,15 @@ void HTTPServer::removeInnerFd(int fd) {
     std::map<int, InnerFd *>::iterator it = _innerFds.find(fd);
     if (it != _innerFds.end()) {
         delete it->second;
+        _innerFds.erase(fd);
     }
-    _innerFds.erase(fd);
+    for (size_t i = 0; i < _srvs.size(); ++i) {
+        std::map<int, InnerFd *>::iterator it =_srvs[i]. _innerFds.find(fd);
+        if (it != _innerFds.end()) {
+            delete it->second;
+            _innerFds.erase(fd);
+        }
+    }
 };
 
 

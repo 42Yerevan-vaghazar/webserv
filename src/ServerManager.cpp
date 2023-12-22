@@ -128,8 +128,7 @@ void ServerManager::start() {
                     closeConnetcion(client->getFd());
                     continue ;
                 }
-            }
-            if (client->isCgi() == true) {
+            } else if (client->isCgi() == true) {
                 client->checkCgi();
             }
         }

@@ -170,10 +170,9 @@ void Client::parseHeader()
 void Client::parseBody()
 {
     if (method == "POST") {
-        if (_isCgi == true) {
-            
+        if (_isCgi == false) {
+            multipart();
         }
-        multipart();
     }
 }
 
@@ -221,30 +220,38 @@ void Client::setResponseLine(std::string const &line) {
 };
 
 void Client::setCgiStartTime() {
-    _cgiStartTime = get_current_time();
+    _cgiStartTime = time(NULL);
 };
 
 bool Client::checkCgi() {
-    if (_cgiPID != -1 && get_current_time() - _cgiStartTime > CGI_TIMEOUT) {
-        _isCgi = false;
+    if (_cgiPID != -1) {
         int status;
-        kill(_cgiPID, SIGKILL);
-        waitpid(_cgiPID, &status, 0);
-        std::cout << "status = " << status << std::endl;
-        if (WIFEXITED(status)) {
-            if (WEXITSTATUS(status) != 0) {
-                std::cout << "WEXITSTATUS(status) = " << WEXITSTATUS(status) << std::endl;
-                throw ResponseError(500, "Internal Server Error");
-            }
+        int waitRet;
+        waitRet = waitpid(_cgiPID, &status, WNOHANG);
+        // std::cout << "waitRet = " <<waitRet << std::endl;
+        if (waitRet == -1) {
+            throw ResponseError(500, "Internal Server Error");
         }
-        if (WIFSIGNALED(status)) {
+        if (waitRet == 0 && time(NULL) - _cgiStartTime > CGI_TIMEOUT) {
+            if (kill(_cgiPID, SIGKILL) != 0) {
+                throw std::runtime_error(std::string("kill: ") + strerror(errno));
+            };
+            waitpid(_cgiPID, &status, 0);
+            _cgiPID = -1;
             if (WTERMSIG(status) == SIGKILL) {
                 throw ResponseError(508, "Loop Detected");
             }
             throw ResponseError(500, "Internal Server Error");
         }
-        EvManager::addEvent(_cgiPipeFd, EvManager::read);
-        this->getSrv().addInnerFd(new InnerFd(_cgiPipeFd, *this, this->getResponseBody(), EvManager::read));
+        if (waitRet != 0 && WIFEXITED(status)) {
+            _cgiPID = -1;
+            if (WEXITSTATUS(status) != 0) {
+                std::cout << "WEXITSTATUS(status) = " << WEXITSTATUS(status) << std::endl;
+                throw ResponseError(500, "Internal Server Error");
+            }
+            EvManager::addEvent(_cgiPipeFd, EvManager::read);
+            this->getSrv().addInnerFd(new InnerFd(_cgiPipeFd, *this, this->getResponseBody(), EvManager::read));
+        }
     }
     return (true);
 };

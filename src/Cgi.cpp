@@ -59,7 +59,6 @@ char **Cgi::initEnv(Client const &client)
     char *pwd;
     const HTTPServer &srv = client.getSrv();
 
-
     pwd = getcwd(NULL, 0);
     _env["AUTH_TYPE"] = "";
     _env["CONTENT_LENGTH"] = std::to_string(client.getRequestBody().size());

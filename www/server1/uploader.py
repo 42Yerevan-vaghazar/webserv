@@ -14,3 +14,8 @@ for form_file in form.list or []:
         fd.write(form.getvalue(form_file.name))
 
 print("<h1>haha!</h1>")
+
+import time
+
+# while True:
+#     time.sleep(1)

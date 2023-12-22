@@ -14,6 +14,8 @@
 #include "ServerManager.hpp"
 #include "Cgi.hpp"
 
+// TODO check memory leaks
+
 int main(int ac, char **av)
 {
     (void)ac;
@@ -32,5 +34,4 @@ int main(int ac, char **av)
     {
         std::cout << e.what() << std::endl;
     }
-   
 }

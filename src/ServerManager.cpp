@@ -16,7 +16,7 @@
 #include "InnerFd.hpp"
 
 bool ServerManager::newClient(int fd) {
-    for (int i = 0; i < this->size(); ++i) {
+    for (size_t i = 0; i < this->size(); ++i) {
         if ((*this)[i]->getfd() == fd) {
             sock_t clientFd = accept((*this)[i]->getfd(), 0, 0);
             if (clientFd == -1) {
@@ -36,8 +36,6 @@ bool checkInnerFd(HTTPServer &srv, int fd) {
         InnerFd *innerFd = srv.getInnerFd(fd);
         if (innerFd) {
             Client *client = innerFd->_client;
-            // std::cout << "client = " << client << std::endl;
-            std::string &str = *innerFd->_str;
             if (innerFd->_flag ==  EvManager::read) {
                 if (client->getResponseBody().empty()) {
                     EvManager::addEvent(innerFd->_fd, EvManager::write);
@@ -71,7 +69,7 @@ bool checkInnerFd(HTTPServer &srv, int fd) {
 void ServerManager::start() {
     EvManager::start();
 
-    for (int i = 0; i < this->size(); ++i) {
+    for (size_t i = 0; i < this->size(); ++i) {
         EvManager::addEvent((*this)[i]->getfd(), EvManager::read);
     }
 
@@ -98,7 +96,7 @@ void ServerManager::start() {
             if (found == true) {
                 continue ;
             }
-            for (int i = 0; i < this->size(); ++i) {
+            for (size_t i = 0; i < this->size(); ++i) {
                 client = (*this)[i]->getClient(event.second);
                 if (client) {
                     break;
@@ -258,15 +256,15 @@ int ServerManager::used(HTTPServer &srv) const
 Select Multiplexing  I/O Helper funtions based on ::ServerManager::
 *******************************************************************/
 
-int ServerManager::isServer(sock_t fd)
-{
-    return (0);
-}
+// int ServerManager::isServer(sock_t fd)
+// {
+//     return (0);
+// }
 
-int ServerManager::isClient(sock_t fd)
-{
-    return (0);
-}
+// int ServerManager::isClient(sock_t fd)
+// {
+//     return (0);
+// }
 
 // void ServerManager::push(HTTPServer const &srv)
 // {

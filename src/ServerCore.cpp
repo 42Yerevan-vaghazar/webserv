@@ -19,7 +19,7 @@ ServerCore::ServerCore() {
 };
 
 
-int ServerCore::getClientBodySize( void ) const
+unsigned long ServerCore::getClientBodySize( void ) const
 {
 	return (client_body_size);
 }

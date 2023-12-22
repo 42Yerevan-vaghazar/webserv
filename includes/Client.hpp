@@ -60,15 +60,14 @@ class Client : public HTTPRequest, public HTTPResponse
         // HTTPRequest _request;
         // HTTPResponse _response;
         std::string _responseLine;
-        bool workingOnResponseStatus;
-        double	 _lastSeen;
+        // double	 _lastSeen;  //TODO write or not?
         double	 _cgiStartTime;
         int _cgiPipeFd;
         int _cgiPID;
     private:
-        struct sockaddr_in ClientInfo;
-        struct sockaddr ClientAddress;
-        struct sockaddr_storage addressStorage;
+        // struct sockaddr_in ClientInfo;
+        // struct sockaddr ClientAddress;
+        // struct sockaddr_storage addressStorage;
 };
 
 #endif

@@ -30,8 +30,8 @@ class ServerManager : public std::vector<HTTPServer *>
         ServerManager(const char *configfile);
         ~ServerManager();
     public:
-        int isServer(sock_t fd);
-        int isClient(sock_t fd);
+        // int isServer(sock_t fd);
+        // int isClient(sock_t fd);
     public:
         void printFds( void );
     public:

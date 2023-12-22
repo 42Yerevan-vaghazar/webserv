@@ -71,7 +71,7 @@ void Parser::start(ServerManager &mgn)
 std::string Parser::context_keyword(std::string const &context_token)
 {
     int i = -1;
-    while (++i < context_token.size())
+    while (++i < (int)context_token.size())
         if (std::isspace(context_token[i]))
             break;
     std::string lower = context_token;
@@ -105,7 +105,7 @@ void Parser::semantic_analysis( void )
 {
     for(size_t k = 0; k < server_ctx.size(); k++)
     {
-        for(size_t i = 0, j = 0; i < server_ctx[k].size(); i++)
+        for(size_t i = 0; i < server_ctx[k].size(); i++)
         {
             if(isWord(server_ctx[k][i]))
                 addWord(server_ctx[k], &i);
@@ -123,7 +123,6 @@ void Parser::semantic_analysis( void )
 
 void Parser::intermediate_code_generation( void )
 {
-    bool isSecond = false;
     std::list<Token>::iterator ch = tokens.begin();
     std::list<Token>::iterator next = ch;
     std::list<Token>::iterator tmpNext = ch;
@@ -331,7 +330,6 @@ void Parser::tolower(std::string &s)
 void Parser::create_server(ServerManager &mgn, std::list<Token>::iterator& ch)
 {
     HTTPServer *srv = new HTTPServer();
-    std::list<Token>::iterator tmpCh = ch;
     std::list<Token>::iterator next = ch;
     next++;
     while (next != tokens.end())
@@ -388,7 +386,6 @@ void Parser::l_directive(std::list<Token>::iterator &node, Location &loc)
     std::string d_key;
     std::string d_val;
     size_t i = 0;
-    size_t s = 0;
     while (i < node->token.size())
     {
         if (std::isspace(node->token[i]))
@@ -415,7 +412,6 @@ void Parser::s_directive(std::list<Token>::iterator& node, HTTPServer &srv)
     std::string d_key;
     std::string d_val;
     size_t i = 0;
-    size_t s = 0;
     while (i < node->token.size())
     {
         if (std::isspace(node->token[i]))

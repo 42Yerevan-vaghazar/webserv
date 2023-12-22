@@ -145,7 +145,7 @@ sock_t HTTPServer::getfd( void ) const
     return (this->_fd);
 }
 
-void HTTPServer::up(ServerManager &mgn)
+void HTTPServer::up()
 {
     const char* givenIp = ip.c_str();
     const char* givenPort = port.c_str();

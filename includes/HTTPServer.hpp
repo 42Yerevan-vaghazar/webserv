@@ -21,7 +21,7 @@
 #include <errno.h>
 #include "InnerFd.hpp"
 
-class InnerFd;
+struct InnerFd;
 
 class HTTPRequest;
 class ServerManager;
@@ -31,10 +31,10 @@ class HTTPServer : public Tcp, public IListener, public ServerCore
 {
     public:
         HTTPServer( void );
-        ~HTTPServer();
+        virtual ~HTTPServer();
     public:
-		 void up(ServerManager &mgn);
-         sock_t getfd( void ) const;
+		void up();
+        sock_t getfd( void ) const;
     public:
         Client *getClient(sock_t fd);
         InnerFd *getInnerFd(int fd);

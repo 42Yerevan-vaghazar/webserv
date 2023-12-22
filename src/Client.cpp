@@ -44,7 +44,7 @@ std::string Client::getServerPort( void ) const {
 void Client::readChunkedRequest() {
     char *ptr;
     if (_isChunkNewLineCuted == false) {
-        int pos = _requestBuf.find("\r\n");
+        size_t pos = _requestBuf.find("\r\n");
         if (pos != std::string::npos && pos == 0) {
             _requestBuf.erase(0, strlen("\r\n"));
             _isChunkNewLineCuted = true;

@@ -49,7 +49,6 @@ int Cgi::execute(Client &client) {
     close(pipe_from_child[1]);
     close(pipe_to_child[1]);
     close(pipe_to_child[0]);
-    int status;
     client.setCgiPID(pid);
     client.setCgiStartTime();
     return (pipe_from_child[0]);

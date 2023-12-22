@@ -21,6 +21,7 @@ Client::Client(sock_t clfd, sock_t srfd, HTTPServer &srv) : _defaultSrv(srv)
     _subSrv = NULL;
     _cgiPipeFd = -1;
     _cgiPID = -1;
+    _lastSeen = time(NULL);
 }
 
 Client::~Client()
@@ -73,10 +74,12 @@ int Client::receiveRequest() {
     errno = 0;
     int rdSize = recv(fd, buf, sizeof(buf), 0);
     if (rdSize == -1) { 
-        _isBodyReady = true;
-        _isRequestReady = true;
+        if (time(NULL) - _lastSeen == LAST_SENN_RIMEOUT) {
+            return (-1);
+        }
         return (0);
     }
+    _lastSeen = time(NULL);
     if (rdSize == 0) {
         return (-1);
     }
@@ -91,7 +94,6 @@ int Client::receiveRequest() {
         httpRequest  = _requestBuf.substr(0, headerEndPos);
         _requestBuf.erase(0, headerEndPos + strlen("\r\n\r\n"));
         this->parseHeader();
-        // this->showHeaders();
         std::map<std::string, std::string>::const_iterator it = httpHeaders.find("Content-Length");
         if (it != httpHeaders.end()) {
             char *ptr;
@@ -104,24 +106,28 @@ int Client::receiveRequest() {
         if (it != httpHeaders.end() && (it->second.find("Chunked") != std::string::npos ||  it->second.find("chunked") != std::string::npos)) {
             if (it->second.find("Chunked") != std::string::npos ||  it->second.find("chunked") != std::string::npos) {
                 _isChunked = true;
-                std::cout << "chunked = true " << std::endl;
             } else {
                 throw ResponseError(400, "Bad Request");
             }
         }
-        return (0);
-    } 
-    if (_isChunked) {
-        readChunkedRequest();
-        return (0);
-    }      
-    else {
-        _body.append(_requestBuf.c_str(), _requestBuf.size());
-        _requestBuf.clear();
-        if (_bodySize <= _body.size()) {
-            _body.erase(_bodySize);
-            _isBodyReady = true;
-            _isRequestReady = true;
+    }
+    if (_isHeaderReady == true) {
+        if (_isChunked ) {
+            readChunkedRequest();
+            return (0);
+        } else {
+            if (_bodySize == 0) {
+                _isBodyReady = true;
+                _isRequestReady = true;
+                return (0);
+            }
+            _body.append(_requestBuf.c_str(), _requestBuf.size());
+            _requestBuf.clear();
+            if (_bodySize <= _body.size()) {
+                _body.erase(_bodySize);
+                _isBodyReady = true;
+                _isRequestReady = true;
+            }
         }
     }
     return 0;

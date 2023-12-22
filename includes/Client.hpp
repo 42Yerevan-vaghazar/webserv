@@ -20,7 +20,8 @@
 #include <signal.h>
 #include "EvManager.hpp"
 
-#define CGI_TIMEOUT 15 // sec
+#define CGI_TIMEOUT 1 // sec
+#define LAST_SENN_RIMEOUT 15 // sec
 
 class HTTPServer;
 class Client : public HTTPRequest, public HTTPResponse
@@ -60,7 +61,7 @@ class Client : public HTTPRequest, public HTTPResponse
         // HTTPRequest _request;
         // HTTPResponse _response;
         std::string _responseLine;
-        // std::time_t	 _lastSeen;  //TODO write or not?
+        std::time_t	 _lastSeen;  //TODO write or not?
         std::time_t	 _cgiStartTime;
         int _cgiPipeFd;
         int _cgiPID;

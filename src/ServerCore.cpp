@@ -16,6 +16,9 @@ ServerCore::ServerCore() {
 	_autoindex = false;
 	_redirect = false;
 	client_body_size = 0;
+	methods.push_back("GET");
+    methods.push_back("POST");
+    methods.push_back("DEL");
 };
 
 

@@ -57,15 +57,6 @@ void Parser::start(ServerManager &mgn)
     Parser::intermediate_code_generation();
     Parser::syntax_analysis();
     Parser::fill_servers(mgn);
-    // std::map<std::string, Location>::const_iterator it = mgn[0].getLocations().begin();
-    // std::cout << it->second.getRoot() << std::endl;
-    // std::cout << it->second.getAutoindex() << std::endl;
-    // std::cout << it->second.getErrPage(403) << std::endl;
-    // std::cout << it->second.getRedirection(301) << std::endl;
-    
-    // std::list<Token>::iterator tok = tokens.begin();
-    // for(; tok != tokens.end(); tok++)
-    //     std::cout << tok->type << " : " << "|" << tok->token << "|" << std::endl;
 }
 
 std::string Parser::context_keyword(std::string const &context_token)
@@ -349,7 +340,6 @@ void Parser::create_server(ServerManager &mgn, std::list<Token>::iterator& ch)
     } else {
         mgn[srvIndex]->push(*srv);
     }
-    std::cout << "***************" << std::endl;
 }
 
 void Parser::location(std::list<Token>::iterator& node, HTTPServer &srv)
@@ -362,7 +352,6 @@ void Parser::location(std::list<Token>::iterator& node, HTTPServer &srv)
         location_Components.push_back(comp);
     if (location_Components.size() != 2 || location_Components[0] != "location")
         throw HTTPCoreException("Location: Syntax is not valid");
-    // location_Components.clear(); TODO DAVIT NAYEL
     comp.clear();
     Location loc(location_Components[1]);
     while (node->type != OPENBRACE)
@@ -432,18 +421,9 @@ void Parser::s_directive(std::list<Token>::iterator& node, HTTPServer &srv)
     FuncDir f = directives.find(d_key);
     if (f != directives.end())
     {
-        // std::cout << "|" << d_key << "|" << " : " << "|" << d_val << "|" << std::endl;
-        // std::cout << "f->first = " << f->first << std::endl << std::endl;
         (this->*(f->second))(d_val, srv);
     }
 }
-
-
-// void Parser::make_pair(size_t i, std::list<Token>::iterator& node, HTTPServer &srv)
-// {
-//     std::string d_key = node->token.substr(0, i);
-//     std::cout << d_key << std::endl;
-// }
 
 void Parser::d_listen(std::string &d_val, HTTPServer &srv)
 {

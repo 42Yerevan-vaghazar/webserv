@@ -101,8 +101,4 @@ class Parser
 };
 typedef std::map<std::string, void (Parser::*)(std::string &, HTTPServer &)>::iterator FuncDir;
 typedef std::map<std::string, void (Parser::*)(std::string &, Location &)>::iterator LocDir;
-
-// server, location
-//root, index, autoindex, error_page, methods, client_body_size, server_name, listen
-
 #endif

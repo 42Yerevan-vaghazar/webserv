@@ -10,7 +10,7 @@ std::map<std::string, std::string> Cgi::_env;
 
 int Cgi::execute(Client &client) {
     char *argv[3];
-    const std::string &argv1 = client.getSrv().getCgi(client.getExtension()).second;
+    const std::string &argv1 = client.getCurrentLoc().getCgi(client.getExtension()).second;
     argv[0] = const_cast<char *>(argv1.c_str());
     const std::string &argv2 =  client.getPath();
     argv[1] = const_cast<char *>(argv2.c_str());

@@ -58,7 +58,6 @@ bool checkInnerFd(HTTPServer &srv, int fd) {
                     EvManager::delEvent(innerFd->_fd, EvManager::write);
                     close(innerFd->_fd);
                     client->getSrv().removeInnerFd(innerFd->_fd);
-                    std::cout << "inner file writed" << std::endl;
                 };
             }
             return (true);
@@ -118,13 +117,13 @@ void ServerManager::start() {
                 }
                 if (client->isRequestReady() && client->isStarted() == false) {
                     client->setStartStatus(true);
-                    std::cout << "request received " << std::endl;
+                    // std::cout << "request received " << std::endl;
                     client->parseBody();
                     generateResponse(*client);
                 }
             } else if (client->isResponseReady() && event.first == EvManager::write) {
                 if (client->sendResponse() == true) {
-                    std::cout << "sendResponse send" << std::endl;
+                    // std::cout << "sendResponse send" << std::endl;
                     closeConnetcion(client->getFd());
                     continue ;
                 }
@@ -147,13 +146,13 @@ void ServerManager::start() {
 void ServerManager::generateErrorResponse(const ResponseError& e, Client &client) {
     std::string response;
     std::string resBody;
-    std::cout << "generateErrorResponse\n";
+    // std::cout << "generateErrorResponse\n";
     if (e.getStatusCode() == 301) {
         client.addHeader(std::make_pair("Location", client.getRedirectPath()));
     }
     try
     {
-        resBody = fileToString(client.getSrv().getErrPage(e.getStatusCode())) + "barev";
+        resBody = fileToString(client.getCurrentLoc().getErrPage(e.getStatusCode()));
     }
     catch(...)
     {
@@ -245,32 +244,7 @@ int ServerManager::used(HTTPServer &srv) const
     for(size_t i = 0; i < this->size(); i++)
         if (std::strcmp((*this)[i]->getPort(), srv.getPort()) == 0)
         {
-            std::cout << "return (-1);\n";
             return (i);
         }
     return (-1);
 }
-
-/*******************************************************************
-Select Multiplexing  I/O Helper funtions based on ::ServerManager::
-*******************************************************************/
-
-// int ServerManager::isServer(sock_t fd)
-// {
-//     return (0);
-// }
-
-// int ServerManager::isClient(sock_t fd)
-// {
-//     return (0);
-// }
-
-// void ServerManager::push(HTTPServer const &srv)
-// {
-//     srvs.push_back(srv);
-// }
-
-// void ServerManager::push(HTTPServer const &srv)
-// {
-//     srvs.push_back(srv);
-// }

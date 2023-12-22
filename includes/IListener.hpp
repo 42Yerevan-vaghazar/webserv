@@ -23,7 +23,7 @@ struct IListener
 		virtual const char* getPort( void ) const = 0;
         virtual uint32_t getNIp( void ) const = 0;
 		virtual uint16_t getNPort( void ) const = 0;
-		// virtual ~IListener() {}; // TODO review
+		virtual ~IListener() {};
 	protected:
         std::string ip;
         std::string port;

@@ -12,6 +12,8 @@
 
 #include "Client.hpp"
 #include "ResponseError.hpp"
+#include "InnerFd.hpp"
+
 
 Client::Client(sock_t clfd, sock_t srfd, HTTPServer &srv) : _defaultSrv(srv)
 {
@@ -26,6 +28,9 @@ Client::Client(sock_t clfd, sock_t srfd, HTTPServer &srv) : _defaultSrv(srv)
 
 Client::~Client()
 {
+    while (InnerFd *ptr = this->getSrv().getInnerFd(fd)) {
+        this->getSrv().removeInnerFd(ptr->_fd);
+    }
 }
 
 sock_t Client::getFd( void ) const
@@ -98,7 +103,7 @@ int Client::receiveRequest() {
         if (it != httpHeaders.end()) {
             char *ptr;
             _bodySize = std::strtoul(it->second.c_str(), &ptr, 10);
-            if (_bodySize > this->getSrv().getClientBodySize()) {
+            if (_bodySize > this->getCurrentLoc().getClientBodySize()) {
                 throw ResponseError(413, "Content Too Large");
             }
         }
@@ -132,8 +137,7 @@ int Client::receiveRequest() {
     }
     return 0;
 }
-// echo -ne '6\r\nHello,\r\n6\r\nworld!\r\n\r\n' | curl -X POST http://localhost:3000/chunked-H "Transfer-Encoding: chunked" --data @-
-// curl -H "Transfer-Encoding: chunked" http://localhost:3000/--data --data-binary "This is the second chunk." --data-binary "And this is the third chunk."
+
 void Client::parseHeader()
 {
     size_t space = 0;
@@ -234,7 +238,6 @@ bool Client::checkCgi() {
         int status;
         int waitRet;
         waitRet = waitpid(_cgiPID, &status, WNOHANG);
-        // std::cout << "waitRet = " <<waitRet << std::endl;
         if (waitRet == -1) {
             throw ResponseError(500, "Internal Server Error");
         }
@@ -252,7 +255,7 @@ bool Client::checkCgi() {
         if (waitRet != 0 && WIFEXITED(status)) {
             _cgiPID = -1;
             if (WEXITSTATUS(status) != 0) {
-                std::cout << "WEXITSTATUS(status) = " << WEXITSTATUS(status) << std::endl;
+                // std::cout << "WEXITSTATUS(status) = " << WEXITSTATUS(status) << std::endl;
                 throw ResponseError(500, "Internal Server Error");
             }
             EvManager::addEvent(_cgiPipeFd, EvManager::read);
@@ -269,4 +272,14 @@ void Client::setCgiPipeFd(int fd) {
 
 void Client::setCgiPID(int pid) {
     _cgiPID = pid;
+};
+
+const ServerCore &Client::getCurrentLoc() {
+    if (_location) {
+        return (*_location);
+    }
+    if (_subSrv) {
+        return (*_subSrv);
+    }
+    return (_defaultSrv);
 };

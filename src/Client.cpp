@@ -126,6 +126,7 @@ int Client::receiveRequest() {
             return (0);
         } else {
             if (_bodySize == 0) {
+                EvManager::delEvent(_fd, EvManager::read);
                 _isBodyReady = true;
                 _isRequestReady = true;
                 return (0);
@@ -134,6 +135,7 @@ int Client::receiveRequest() {
             _requestBuf.clear();
             if (_bodySize <= _body.size()) {
                 _body.erase(_bodySize);
+                EvManager::delEvent(_fd, EvManager::read);
                 _isBodyReady = true;
                 _isRequestReady = true;
             }
@@ -263,7 +265,7 @@ bool Client::checkCgi() {
         if (waitRet != 0 && WIFEXITED(status)) {
             _cgiPID = -1;
             if (WEXITSTATUS(status) != 0) {
-                // std::cout << "WEXITSTATUS(status) = " << WEXITSTATUS(status) << std::endl;
+                std::cout << "WEXITSTATUS(status) = " << WEXITSTATUS(status) << std::endl;
                 throw ResponseError(500, "Internal Server Error");
             }
             EvManager::addEvent(_cgiPipeFd, EvManager::read);
@@ -282,7 +284,7 @@ void Client::setCgiPID(int pid) {
     _cgiPID = pid;
 };
 
-const ServerCore &Client::getCurrentLoc() {
+const ServerCore &Client::getCurrentLoc() const {
     if (_location) {
         return (*_location);
     }
@@ -294,7 +296,6 @@ const ServerCore &Client::getCurrentLoc() {
 
 
 InnerFd *Client:: getInnerFd(int fd) {
-    // std::cout << "_fd = " << fd << std::endl;
     std::map<int, InnerFd *  >::iterator it = _innerFds.find(fd);
     if (it != _innerFds.end()) {
         return(it->second);

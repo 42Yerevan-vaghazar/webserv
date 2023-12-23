@@ -57,28 +57,29 @@ int Cgi::execute(Client &client) {
 char **Cgi::initEnv(Client const &client)
 {
     char *pwd;
-    const HTTPServer &srv = client.getSrv();
+    const ServerCore &srv = client.getCurrentLoc();
 
     pwd = getcwd(NULL, 0);
     _env["AUTH_TYPE"] = "";
     _env["CONTENT_LENGTH"] = std::to_string(client.getRequestBody().size());
     _env["CONTENT_TYPE"] = client.findInMap("Content-Type");
-    _env["GATEWAY_INTERFACE"] = "CGI/1.1";
-    _env["PATH_INFO"] = pwd + client.getPath();
-    _env["PATH_TRANSLATED"] = pwd + client.getPath();
-    _env["QUERY_STRING"] = client.getQueryString();
-    _env["REMOTE_ADDR"] = "";
-    _env["REMOTE_HOST"] = "::1";
-    _env["REMOTE_IDENT"] = "";
-    _env["REMOTE_USER"] = "";
-    _env["REQUEST_METHOD"] = client.getMethod();
-    _env["SCRIPT_NAME"] = pwd + client.getPath();
-    _env["SERVER_NAME"] = "webserv";
-    _env["SERVER_PORT"] = srv.getPort();
-    _env["SERVER_PROTOCOL"] = "HTTP/1.1";
-    _env["SERVER_SOFTWARE"] = "webserv/1.0";
+    // _env["GATEWAY_INTERFACE"] = "CGI/1.1";
+    // _env["PATH_INFO"] = pwd + client.getPath();
+    // _env["PATH_TRANSLATED"] = pwd + client.getPath();
+    // _env["QUERY_STRING"] = client.getQueryString();
+    // _env["REMOTE_ADDR"] = "";
+    // _env["REMOTE_HOST"] = "::1";
+    // _env["REMOTE_IDENT"] = "";
+    // _env["REMOTE_USER"] = "";
+    // _env["REQUEST_METHOD"] = client.getMethod();
+    // _env["SCRIPT_NAME"] = "/index.php";
+    // _env["SERVER_NAME"] = "webserv";
+    // _env["SERVER_PORT"] = srv.getPort();
+    // _env["SERVER_PROTOCOL"] = "HTTP/1.1";
+    // _env["SERVER_SOFTWARE"] = "webserv/1.0";
     _env["SERVER_WRITE_PATH"] = srv.getUploadDir();
-    _env["LC_CTYPE"] = "C.UTF-8";
+    // _env["LC_CTYPE"] = "C.UTF-8";
+    // _env["REDIRECT_STATUS"] = "true";
 	free(pwd);
 
     char **envp = new char *[_env.size() + 1];

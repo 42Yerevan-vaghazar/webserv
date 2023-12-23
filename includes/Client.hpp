@@ -53,7 +53,7 @@ class Client : public HTTPRequest, public HTTPResponse
         int _cgiPID;
     public:
         void readChunkedRequest();
-        const ServerCore &getCurrentLoc();
+        const ServerCore &getCurrentLoc() const;
 };
 
 #endif

@@ -42,7 +42,7 @@ bool checkInnerFd(HTTPServer &srv, int fd) {
                 }
                 // std::cout << "readFromFd\n";
                 if (readFromFd(innerFd->_fd, innerFd->_str) == true) {
-                    client.addHeader(std::pair<std::string, std::string>("Content-Length", std::to_string(client.getResponseBody().size())));
+                    client.addHeader(std::pair<std::string, std::string>("Content-Length", my_to_string(client.getResponseBody().size())));
                     client.buildHeader();
                     client.isResponseReady() = true;
                     EvManager::delEvent(innerFd->_fd, EvManager::read);
@@ -53,7 +53,7 @@ bool checkInnerFd(HTTPServer &srv, int fd) {
             } else if (innerFd->_flag == EvManager::write) {
                 // std::cout << "writeInFd\n";
                 if (writeInFd(innerFd->_fd, innerFd->_str) == true) {
-                    client.addHeader(std::pair<std::string, std::string>("Content-Length", std::to_string(client.getResponseBody().size())));
+                    client.addHeader(std::pair<std::string, std::string>("Content-Length", my_to_string(client.getResponseBody().size())));
                     client.buildHeader();
                     client.isResponseReady() = true;
                     EvManager::delEvent(innerFd->_fd, EvManager::read);
@@ -161,21 +161,21 @@ void ServerManager::generateErrorResponse(const ResponseError& e, Client &client
     catch(...)
     {
         resBody += "<html>";
-		resBody += "<head><title>" + std::to_string(e.getStatusCode()) + " " + e.what() + "</title></head>";
+		resBody += "<head><title>" + my_to_string(e.getStatusCode()) + " " + e.what() + "</title></head>";
 		resBody += "<body>";
-		resBody += "<center><h1>" + std::to_string(e.getStatusCode()) + " " + e.what() + "</h1></center><hr>";
+		resBody += "<center><h1>" + my_to_string(e.getStatusCode()) + " " + e.what() + "</h1></center><hr>";
 		resBody += "</body>";
 		resBody += "</html>";
     }
 
     response = HTTP_VERSION;
-    response += " " + std::to_string(e.getStatusCode());
+    response += " " + my_to_string(e.getStatusCode());
     response += " ";
     response += e.what();
     response += "\r\n";
     client.setResponseLine(response);
     client.addHeader(std::pair<std::string, std::string>("Content-Type", "text/html"));
-    client.addHeader(std::pair<std::string, std::string>("Content-Length", std::to_string(resBody.size())));
+    client.addHeader(std::pair<std::string, std::string>("Content-Length", my_to_string(resBody.size())));
     client.buildHeader();
     client.setBody(resBody);
 }

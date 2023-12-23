@@ -11,7 +11,7 @@
 /* ************************************************************************** */
 
 #include "HTTPServer.hpp"
-#include <unordered_map>
+#include <map>
 #include "HelperFunctions.hpp"
 #include "Cgi.hpp"
 #include "EvManager.hpp"
@@ -164,8 +164,8 @@ void HTTPServer::push(HTTPServer &srv) {
 
 HTTPServer *HTTPServer::getSubServerByName(std::string const &serverName) {
     for (size_t i = 0; i < _srvs.size(); ++i) {
-        const std::vector<std::string> &srvNames =  _srvs[i].get_serverNames();
-        std::vector<std::string>::const_iterator it = std::find(srvNames.cbegin(),srvNames.cend(), serverName);
+        std::vector<std::string> &srvNames =  _srvs[i]._serverName;
+        std::vector<std::string>::const_iterator it = std::find(srvNames.begin(),srvNames.end(), serverName);
         if (it != srvNames.end()) {
             return (&_srvs[i]);
         }
@@ -301,9 +301,9 @@ void HTTPServer::post(Client &client) {
         int fd = Cgi::execute(client);
         client.setCgiPipeFd(fd);
     } else {
-        std::unordered_map<std::string, std::string> &uploadedFiles = client.getUploadedFiles();
-        std::unordered_map<std::string, std::string>::iterator it = uploadedFiles.begin();
-        for (; it != uploadedFiles.cend(); ++it) {
+        std::map<std::string, std::string> &uploadedFiles = client.getUploadedFiles();
+        std::map<std::string, std::string>::iterator it = uploadedFiles.begin();
+        for (; it != uploadedFiles.end(); ++it) {
             const std::string &fileName = it->first;
             std::string &fileContent = it->second;
             int fd = open((client.getCurrentLoc().getUploadDir() + fileName).c_str(),  O_WRONLY | O_TRUNC | O_CREAT, S_IRWXU);
@@ -377,7 +377,7 @@ std::string	HTTPServer::directory_listing(const std::string &path, std::string d
 		if (name != ".")
 		{
 			table += "<a href=\"";
-            if (displayPath.back() != '/')
+            if (displayPath.empty() == false && displayPath[displayPath.size() - 1] != '/')
             {
     			displayPath +=  "/";
             }

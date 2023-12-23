@@ -13,7 +13,7 @@
 #ifndef HTTP_RESPONSE_HPP
 #define HTTP_RESPONSE_HPP
 #include "Libs.hpp"
-#include <unordered_map>
+#include <map>
 
 class HTTPResponse
 {
@@ -22,7 +22,7 @@ class HTTPResponse
         ~HTTPResponse();
     public:
         std::string const getResponse( void ) const;
-        std::unordered_map<std::string, std::string> &getResponseHeader();
+        std::map<std::string, std::string> &getResponseHeader();
         void addHeader(const std::pair<std::string, std::string> &);
         void buildHeader();
         void setCgiPipeFd(int fd);
@@ -35,7 +35,7 @@ class HTTPResponse
     protected:
         std::string _header;
         std::string _responseBody;
-        std::unordered_map<std::string, std::string> _responseHeader;
+        std::map<std::string, std::string> _responseHeader;
         bool _isResponseReady;
         bool _isStarted;
     private:

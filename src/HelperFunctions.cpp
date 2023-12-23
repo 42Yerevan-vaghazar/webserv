@@ -1,14 +1,14 @@
 #include <string>
 #include <fstream>
 #include <sstream>
-#include <HelperFunctions.hpp>
 #include <unistd.h>
 #include <iostream>
 #include "DefaultSetup.hpp"
+#include "HelperFunctions.hpp"
 
 
 std::string fileToString(std::string const &fileName) {
-    std::ifstream file(fileName);
+    std::ifstream file(fileName.c_str());
 	std::string fileContent;
 
     if (file.is_open()) {
@@ -55,3 +55,9 @@ long double	get_current_time(void)
 	gettimeofday(&time, NULL);
 	return ((time.tv_sec * 1000) + (time.tv_usec / 1000));
 }
+
+std::string my_to_string(size_t num) {
+    std::stringstream str;
+    str << num;
+    return (str.str());
+};

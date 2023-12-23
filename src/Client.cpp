@@ -13,7 +13,8 @@
 #include "Client.hpp"
 #include "ResponseError.hpp"
 #include "InnerFd.hpp"
-
+#include <sys/types.h>
+#include <sys/wait.h>
 
 Client::Client(sock_t clfd, sock_t srfd, HTTPServer &srv) : _defaultSrv(srv)
 {
@@ -83,9 +84,9 @@ int Client::receiveRequest() {
     errno = 0;
     int rdSize = recv(_fd, buf, sizeof(buf), 0);
     if (rdSize == -1) { 
-        // if (time(NULL) - _lastSeen == LAST_SENN_RIMEOUT) {
-        //     return (-1);
-        // }
+        if (time(NULL) - _lastSeen == LAST_SENN_RIMEOUT) {
+            return (-1);
+        }
         return (0);
     }
     _lastSeen = time(NULL);
@@ -126,7 +127,7 @@ int Client::receiveRequest() {
             return (0);
         } else {
             if (_bodySize == 0) {
-                EvManager::delEvent(_fd, EvManager::read);
+                // EvManager::delEvent(_fd, EvManager::read);
                 _isBodyReady = true;
                 _isRequestReady = true;
                 return (0);
@@ -135,7 +136,7 @@ int Client::receiveRequest() {
             _requestBuf.clear();
             if (_bodySize <= _body.size()) {
                 _body.erase(_bodySize);
-                EvManager::delEvent(_fd, EvManager::read);
+                // EvManager::delEvent(_fd, EvManager::read);
                 _isBodyReady = true;
                 _isRequestReady = true;
             }

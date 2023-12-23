@@ -74,7 +74,7 @@ std::string HTTPRequest::getHttpRequest() const {
     return (httpRequest);
 }
 
-std::unordered_map<std::string, std::string> &HTTPRequest::getUploadedFiles() {
+std::map<std::string, std::string> &HTTPRequest::getUploadedFiles() {
     return(_uploadedFiles);
 }
 
@@ -260,9 +260,7 @@ void HTTPRequest::checkPath(const HTTPServer &srv)
 
         for (size_t i = 0; i < indexes.size(); i++) {
             std::string path = _relativePath;
-            if (path.back() != '/') {
-                path += "/";
-            }
+            path += "/";
             path += indexes[i];
 
             if (access(path.c_str(), R_OK) == 0) {

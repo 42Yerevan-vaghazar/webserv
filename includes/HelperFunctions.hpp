@@ -6,3 +6,4 @@ std::string fileToString(std::string const &fileName);
 bool readFromFd(int fd, std::string &str);
 bool writeInFd(int fd, std::string &str);
 long double	get_current_time(void);
+std::string my_to_string(size_t num);

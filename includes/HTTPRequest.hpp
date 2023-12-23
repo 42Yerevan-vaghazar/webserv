@@ -3,7 +3,7 @@
 #include "Libs.hpp"
 #include "HTTPResponse.hpp"
 #define MAX_SIZE_REQUEST 1000
-#include <unordered_map>
+#include <map>
 
 class Location;
 class HTTPServer;
@@ -106,9 +106,9 @@ class HTTPRequest
         bool _isChunkNewLineCuted;
         size_t _chunkSize;
         size_t _maxSizeRequest;
-        std::unordered_map<std::string, std::string> _uploadedFiles;
+        std::map<std::string, std::string> _uploadedFiles;
     public:
-        std::unordered_map<std::string, std::string> &getUploadedFiles();
+        std::map<std::string, std::string> &getUploadedFiles();
 
 };
 

@@ -5,7 +5,7 @@ UNAME := $(shell uname)
 TMP = objs
 
 ifeq ($(UNAME), Linux)
-CXX = c++ -std=c++11
+CXX = c++ -std=c++98
 else
 CXX = c++ -std=c++98
 endif

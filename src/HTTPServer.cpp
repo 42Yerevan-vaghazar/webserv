@@ -198,54 +198,38 @@ bool HTTPServer::operator==(sock_t fd) const
 Client* HTTPServer::getClient(sock_t fd)
 {
     std::map<sock_t, Client*>::iterator it = clnt.find(fd);
-    if (it != clnt.end())
+    if (it != clnt.end()) {
         return (it->second);
+    }
     return (NULL);
 }
 
 void HTTPServer::removeClient(sock_t fd)
 {
     std::map<sock_t, Client*>::iterator it = clnt.find(fd);
+
     if (it != clnt.end()) {
         delete it->second;
         clnt.erase(it);
+        EvManager::delEvent(fd, EvManager::read);
+        EvManager::delEvent(fd, EvManager::write);
     }
     return ;
 }
 
 InnerFd *HTTPServer:: getInnerFd(int fd) {
-    std::map<int, InnerFd *  >::iterator it = _innerFds.find(fd);
-    if (it != _innerFds.end()) {
-        return(it->second);
-    }
-    for (size_t i = 0; i < _srvs.size(); ++i) {
-        std::map<int, InnerFd *  >::iterator it = _srvs[i]._innerFds.find(fd);
-        if (it != _innerFds.end()) {
-            return(it->second);
+    std::map<sock_t, Client *>::iterator it = clnt.begin();
+    
+    while (it != clnt.end()) {
+        InnerFd *innerFd = it->second->getInnerFd(fd);
+
+        if (innerFd) {
+            return(innerFd);
         }
+        ++it;
     }
     return (NULL);
 };
-
-void HTTPServer::addInnerFd(InnerFd *obj) {
-    _innerFds.insert(std::pair<int, InnerFd *>(obj->_fd, obj));
-};
-
-void HTTPServer::removeInnerFd(int fd) {
-    std::map<int, InnerFd *>::iterator it = _innerFds.find(fd);
-    if (it != _innerFds.end()) {
-        delete it->second;
-        _innerFds.erase(fd);
-    }
-    for (size_t i = 0; i < _srvs.size(); ++i) {
-        std::map<int, InnerFd *>::iterator it =_srvs[i]. _innerFds.find(fd);
-        if (it != _innerFds.end()) {
-            delete it->second;
-            _innerFds.erase(fd);
-        }
-    }
-};
-
 
 const Location* HTTPServer::findMatching(std::string const &realPath) const
 {
@@ -303,7 +287,7 @@ void HTTPServer::get(Client &client) {
                         throw ResponseError(500, "Internal Server Error");
                     }
                     EvManager::addEvent(fd, EvManager::read);
-                    this->addInnerFd(new InnerFd(fd, client, client.getResponseBody(),  EvManager::read));
+                    client.addInnerFd(new InnerFd(fd, client, client.getResponseBody(),  EvManager::read));
                 }
             client.addHeader(std::pair<std::string, std::string>("Content-Type", "text/" + client.getExtension()));
         }
@@ -327,7 +311,7 @@ void HTTPServer::post(Client &client) {
                 throw ResponseError(500 , "Internal Server Error");
             }
             EvManager::addEvent(fd, EvManager::write);
-            this->addInnerFd(new InnerFd(fd, client, fileContent, EvManager::write));
+            client.addInnerFd(new InnerFd(fd, client, fileContent, EvManager::write));
         }
     }
     client.addHeader(std::pair<std::string, std::string>("content-type", "text/plain"));

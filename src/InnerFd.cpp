@@ -1,29 +1,13 @@
 #include "InnerFd.hpp"
 
-InnerFd::InnerFd(int fd, Client  &client, std::string &str, int flag) {
+InnerFd::InnerFd(int fd, Client  &client, std::string &str, int flag)
+    : _client(client), _str(str) {
     _fd = fd;
-    _str = &str;
-    _client = &client;
     _flag = flag;
 };
-InnerFd::InnerFd(const InnerFd &obj) : _str(obj._str) {
+InnerFd::InnerFd(const InnerFd &obj) : _str(obj._str), _client(obj._client) {
     _fd = obj._fd;
-    _client = obj._client;
     _flag = obj._flag;
 };
 
-InnerFd &InnerFd::operator=(const InnerFd &obj) {
-    if (this != &obj) {
-        _fd = obj._fd;
-        _client = obj._client;
-        _flag = obj._flag;
-    }
-    return (*this);
-};
-
 InnerFd::~InnerFd(){};
-
-
-bool InnerFd::operator<(int fd) const {
-    return (_fd < fd);
-}

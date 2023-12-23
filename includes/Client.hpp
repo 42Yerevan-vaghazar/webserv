@@ -7,9 +7,12 @@
 #include "HelperFunctions.hpp"
 #include <signal.h>
 #include "EvManager.hpp"
+#include "InnerFd.hpp"
 
 #define CGI_TIMEOUT 1 // sec
 #define LAST_SENN_RIMEOUT 15 // sec
+
+class InnerFd;
 
 class HTTPServer;
 class Client : public HTTPRequest, public HTTPResponse
@@ -28,14 +31,18 @@ class Client : public HTTPRequest, public HTTPResponse
         void setResponseLine(std::string const &);
         const HTTPServer &getSrv( void ) const;
         HTTPServer &getSrv( void );
+        HTTPServer &getDefaultSrv( void );
         void setCgiStartTime();
         bool checkCgi();
         void setCgiPipeFd(int fd);
         void setCgiPID(int fd);
+        InnerFd *getInnerFd(int fd);
+        void addInnerFd(InnerFd *);
+        void removeInnerFd(int fd);
     private:
-        void readChunkedRequest();
+        std::map<int, InnerFd *> _innerFds;                   // [Clients inner fds]
         int rd;
-        sock_t fd;
+        sock_t _fd;
         sock_t serverFd;
         HTTPServer &_defaultSrv;
         HTTPServer *_subSrv;
@@ -45,6 +52,7 @@ class Client : public HTTPRequest, public HTTPResponse
         int _cgiPipeFd;
         int _cgiPID;
     public:
+        void readChunkedRequest();
         const ServerCore &getCurrentLoc();
 };
 

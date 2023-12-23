@@ -35,30 +35,31 @@ bool ServerManager::newClient(int fd) {
 bool checkInnerFd(HTTPServer &srv, int fd) {
         InnerFd *innerFd = srv.getInnerFd(fd);
         if (innerFd) {
-            // if ()
-            Client *client = innerFd->_client;
+            Client &client = innerFd->_client;
             if (innerFd->_flag ==  EvManager::read) {
-                if (client->getResponseBody().empty()) {
+                if (client.getResponseBody().empty()) {
                     EvManager::addEvent(innerFd->_fd, EvManager::write);
                 }
-                if (readFromFd(innerFd->_fd, *innerFd->_str) == true) {
-                    client->addHeader(std::pair<std::string, std::string>("Content-Length", std::to_string(client->getResponseBody().size())));
-                    client->buildHeader();
-                    client->isResponseReady() = true;
+                // std::cout << "readFromFd\n";
+                if (readFromFd(innerFd->_fd, innerFd->_str) == true) {
+                    client.addHeader(std::pair<std::string, std::string>("Content-Length", std::to_string(client.getResponseBody().size())));
+                    client.buildHeader();
+                    client.isResponseReady() = true;
                     EvManager::delEvent(innerFd->_fd, EvManager::read);
                     EvManager::delEvent(innerFd->_fd, EvManager::write);
                     close(innerFd->_fd);
-                    client->getSrv().removeInnerFd(innerFd->_fd);
+                    client.removeInnerFd(innerFd->_fd);
                 };
             } else if (innerFd->_flag == EvManager::write) {
-                if (writeInFd(innerFd->_fd, *innerFd->_str) == true) {
-                    client->addHeader(std::pair<std::string, std::string>("Content-Length", std::to_string(client->getResponseBody().size())));
-                    client->buildHeader();
-                    client->isResponseReady() = true;
+                // std::cout << "writeInFd\n";
+                if (writeInFd(innerFd->_fd, innerFd->_str) == true) {
+                    client.addHeader(std::pair<std::string, std::string>("Content-Length", std::to_string(client.getResponseBody().size())));
+                    client.buildHeader();
+                    client.isResponseReady() = true;
                     EvManager::delEvent(innerFd->_fd, EvManager::read);
                     EvManager::delEvent(innerFd->_fd, EvManager::write);
                     close(innerFd->_fd);
-                    client->getSrv().removeInnerFd(innerFd->_fd);
+                    client.removeInnerFd(innerFd->_fd);
                 };
             }
             return (true);
@@ -107,11 +108,13 @@ void ServerManager::start() {
             }
             if (event.first == EvManager::eof) {
                 closeConnetcion(*client);
+                continue ;
             } else if ((client->isRequestReady() == false)
                         && client->isResponseReady() == false) {
                 if (client->getHttpRequest().empty()) {
                     EvManager::addEvent(client->getFd(), EvManager::write);
                 }
+                // std::cout << "receiveRequest" << std::endl;
                 if (client->receiveRequest() == -1) {
                     closeConnetcion(*client);
                     continue ;
@@ -123,8 +126,8 @@ void ServerManager::start() {
                     generateResponse(*client);
                 }
             } else if (client->isResponseReady() && event.first == EvManager::write) {
+                // std::cout << "sendResponse" << std::endl;
                 if (client->sendResponse() == true) {
-                    // std::cout << "sendResponse send" << std::endl;
                     closeConnetcion(*client);
                     continue ;
                 }
@@ -199,11 +202,9 @@ bool ServerManager::closeConnetcion(Client &client) {
     int fd = client.getFd();
     EvManager::delEvent(fd, EvManager::read);
     EvManager::delEvent(fd, EvManager::write);
-
     close(fd);
-    HTTPServer *srv = getServerByClientSocket(fd);
-    srv->removeInnerFd(fd);
-    srv->removeClient(fd);
+    HTTPServer &srv = client.getDefaultSrv();
+    srv.removeClient(fd);
     return (true);
 };
 
@@ -215,7 +216,9 @@ ServerManager::ServerManager(const char *configfile)
 
 ServerManager::~ServerManager()
 {
-    
+    for (size_t i = 0; i < this->size(); i++) {
+        delete (*this)[i];
+    }
 }
 
 

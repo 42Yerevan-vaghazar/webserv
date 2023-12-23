@@ -17,7 +17,7 @@
 
 Client::Client(sock_t clfd, sock_t srfd, HTTPServer &srv) : _defaultSrv(srv)
 {
-    this->fd = clfd;
+    this->_fd = clfd;
     this->serverFd = srfd;
     this->rd = 0;
     _subSrv = NULL;
@@ -28,14 +28,18 @@ Client::Client(sock_t clfd, sock_t srfd, HTTPServer &srv) : _defaultSrv(srv)
 
 Client::~Client()
 {
-    // while (InnerFd *ptr = this->_defaultSrv.getInnerFd(fd)) {
-    //     this->getSrv().removeInnerFd(ptr->_fd);
-    // }
+    std::map<int, InnerFd *>::iterator it = _innerFds.begin();
+    while (it != _innerFds.end()) {
+        delete it->second;
+        EvManager::delEvent(it->first, EvManager::read);
+        EvManager::delEvent(it->first, EvManager::write);
+        ++it;
+    }
 }
 
 sock_t Client::getFd( void ) const
 {
-    return (this->fd);
+    return (this->_fd);
 }
 
 sock_t Client::getServerFd( void ) const
@@ -77,11 +81,11 @@ void Client::readChunkedRequest() {
 int Client::receiveRequest() {
     char buf[READ_BUFFER];
     errno = 0;
-    int rdSize = recv(fd, buf, sizeof(buf), 0);
+    int rdSize = recv(_fd, buf, sizeof(buf), 0);
     if (rdSize == -1) { 
-        if (time(NULL) - _lastSeen == LAST_SENN_RIMEOUT) {
-            return (-1);
-        }
+        // if (time(NULL) - _lastSeen == LAST_SENN_RIMEOUT) {
+        //     return (-1);
+        // }
         return (0);
     }
     _lastSeen = time(NULL);
@@ -189,7 +193,7 @@ void Client::parseBody()
 bool Client::sendResponse() {
     if (_responseLine.empty() == false) {
         size_t sendSize = WRITE_BUFFER < _responseLine.size() ? WRITE_BUFFER : _responseLine.size();
-        if (send(fd, _responseLine.c_str(), sendSize, 0) == -1) {
+        if (send(_fd, _responseLine.c_str(), sendSize, 0) == -1) {
             return (false);
         }
         _responseLine.erase(0, sendSize);
@@ -197,13 +201,13 @@ bool Client::sendResponse() {
     }
     else if (_header.empty() == false) {
         size_t sendSize = WRITE_BUFFER < _header.size() ? WRITE_BUFFER : _header.size();
-        if (send(fd, _header.c_str(), sendSize, 0) == -1) {
+        if (send(_fd, _header.c_str(), sendSize, 0) == -1) {
             return (false);
         }
         _header.erase(0, sendSize);
     } else if (_responseBody.empty() == false) {
         size_t sendSize = WRITE_BUFFER < _responseBody.size() ? WRITE_BUFFER : _responseBody.size();
-        if (send(fd, _responseBody.c_str(), sendSize, 0) == -1) {
+        if (send(_fd, _responseBody.c_str(), sendSize, 0) == -1) {
             return (false);
         }
         _responseBody.erase(0, sendSize);
@@ -215,6 +219,10 @@ const HTTPServer &Client::getSrv( void ) const {
     if (_subSrv) {
         return (*_subSrv);
     }
+    return (_defaultSrv);
+};
+
+HTTPServer &Client::getDefaultSrv( void ) {
     return (_defaultSrv);
 };
 
@@ -259,7 +267,7 @@ bool Client::checkCgi() {
                 throw ResponseError(500, "Internal Server Error");
             }
             EvManager::addEvent(_cgiPipeFd, EvManager::read);
-            this->getSrv().addInnerFd(new InnerFd(_cgiPipeFd, *this, this->getResponseBody(), EvManager::read));
+            this->addInnerFd(new InnerFd(_cgiPipeFd, *this, this->getResponseBody(), EvManager::read));
         }
     }
     return (true);
@@ -282,4 +290,30 @@ const ServerCore &Client::getCurrentLoc() {
         return (*_subSrv);
     }
     return (_defaultSrv);
+};
+
+
+InnerFd *Client:: getInnerFd(int fd) {
+    // std::cout << "_fd = " << fd << std::endl;
+    std::map<int, InnerFd *  >::iterator it = _innerFds.find(fd);
+    if (it != _innerFds.end()) {
+        return(it->second);
+    }
+    return (NULL);
+};
+
+void Client::addInnerFd(InnerFd *obj) {
+    if (obj) {
+        _innerFds.insert(std::pair<int, InnerFd *>(obj->_fd, obj));
+    }
+};
+
+void Client::removeInnerFd(int fd) {
+    std::map<int, InnerFd *>::iterator it = _innerFds.find(fd);
+    if (it != _innerFds.end()) {
+        delete it->second;
+        _innerFds.erase(fd);
+        EvManager::delEvent(fd, EvManager::read);
+        EvManager::delEvent(fd, EvManager::write);
+    }
 };

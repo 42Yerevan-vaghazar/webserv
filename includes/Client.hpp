@@ -9,7 +9,6 @@
 #include "EvManager.hpp"
 #include "InnerFd.hpp"
 
-#define CGI_TIMEOUT 1 // sec
 #define LAST_SENN_RIMEOUT 15 // sec
 
 class InnerFd;

@@ -15,6 +15,7 @@
 #include "InnerFd.hpp"
 #include <sys/types.h>
 #include <sys/wait.h>
+#include "Cgi.hpp"
 
 Client::Client(sock_t clfd, sock_t srfd, HTTPServer &srv) : _defaultSrv(srv)
 {
@@ -269,6 +270,7 @@ bool Client::checkCgi() {
                 std::cout << "WEXITSTATUS(status) = " << WEXITSTATUS(status) << std::endl;
                 throw ResponseError(500, "Internal Server Error");
             }
+            std::cout << "WEXITSTATUS(status) = " << WEXITSTATUS(status) << std::endl;
             EvManager::addEvent(_cgiPipeFd, EvManager::read);
             this->addInnerFd(new InnerFd(_cgiPipeFd, *this, this->getResponseBody(), EvManager::read));
         }

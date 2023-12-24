@@ -21,7 +21,6 @@ int Cgi::execute(Client &client) {
     if (pipe(pipe_from_child) == -1 || pipe(pipe_to_child) == -1) {
         throw ResponseError(500, "Internal Server Error");
     }
-
     fcntl(pipe_to_child[1], F_SETFL, O_NONBLOCK, O_CLOEXEC);
 	fcntl(pipe_from_child[0], F_SETFL, O_NONBLOCK, O_CLOEXEC);
     int pid = fork();
@@ -79,7 +78,7 @@ char **Cgi::initEnv(Client const &client)
     // _env["SERVER_SOFTWARE"] = "webserv/1.0";
     _env["SERVER_WRITE_PATH"] = srv.getUploadDir();
     // _env["LC_CTYPE"] = "C.UTF-8";
-    // _env["REDIRECT_STATUS"] = "true";
+    _env["REDIRECT_STATUS"] = "true";
 	free(pwd);
 
     char **envp = new char *[_env.size() + 1];

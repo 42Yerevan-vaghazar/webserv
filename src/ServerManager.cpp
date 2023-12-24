@@ -80,7 +80,7 @@ void ServerManager::start() {
     
         event = EvManager::listen();
         // std::cout << "event = " << event.first << std::endl;
-        std::cout << "second = " << event.second << std::endl;
+        // std::cout << "second = " << event.second << std::endl;
         if (newClient(event.second)) {
             continue ;
         }

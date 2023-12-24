@@ -128,6 +128,7 @@ void ServerManager::start() {
             } else if (client->isResponseReady() && event.first == EvManager::write) {
                 // std::cout << "sendResponse" << std::endl;
                 if (client->sendResponse() == true) {
+                    // std::cout << "response sent" << std::endl;
                     closeConnetcion(*client);
                     continue ;
                 }

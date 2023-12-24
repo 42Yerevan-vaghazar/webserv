@@ -6,67 +6,78 @@
 /*   By: dmartiro <dmartiro@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/23 00:32:31 by dmartiro          #+#    #+#             */
-/*   Updated: 2023/11/23 00:37:16 by dmartiro         ###   ########.fr       */
+/*   Updated: 2023/12/24 17:12:51 by dmartiro         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Types.hpp"
 
+std::map<std::string, std::string>  Types::MimeTypes;
+Types Types::singleton_;
+
 Types::Types( void )
-{
-    ContentType.push_back("application/java-archive");
-    ContentType.push_back("application/EDI-X12");
-    ContentType.push_back("application/EDIFACT");
-    ContentType.push_back("application/javascript");
-    ContentType.push_back("application/octet-stream");
-    ContentType.push_back("application/ogg");
-    ContentType.push_back("application/pdf");
-    ContentType.push_back("application/xhtml+xml");
-    ContentType.push_back("application/x-shockwave-flash");
-    ContentType.push_back("application/json");
-    ContentType.push_back("application/ld+json");
-    ContentType.push_back("application/xml");
-    ContentType.push_back("application/zip");
-    ContentType.push_back("application/x-www-form-urlencoded");
-    ContentType.push_back("audio/mpeg");
-    ContentType.push_back("audio/x-ms-wma");
-    ContentType.push_back("audio/vnd.rn-realaudio");
-    ContentType.push_back("audio/x-wav");
-    ContentType.push_back("image/gif");
-    ContentType.push_back("image/jpeg");
-    ContentType.push_back("image/png");
-    ContentType.push_back("image/tiff");
-    ContentType.push_back("image/vnd.microsoft.icon");
-    ContentType.push_back("image/x-icon");
-    ContentType.push_back("image/vnd.djvu");
-    ContentType.push_back("image/svg+xml");
-    ContentType.push_back("multipart/mixed");
-    ContentType.push_back("multipart/alternative");
-    ContentType.push_back("multipart/related");
-    ContentType.push_back("multipart/form-data");
-    ContentType.push_back("text/css");
-    ContentType.push_back("text/csv");
-    ContentType.push_back("text/html");
-    ContentType.push_back("text/javascript");
-    ContentType.push_back("text/plain");
-    ContentType.push_back("text/xml");
-    ContentType.push_back("video/mpeg");
-    ContentType.push_back("video/mp4");
-    ContentType.push_back("video/quicktime");
-    ContentType.push_back("video/x-ms-wmv");
-    ContentType.push_back("video/x-msvideo");
-    ContentType.push_back("video/x-flv");
-    ContentType.push_back("video/webm");
-    ContentType.push_back("application/vnd.android.package-archive");
-    ContentType.push_back("application/vnd.oasis.opendocument.text");
-    ContentType.push_back("application/vnd.oasis.opendocument.spreadsheet");
-    ContentType.push_back("application/vnd.oasis.opendocument.presentation");
-    ContentType.push_back("application/vnd.oasis.opendocument.graphics");
-    ContentType.push_back("application/vnd.ms-excel");
-    ContentType.push_back("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-    ContentType.push_back("application/vnd.ms-powerpoint");
-    ContentType.push_back("application/vnd.openxmlformats-officedocument.presentationml.presentation");
-    ContentType.push_back("application/msword");
-    ContentType.push_back("application/vnd.openxmlformats-officedocument.wordprocessingml.document");
-    ContentType.push_back("application/vnd.mozilla.xul+xml");
+{   
+    MimeTypes["java-archive"] = "application/java-archive";
+    MimeTypes["EDI-X12"] = "application/EDI-X12";
+    MimeTypes["EDIFACT"] = "application/EDIFACT";
+    MimeTypes["javascript"] = "application/javascript";
+    MimeTypes["octet-stream"] = "application/octet-stream";
+    MimeTypes["ogg"] = "application/ogg";
+    MimeTypes["pdf"] = "application/pdf";
+    MimeTypes["xhtml+xml"] = "application/xhtml+xml";
+    MimeTypes["x-shockwave-flash"] = "application/x-shockwave-flash";
+    MimeTypes["json"] = "application/json";
+    MimeTypes["ld+json"] = "application/ld+json";
+    MimeTypes["xml"] = "application/xml";
+    MimeTypes["zip"] = "application/zip";
+    MimeTypes["x-www-form-urlencoded"] = "application/x-www-form-urlencoded";
+    MimeTypes["mpeg"] = "audio/mpeg";
+    MimeTypes["x-ms-wma"] = "audio/x-ms-wma";
+    MimeTypes["vnd.rn-realaudio"] = "audio/vnd.rn-realaudio";
+    MimeTypes["x-wav"] = "audio/x-wav";
+    MimeTypes["gif"] = "image/gif";
+    MimeTypes["jpeg"] = "image/jpeg";
+    MimeTypes["png"] = "image/png";
+    MimeTypes["tiff"] = "image/tiff";
+    MimeTypes["vnd.microsoft.icon"] = "image/vnd.microsoft.icon";
+    MimeTypes["x-icon"] = "image/x-icon";
+    MimeTypes["vnd.djvu"] = "image/vnd.djvu";
+    MimeTypes["svg+xml"] = "image/svg+xml";
+    MimeTypes["mixed"] = "multipart/mixed";
+    MimeTypes["alternative"] = "multipart/alternative";
+    MimeTypes["related"] = "multipart/related";
+    MimeTypes["form-data"] = "multipart/form-data";
+    MimeTypes["css"] = "text/css";
+    MimeTypes["csv"] = "text/csv";
+    MimeTypes["html"] = "text/html";
+    MimeTypes["javascript"] = "text/javascript";
+    MimeTypes["plain"] = "text/plain";
+    MimeTypes["xml"] = "text/xml";
+    MimeTypes["mpeg"] = "video/mpeg";
+    MimeTypes["mp4"] = "video/mp4";
+    MimeTypes["quicktime"] = "video/quicktime";
+    MimeTypes["x-ms-wmv"] = "video/x-ms-wmv";
+    MimeTypes["x-msvideo"] = "video/x-msvideo";
+    MimeTypes["x-flv"] = "video/x-flv";
+    MimeTypes["webm"] = "video/webm";
+    MimeTypes["vnd.android.package-archive"] = "application/vnd.android.package-archive";
+    MimeTypes["vnd.oasis.opendocument.text"] = "application/vnd.oasis.opendocument.text";
+    MimeTypes["vnd.oasis.opendocument.spreadsheet"] = "application/vnd.oasis.opendocument.spreadsheet";
+    MimeTypes["vnd.oasis.opendocument.presentation"] = "application/vnd.oasis.opendocument.graphics";
+    MimeTypes["vnd.oasis.opendocument.graphics"] = "application/vnd.oasis.opendocument.graphics";
+    MimeTypes["vnd.ms-excel"] = "application/vnd.ms-excel";
+    MimeTypes["vnd.openxmlformats-officedocument.spreadsheetml.sheet"] = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+    MimeTypes["vnd.ms-powerpoint"] = "application/vnd.ms-powerpoint";
+    MimeTypes["vnd.openxmlformats-officedocument.presentationml.presentation"] = "application/vnd.openxmlformats-officedocument.presentationml.presentation";
+    MimeTypes["msword"] = "application/msword";
+    MimeTypes["vnd.openxmlformats-officedocument.wordprocessingml.document"] = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+    MimeTypes["vnd.mozilla.xul+xml"] = "application/vnd.mozilla.xul+xml";
+    MimeTypes[""] = "text/html";
 }
+
+
+Types &Types::GetInstance(const std::string& value) {
+    return (singleton_);
+};
+
+Types::~Types() {};

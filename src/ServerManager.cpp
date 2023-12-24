@@ -32,6 +32,30 @@ bool ServerManager::newClient(int fd) {
     return (false);
 }
 
+void manageHeader(std::string &str, Client &client) {
+    size_t pos = str.find("\r\n\r\n");
+    if (pos != std::string::npos) {
+        std::string header = str.substr(0, pos);
+        str.erase(0, pos + strlen("\r\n\r\n"));
+        std::stringstream sheader(header);
+        std::string line;        
+        while (std::getline(sheader, line, '\n'))
+        {
+            std::stringstream sline(line);
+            std::string key;
+            std::string value;
+            std::getline(sline, key, ':');
+            std::getline(sline, value);
+            key = HTTPRequest::trim(key);
+            value = HTTPRequest::trim(value);
+            
+            if (key.empty() == false && value.empty() == false) {
+                client.addHeader(std::pair<std::string, std::string>(key, value));   
+            }
+        }
+    }
+}
+
 bool checkInnerFd(HTTPServer &srv, int fd) {
         InnerFd *innerFd = srv.getInnerFd(fd);
         if (innerFd) {
@@ -42,6 +66,9 @@ bool checkInnerFd(HTTPServer &srv, int fd) {
                 }
                 // std::cout << "readFromFd\n";
                 if (readFromFd(innerFd->_fd, innerFd->_str) == true) {
+                    if (client.isCgi() == true) {
+                        manageHeader(innerFd->_str, client);                  
+                    }
                     client.addHeader(std::pair<std::string, std::string>("Content-Length", my_to_string(client.getResponseBody().size())));
                     client.buildHeader();
                     client.isResponseReady() = true;

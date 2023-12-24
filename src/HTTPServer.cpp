@@ -16,6 +16,8 @@
 #include "Cgi.hpp"
 #include "EvManager.hpp"
 #include "InnerFd.hpp"
+#include "Types.hpp"
+
 
 size_t longestMatch(std::string const &s1, std::string const &s2);
 
@@ -275,21 +277,30 @@ void HTTPServer::get(Client &client) {
             int fd = Cgi::execute(client);
             client.setCgiPipeFd(fd);
         } else {
-                if (client.getCurrentLoc().getAutoindex() == true && HTTPRequest::isDir(path)) {
-                    client.addHeader(std::pair<std::string, std::string>("Content-Type", "text/html"));
-                    client.buildHeader();
-                    client.setBody(directory_listing(path, client.getDisplayPath()));
-                } else if (HTTPRequest::isDir(path)) {
-                    throw ResponseError(404, "not found");
-                } else {
-                    int fd = open(path.c_str(), O_RDONLY);
-                    if (fd == -1) {
-                        throw ResponseError(500, "Internal Server Error");
-                    }
-                    EvManager::addEvent(fd, EvManager::read);
-                    client.addInnerFd(new InnerFd(fd, client, client.getResponseBody(),  EvManager::read));
+            if (client.getCurrentLoc().getAutoindex() == true && HTTPRequest::isDir(path)) {
+                client.addHeader(std::pair<std::string, std::string>("Content-Type", "text/html"));
+                client.buildHeader();
+                client.setBody(directory_listing(path, client.getDisplayPath()));
+            } else if (HTTPRequest::isDir(path)) {
+                throw ResponseError(404, "not found");
+            } else {
+                int fd = open(path.c_str(), O_RDONLY);
+                if (fd == -1) {
+                    throw ResponseError(500, "Internal Server Error");
                 }
-            client.addHeader(std::pair<std::string, std::string>("Content-Type", "text/" + client.getExtension()));
+                EvManager::addEvent(fd, EvManager::read);
+                client.addInnerFd(new InnerFd(fd, client, client.getResponseBody(),  EvManager::read));
+            }
+
+            std::map<std::string, std::string>::iterator mime = Types::MimeTypes.find(client.getExtension());
+            std::string mimeType;
+            if (mime != Types::MimeTypes.end())
+                mimeType = mime->second;
+            else
+                mimeType = "text/plain";
+            
+            
+            client.addHeader(std::pair<std::string, std::string>("Content-Type", mimeType));
         }
     } else {
         throw ResponseError(404, "not found");
@@ -314,7 +325,7 @@ void HTTPServer::post(Client &client) {
             client.addInnerFd(new InnerFd(fd, client, fileContent, EvManager::write));
         }
     }
-    client.addHeader(std::pair<std::string, std::string>("content-type", "text/plain"));
+    client.addHeader(std::pair<std::string, std::string>("content-type", "text/html"));
 };
 
 void HTTPServer::del(Client &client) {

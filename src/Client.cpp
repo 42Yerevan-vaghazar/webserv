@@ -21,7 +21,6 @@ Client::Client(sock_t clfd, sock_t srfd, HTTPServer &srv) : _defaultSrv(srv)
 {
     this->_fd = clfd;
     this->serverFd = srfd;
-    this->rd = 0;
     _subSrv = NULL;
     _cgiPipeFd = -1;
     _cgiPID = -1;
@@ -321,3 +320,40 @@ void Client::removeInnerFd(int fd) {
         EvManager::delEvent(fd, EvManager::write);
     }
 };
+
+std::string Client::getUser(std::string const &pwd) const
+{
+    std::string user = pwd;
+    if (user.find("/home/") != std::string::npos)
+    {
+        user = user.substr(user.find("/home/") + 6);
+        if (user.find("/") != std::string::npos)
+            user = user.substr(0, user.find("/"));
+    }
+    return (user);
+}
+
+void Client::setSocketAddress(struct sockaddr_in *addr)
+{
+    this->clientInfo = *addr;
+}
+
+const struct sockaddr_in* Client::getSocketAddress( void ) const
+{
+    return (&this->clientInfo);
+}
+
+char* Client::inet_ntoa(struct in_addr clAddr) const
+{
+    static char ip[INET_ADDRSTRLEN];
+    
+    uint32_t ipaddr = htonl(clAddr.s_addr);
+
+    snprintf(ip, sizeof(ip), "%u.%u.%u.%u",
+        (ipaddr >> 24) & 0xFF,
+        (ipaddr >> 16) & 0xFF,
+        (ipaddr >> 8) & 0xFF,
+        ipaddr & 0xFF
+    );
+    return (ip);
+}

@@ -228,7 +228,7 @@ void HTTPRequest::setExtension(const std::string &path) {
     size_t pos = _relativePath.rfind(".");
     std::string tmpExtension = _relativePath.substr(pos + 1);
     if (tmpExtension.find("/") == std::string::npos) {
-        _extension = tmpExtension;
+        _extension = HTTPRequest::trim(tmpExtension);
     }
 }
 

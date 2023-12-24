@@ -19,7 +19,7 @@ class HTTPRequest
         std::string const &getPath( void ) const;
         std::string const &getDisplayPath( void ) const;
         std::string const &getVersion( void ) const;
-        std::string getHttpRequest() const;
+        std::string const &getHttpRequest() const;
         std::string const &getExtension() const;
         std::string const &getRedirectPath() const;
         std::string const &getQueryString() const;
@@ -45,9 +45,7 @@ class HTTPRequest
     protected:
         std::vector<std::string> pathChunking(std::string const &rPath);
         void checkPath(HTTPServer const &srv);
-        int in(std::string const &method);
-        void processing(HTTPServer &srv);
-        void processing(sock_t fd);
+        // int in(std::string const &method);
     protected:
         std::vector<std::string> pathChunks;
         enum PathStatus{ISDIR, DIROFF, DIRON, ISFILE, NOTFOUND, FORBIDDEN, UNDEFINED};
@@ -56,7 +54,6 @@ class HTTPRequest
     protected:
         size_t reqLineEnd;
         size_t bodyEnd;
-		char *http;
         std::string httpRequest;
         std::string request;
         std::string method;
@@ -73,21 +70,18 @@ class HTTPRequest
         std::string _body;
         std::string _requestBuf;
     protected:
-        int statusCode;
         std::string _redirectPath;
     protected:
-        std::map<std::string, std::string> httpHeaders;
+        std::map<std::string, std::string> _httpHeaders;
     protected:
-        std::string boundary;
-        std::string boundaryEnd;
-        std::string contentType;
-        std::string transferEncoding;
-        std::string type;
+        std::string _boundary;
+        std::string _boundaryEnd;
+        std::string _contentType;
         unsigned long int _bodySize;
     protected:
         const Location* _location;
     protected:
-        std::vector<std::string> methods;
+        std::vector<std::string> _methods;
     protected:
         std::string _cgiPath;
         

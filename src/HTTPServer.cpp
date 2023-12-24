@@ -308,10 +308,11 @@ void HTTPServer::get(Client &client) {
 };
 
 void HTTPServer::post(Client &client) {
+    client.addHeader(std::pair<std::string, std::string>("content-type", "text/html"));
     if (client.isCgi() == true) {
         int fd = Cgi::execute(client);
         client.setCgiPipeFd(fd);
-    } else {
+    } else if (client.findInMap("Content-Type").find("multipart/form-data") != std::string::npos) {
         std::map<std::string, std::string> &uploadedFiles = client.getUploadedFiles();
         std::map<std::string, std::string>::iterator it = uploadedFiles.begin();
         for (; it != uploadedFiles.end(); ++it) {
@@ -324,8 +325,12 @@ void HTTPServer::post(Client &client) {
             EvManager::addEvent(fd, EvManager::write);
             client.addInnerFd(new InnerFd(fd, client, fileContent, EvManager::write));
         }
+    } else {
+        // TODO send response
+        client.addHeader(std::pair<std::string, std::string>("Content-Length", my_to_string(client.getResponseBody().size())));
+        client.buildHeader();
+        client.isResponseReady() = true;
     }
-    client.addHeader(std::pair<std::string, std::string>("content-type", "text/html"));
 };
 
 void HTTPServer::del(Client &client) {

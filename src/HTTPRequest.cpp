@@ -19,7 +19,6 @@ HTTPRequest::HTTPRequest(void)
     reqLineEnd = 0;
     bodyEnd = 0;
     _bodySize = 0;
-    statusCode = 0;
     _maxSizeRequest = 0;
     _isHeaderReady = false;
     _isBodyReady = false;
@@ -70,7 +69,7 @@ std::string const &HTTPRequest::getExtension() const {
     return (_extension);
 };
 
-std::string HTTPRequest::getHttpRequest() const {
+std::string const &HTTPRequest::getHttpRequest() const {
     return (httpRequest);
 }
 
@@ -111,8 +110,8 @@ void HTTPRequest::charChange(std::string &str, char s, char d)
 
 std::string HTTPRequest::findInMap(std::string key) const
 {
-    std::map<std::string, std::string>::const_iterator in = httpHeaders.find(key);
-    if (in != httpHeaders.end()) {
+    std::map<std::string, std::string>::const_iterator in = _httpHeaders.find(key);
+    if (in != _httpHeaders.end()) {
         return (in->second);
     }
     std::string nill;
@@ -121,9 +120,9 @@ std::string HTTPRequest::findInMap(std::string key) const
 
 void HTTPRequest::multipart(void)
 {
-    std::map<std::string, std::string>::iterator it =  httpHeaders.find("Content-Type");
+    std::map<std::string, std::string>::iterator it =  _httpHeaders.find("Content-Type");
 
-    if(it == httpHeaders.end())
+    if(it == _httpHeaders.end())
     {
         throw ResponseError(411, "Length Required");
     }
@@ -133,10 +132,10 @@ void HTTPRequest::multipart(void)
     if (posEqualsign == std::string::npos) {
         throw ResponseError(428, "Precondition Required posEqualsign");
     }
-    boundary = "--" + contentType.substr(posEqualsign + 1);
-    boundaryEnd = boundary + "--";
-    size_t boundaryPos = _body.find(boundary);
-    size_t endPos = _body.find(boundaryEnd);
+    _boundary = "--" + contentType.substr(posEqualsign + 1);
+    _boundaryEnd = _boundary + "--";
+    size_t boundaryPos = _body.find(_boundary);
+    size_t endPos = _body.find(_boundaryEnd);
     do {
         size_t filenameStart = _body.find("filename", boundaryPos);
 
@@ -145,7 +144,7 @@ void HTTPRequest::multipart(void)
         }
         filenameStart += strlen("filename") + 2;
         std::string filename = _body.substr(filenameStart, _body.find("\"", filenameStart) - filenameStart);
-        boundaryPos = _body.find(boundary, filenameStart);
+        boundaryPos = _body.find(_boundary, filenameStart);
         size_t contentStart = _body.find("\r\n\r\n", filenameStart) + strlen("\r\n\r\n");
         std::string fileContent = _body.substr(contentStart, boundaryPos - contentStart - strlen("\r\n"));
         _uploadedFiles[filename] = fileContent;
@@ -155,7 +154,7 @@ void HTTPRequest::multipart(void)
 void HTTPRequest::showHeaders( void ) const
 {
     std::map<std::string, std::string>::const_iterator it;
-    for(it = httpHeaders.begin(); it != httpHeaders.end(); it++)
+    for(it = _httpHeaders.begin(); it != _httpHeaders.end(); it++)
     {
         std::cout << it->first << " = " << it->second << std::endl;
     }
@@ -198,13 +197,13 @@ std::string HTTPRequest::middle_slash(std::string const &s1, char s, std::string
     return (newString);
 }
 
-int HTTPRequest::in(std::string const &method)
-{
-    std::vector<std::string>::iterator it = std::find(methods.begin(), methods.end(), method);
-    if (it != methods.end())
-        return (1);
-    return (0);
-}
+// int HTTPRequest::in(std::string const &method)
+// {
+//     std::vector<std::string>::iterator it = std::find(_methods.begin(), _methods.end(), method);
+//     if (it != _methods.end())
+//         return (1);
+//     return (0);
+// }
 
 std::string HTTPRequest::dir_content(std::string const &realPath)
 {

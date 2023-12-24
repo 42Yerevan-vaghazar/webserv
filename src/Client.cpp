@@ -104,16 +104,16 @@ int Client::receiveRequest() {
         httpRequest  = _requestBuf.substr(0, headerEndPos);
         _requestBuf.erase(0, headerEndPos + strlen("\r\n\r\n"));
         this->parseHeader();
-        std::map<std::string, std::string>::const_iterator it = httpHeaders.find("Content-Length");
-        if (it != httpHeaders.end()) {
+        std::map<std::string, std::string>::const_iterator it = _httpHeaders.find("Content-Length");
+        if (it != _httpHeaders.end()) {
             char *ptr;
             _bodySize = std::strtoul(it->second.c_str(), &ptr, 10);
             if (_bodySize > this->getCurrentLoc().getClientBodySize()) {
                 throw ResponseError(413, "Content Too Large");
             }
         }
-        it = httpHeaders.find("Transfer-Encoding");
-        if (it != httpHeaders.end() && (it->second.find("Chunked") != std::string::npos ||  it->second.find("chunked") != std::string::npos)) {
+        it = _httpHeaders.find("Transfer-Encoding");
+        if (it != _httpHeaders.end() && (it->second.find("Chunked") != std::string::npos ||  it->second.find("chunked") != std::string::npos)) {
             if (it->second.find("Chunked") != std::string::npos ||  it->second.find("chunked") != std::string::npos) {
                 _isChunked = true;
             } else {
@@ -173,12 +173,12 @@ void Client::parseHeader()
         {
             std::string key = trim(get_next_line.substr(0, colon));
             std::string value = trim(get_next_line.substr(colon+2, get_next_line.find("\r\n")));
-            httpHeaders.insert(std::make_pair(key, value));
+            _httpHeaders.insert(std::make_pair(key, value));
         }
     }
     httpRequest.clear();
-    std::map<std::string, std::string>::iterator it = httpHeaders.find("Host");
-    if (it != httpHeaders.end()) {
+    std::map<std::string, std::string>::iterator it = _httpHeaders.find("Host");
+    if (it != _httpHeaders.end()) {
         _subSrv = _defaultSrv.getSubServerByName(it->second);
     }
     HTTPRequest::checkPath(this->getSrv());
@@ -188,7 +188,9 @@ void Client::parseBody()
 {
     if (method == "POST") {
         if (_isCgi == false) {
-            multipart();
+            if (this->findInMap("Content-Type").find("multipart/form-data") != std::string::npos) {
+                multipart();
+            }
         }
     }
 }

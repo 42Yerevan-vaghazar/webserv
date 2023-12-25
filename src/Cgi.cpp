@@ -60,7 +60,7 @@ char **Cgi::initEnv(Client const &client)
 
     pwd = getcwd(NULL, 0);
     _env["AUTH_TYPE"] = "Basic";
-    _env["CONTENT_LENGTH"] = std::to_string(client.getRequestBody().size());
+    _env["CONTENT_LENGTH"] = my_to_string(client.getRequestBody().size());
     _env["CONTENT_TYPE"] = client.findInMap("Content-Type");
     _env["GATEWAY_INTERFACE"] = "CGI/1.1";
     _env["PATH_INFO"] = pwd + client.getPath();

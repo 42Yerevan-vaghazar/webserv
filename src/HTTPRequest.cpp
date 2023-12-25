@@ -267,6 +267,9 @@ void HTTPRequest::checkPath(const HTTPServer &srv)
                 break ;
             }
         }
+        if (_location->getCgi(_extension).first.empty() == false) {
+            _isCgi = true;
+        }
     }
     else {
         if (srv.getRedirection().empty() == false && _path == "/") {
@@ -286,11 +289,11 @@ void HTTPRequest::checkPath(const HTTPServer &srv)
                 }
             }
         }
+        if (srv.getCgi(_extension).first.empty() == false) {
+            _isCgi = true;
+        }
     }
     setExtension(_relativePath);
-    if (srv.getCgi(_extension).first.empty() == false) {
-        _isCgi = true;
-    }
 }
 
 std::vector<std::string> HTTPRequest::pathChunking(std::string const &rPath)

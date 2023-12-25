@@ -321,24 +321,32 @@ void Parser::tolower(std::string &s)
 void Parser::create_server(ServerManager &mgn, std::list<Token>::iterator& ch)
 {
     HTTPServer *srv = new HTTPServer();
-    std::list<Token>::iterator next = ch;
-    next++;
-    while (next != tokens.end())
+    try
     {
-        if (next->type == DIRECTIVE)
-            s_directive(next, *srv);
-        if (next->type == CONTEXT && context_keyword(next->token) == "server") {
-            break;
-        }
-        if (next->type == CONTEXT)
-            location(next, *srv);
+        std::list<Token>::iterator next = ch;
         next++;
+        while (next != tokens.end())
+        {
+            if (next->type == DIRECTIVE)
+                s_directive(next, *srv);
+            if (next->type == CONTEXT && context_keyword(next->token) == "server") {
+                break;
+            }
+            if (next->type == CONTEXT)
+                location(next, *srv);
+            next++;
+        }
+        int srvIndex = mgn.used(*srv);
+        if (srvIndex == -1) {
+            mgn.push_back(srv);
+        } else {
+            mgn[srvIndex]->push(*srv);
+        }
     }
-    int srvIndex = mgn.used(*srv);
-    if (srvIndex == -1) {
-        mgn.push_back(srv);
-    } else {
-        mgn[srvIndex]->push(*srv);
+    catch(const HTTPCoreException& e)
+    {
+        delete srv;
+        throw e;
     }
 }
 
@@ -414,8 +422,9 @@ void Parser::s_directive(std::list<Token>::iterator& node, HTTPServer &srv)
         node->token = HTTPRequest::trim(node->token);
         d_val = remove_extraSpace(node->token.substr(i+1));
     }
-    if (d_key.empty() || d_val.empty())
+    if (d_key.empty() || d_val.empty()) {
         throw HTTPCoreException("Directive Value: Value Can't be NULL");
+    }
     node->token[i] = ' ';
     
     FuncDir f = directives.find(d_key);

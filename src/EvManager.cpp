@@ -154,7 +154,7 @@ bool EvManager::delEvent(int fd, Flag flag) {
 std::pair<EvManager::Flag, int> EvManager::listen() {
     while (_numEvents == 0) {
         _numEvents = kevent(_kq, NULL, 0, _evList, CLIENT_LIMIT, NULL);
-        std::cout << "_numEvents = " << _numEvents << std::endl;
+        // std::cout << "_numEvents = " << _numEvents << std::endl;
     }
 
     if (_numEvents == -1) {

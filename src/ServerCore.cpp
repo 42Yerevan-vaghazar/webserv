@@ -16,9 +16,10 @@ ServerCore::ServerCore() {
 	_autoindex = false;
 	_redirect = false;
 	client_body_size = 0;
-	methods.push_back("GET");
-    methods.push_back("POST");
-    methods.push_back("DEL");
+	_methods.push_back("GET");
+    _methods.push_back("POST");
+    _methods.push_back("DEL");
+    _methods.push_back("HEAD");
 };
 
 
@@ -37,7 +38,7 @@ void ServerCore::pushMethods(std::string const &method)
 	std::string capitalized = method;
 	for(size_t i = 0; i < method.size(); i++)
 		capitalized[i] = std::toupper(capitalized[i]);
-	methods.push_back(capitalized);
+	_methods.push_back(capitalized);
 }
 
 std::vector<std::string> ServerCore::getIndexFiles( void ) const
@@ -47,7 +48,7 @@ std::vector<std::string> ServerCore::getIndexFiles( void ) const
 
 std::vector<std::string> ServerCore::getMethods( void ) const
 {
-	return (this->methods);
+	return (this->_methods);
 }
 
 void ServerCore::setRoot(std::string const &root)
@@ -72,9 +73,9 @@ const char* ServerCore::findIndex(std::string const &filename) const
 const char* ServerCore::findMethod(std::string const &method) const
 {
 	size_t i = 0;
-	for(; i < methods.size(); i++)
-		if (methods[i] == method)
-			return (methods[i].c_str());
+	for(; i < _methods.size(); i++)
+		if (_methods[i] == method)
+			return (_methods[i].c_str());
 	return (NULL);
 }
 
@@ -166,5 +167,6 @@ std::pair<std::string, std::string> ServerCore::getCgi( std::string const &cgiTy
 };
 
 void ServerCore::dropMethods() {
-	methods.clear();
+	_methods.clear();
+	// _methods.push_back("HEAD");
 };

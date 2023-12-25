@@ -28,6 +28,7 @@ HTTPServer::HTTPServer( void )
     methodsMap["GET"] = &HTTPServer::get;
     methodsMap["POST"] = &HTTPServer::post;
     methodsMap["DELETE"] = &HTTPServer::del;
+    methodsMap["HEAD"] = &HTTPServer::head;
 }
 
 HTTPServer::~HTTPServer()
@@ -308,7 +309,7 @@ void HTTPServer::get(Client &client) {
 };
 
 void HTTPServer::post(Client &client) {
-    client.addHeader(std::pair<std::string, std::string>("content-type", "text/html"));
+    // client.addHeader(std::pair<std::string, std::string>("content-type", "text/html"));
     if (client.isCgi() == true) {
         int fd = Cgi::execute(client);
         client.setCgiPipeFd(fd);
@@ -325,18 +326,21 @@ void HTTPServer::post(Client &client) {
             EvManager::addEvent(fd, EvManager::write);
             client.addInnerFd(new InnerFd(fd, client, fileContent, EvManager::write));
         }
-    } else {
-        // TODO send response
-        client.addHeader(std::pair<std::string, std::string>("Content-Length", my_to_string(client.getResponseBody().size())));
-        client.buildHeader();
-        client.isResponseReady() = true;
     }
+    HTTPServer::get(client);
 };
 
 void HTTPServer::del(Client &client) {
     if (std::remove(client.getPath().c_str()) == -1) {
         throw ResponseError(404, "not found");
     };
+};
+
+void HTTPServer::head(Client &client) {
+    std::cout << client.getMethod() << " " <<  client.getPath() << std::endl;
+    HTTPServer::get(client);
+    client.setBody("");
+    std::cout << client.getResponseLine() << client.getResponseHeader() << client.getResponseBody();
 };
 
 void HTTPServer::processing(Client &client)

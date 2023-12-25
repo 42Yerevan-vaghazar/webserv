@@ -238,9 +238,6 @@ HTTPServer &Client::getSrv( void ) {
     return (_defaultSrv);
 };
 
-void Client::setResponseLine(std::string const &line) {
-    _responseLine = line;
-};
 
 void Client::setCgiStartTime() {
     _cgiStartTime = time(NULL);

@@ -15,6 +15,7 @@
 HTTPResponse::HTTPResponse( void )
 {
     _responseHeader["server"] = "webserv";
+    _responseHeader["Accept-Ranges"] = "bytes";
     _isResponseReady = false;
     _isStarted = false;
 }
@@ -26,21 +27,24 @@ HTTPResponse::~HTTPResponse()
 
 std::string const HTTPResponse::getResponse( void ) const
 {
-    return (_header + _responseBody);
+    return (_responseLine + _header + _responseBody);
 }
 
-std::map<std::string, std::string> &HTTPResponse::getResponseHeader() {
-    return (_responseHeader);
-}
+void HTTPResponse::setResponseLine(std::string const &line) {
+    _responseLine = line;
+};
 
 void HTTPResponse::addHeader(const std::pair<std::string, std::string> &pair) {
     _responseHeader[pair.first] = pair.second;
 }
 
+const std::string &HTTPResponse::getResponseHeader() const {
+    return (_header);
+};
 
 void HTTPResponse::buildHeader() {
     for (std::map<std::string, std::string>::iterator it = _responseHeader.begin();
-        it != _responseHeader.end(); ++it) {
+        it != _responseHeader.end(); ++it)  {
             _header += it->first;
             _header += ": ";
             _header += it->second;
@@ -52,6 +56,9 @@ void HTTPResponse::buildHeader() {
 
 std::string &HTTPResponse::getResponseBody() {
     return (_responseBody);
+};
+const std::string &HTTPResponse::getResponseLine() const {
+    return (_responseLine);
 };
 
 void HTTPResponse::setBody(const std::string &body) {

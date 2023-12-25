@@ -22,18 +22,21 @@ class HTTPResponse
         ~HTTPResponse();
     public:
         std::string const getResponse( void ) const;
-        std::map<std::string, std::string> &getResponseHeader();
         void addHeader(const std::pair<std::string, std::string> &);
         void buildHeader();
         void setCgiPipeFd(int fd);
         std::string &getResponseBody();
+        const std::string &getResponseHeader() const;
+        const std::string &getResponseLine() const;
         void setBody(const std::string &body);
         bool isResponseReady() const;
         bool &isResponseReady();
         bool isStarted() const;
         void setStartStatus(bool);
+        void setResponseLine(std::string const &line);
     protected:
         std::string _header;
+        std::string _responseLine;
         std::string _responseBody;
         std::map<std::string, std::string> _responseHeader;
         bool _isResponseReady;

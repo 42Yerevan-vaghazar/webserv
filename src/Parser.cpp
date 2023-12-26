@@ -585,6 +585,7 @@ void Parser::l_methods(std::string &d_val, Location &loc)
 {
     std::stringstream loc_methods(d_val);
     std::string method;
+    loc.dropMethods();
     while (std::getline(loc_methods, method, ' '))
         loc.pushMethods(method);
 }

@@ -345,11 +345,13 @@ void HTTPServer::head(Client &client) {
 
 void HTTPServer::processing(Client &client)
 {
+    std::cout << client.getMethod() << " " << client.getPath() << std::endl;
     std::map<std::string, void (HTTPServer::*)(Client&)>::iterator function = methodsMap.find(client.getMethod());
-    if (function != methodsMap.end() && client.getCurrentLoc().findMethod(client.getMethod()) != NULL)
+    if (function != methodsMap.end() && printf("barev\n") && client.getCurrentLoc().findMethod(client.getMethod()) != NULL)
     {
        (this->*(function->second))(client);
     } else {
+        std::cout << "stex\n";
         throw ResponseError(405, "Method Not Allowed");
     }
 }

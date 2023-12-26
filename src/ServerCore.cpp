@@ -19,7 +19,7 @@ ServerCore::ServerCore() {
 	_methods.push_back("GET");
     _methods.push_back("POST");
     _methods.push_back("DEL");
-    _methods.push_back("HEAD");
+    // _methods.push_back("HEAD");
 };
 
 

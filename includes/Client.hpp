@@ -54,6 +54,9 @@ class Client : public HTTPRequest, public HTTPResponse
         int _cgiPipeFd;
         int _cgiPID;
         struct sockaddr_in clientInfo;
+    private:
+        Client &operator=(const Client &);
+        Client(const Client &);
 };
 
 #endif

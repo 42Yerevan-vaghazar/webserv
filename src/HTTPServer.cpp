@@ -100,7 +100,7 @@ void HTTPServer::setIp(std::string const &ipv)
     this->ip = ipv;
 }
 
-void HTTPServer::push(std::string const &prefix, Location locationDirective)
+void HTTPServer::push(std::string const &prefix, Location const &locationDirective)
 {
     this->locations.insert(std::make_pair(prefix, locationDirective));
 }

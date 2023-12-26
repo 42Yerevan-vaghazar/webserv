@@ -29,6 +29,7 @@ class ServerManager : public std::vector<HTTPServer *>
     public:
         ServerManager(const char *configfile);
         ~ServerManager();
+        void clearInstances( void );
     public:
         void printFds( void );
     public:

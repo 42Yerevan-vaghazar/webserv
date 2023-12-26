@@ -41,7 +41,7 @@ class HTTPServer : public Tcp, public IListener, public ServerCore
         void readFromFd(int fd, std::string &str);
         void writeInFd(int fd, std::string &str);
     public:
-        void push(std::string const &prefix, Location locationDirective);
+        void push(std::string const &prefix, Location const &locationDirective);
         void push(sock_t clFd, Client *clt);
         void removeClient(sock_t fd);
         void push(HTTPServer &srv);

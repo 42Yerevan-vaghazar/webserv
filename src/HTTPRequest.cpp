@@ -254,7 +254,7 @@ void HTTPRequest::checkPath(const HTTPServer &srv)
             checkRedirect(_location->getLocation(), _location->getRedirection().begin()->second);
         }
         pathChunks = pathChunking(_path);
-        _relativePath = srv.getRoot() + "/" + _path;
+        _relativePath = _location->getRoot() + "/" + _path;
         std::vector<std::string> indexes = _location->getIndexFiles();
 
         for (size_t i = 0; i < indexes.size(); i++) {
@@ -275,7 +275,7 @@ void HTTPRequest::checkPath(const HTTPServer &srv)
         if (srv.getRedirection().empty() == false && _path == "/") {
             checkRedirect("/", srv.getRedirection().begin()->second);
         }
-        _relativePath = middle_slash(srv.getRoot(), '/', _path);
+        _relativePath = srv.getRoot() + "/" + _path;
         if (_path == "/") {
 
             std::vector<std::string> indexes = srv.getIndexFiles();

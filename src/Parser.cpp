@@ -43,7 +43,6 @@ Parser::Parser(const char *confFile)
     location_directives["upload_dir"] = &Parser::l_upload_dir;
 }
 
-
 Parser::~Parser()
 {
     
@@ -362,6 +361,7 @@ void Parser::location(std::list<Token>::iterator& node, HTTPServer &srv)
         throw HTTPCoreException("Location: Syntax is not valid");
     comp.clear();
     Location loc(location_Components[1]);
+    loc.setRoot(srv.getRoot());
     while (node->type != OPENBRACE)
         node++;    
     while (node->type != CLOSEBRACE)

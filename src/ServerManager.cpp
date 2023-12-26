@@ -250,6 +250,13 @@ ServerManager::~ServerManager()
 }
 
 
+void ServerManager::clearInstances( void ) // TODO pop it
+{
+    for (size_t i = 0; i < this->size(); i++) {
+        delete (*this)[i];
+    }
+    
+}
 
 /*************************************************************
 Finding correct HTTPServer funtions based on ::ServerManager::

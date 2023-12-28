@@ -57,7 +57,7 @@ class HTTPServer : public Tcp, public IListener, public ServerCore
         std::vector<HTTPServer > _srvs;
         std::vector<std::string> _serverName;
         std::map<sock_t, Client *> clnt;                   // [Clients]
-        std::map<std::string, Location> locations;      // <prefix, LocationDirective>  location / {Location}
+        std::map<std::string, Location> _locations;      // <prefix, LocationDirective>  location / {Location}
     public: //ip port interface
 		virtual void setPort(std::string const &port);
 		virtual void setIp(std::string const &ipv);

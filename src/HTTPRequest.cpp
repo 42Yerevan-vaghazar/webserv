@@ -247,7 +247,8 @@ void HTTPRequest::checkPath(const HTTPServer &srv)
         queryString = _path.substr(use+1);
         _path = _path.substr(0, use);
     }
-    _location = srv.find(_path); // TODO dont find location
+    // std::cout << "_path = " << _path << std::endl;
+    _location = srv.findMatching(_path); // TODO dont find location
     if (_location)
     {
         if (_location->getRedirection().empty() == false) {
@@ -295,10 +296,10 @@ void HTTPRequest::checkPath(const HTTPServer &srv)
             _isCgi = true;
         }
     }
-        std::cout << "************" << std::endl;;
-        std::cout << "_relativePath: " << _relativePath << std::endl;
-        std::cout << "_path: " << _path << std::endl;
-        std::cout << "************" << std::endl;
+        // std::cout << "************" << std::endl;;
+        // std::cout << "_relativePath: " << _relativePath << std::endl;
+        // std::cout << "_path: " << _path << std::endl;
+        // std::cout << "************" << std::endl;
     setExtension(_relativePath);
 }
 

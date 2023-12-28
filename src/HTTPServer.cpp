@@ -102,7 +102,7 @@ void HTTPServer::setIp(std::string const &ipv)
 
 void HTTPServer::push(std::string const &prefix, Location const &locationDirective)
 {
-    this->locations.insert(std::make_pair(prefix, locationDirective));
+    this->_locations.insert(std::make_pair(prefix, locationDirective));
 }
 
 
@@ -116,13 +116,23 @@ void HTTPServer::push__serverName(std::string const &srvName)
 const Location* HTTPServer::find(std::string const &prefix) const
 {
     std::string path = prefix;
+    // std::cout << "\n\n\n--------\npath = " << path << std::endl;
     size_t sl = HTTPRequest::slashes(path);
+
+    std::map<std::string, Location>::const_iterator it = _locations.begin();
+    // std::cout << "_locations.size() = " << _locations.size() << std::endl;
+    // while (it != _locations.end()) {
+    //     std::cout << "_locations.end() = "  << it->first << " " << it->second.getLocation() << std::endl;
+    //     ++it;
+    // } 
+
     for(size_t i = 0; i <= sl; i++)
     {
-        std::map<std::string, Location>::const_iterator route = locations.find(path);
-        if (route != locations.end()) {
+        std::map<std::string, Location>::const_iterator route = _locations.find(path);
+        if (route != _locations.end()) {
             return (&route->second);
         }
+        // std::cout << "path = " << path << std::endl;
         path = path.substr(0, path.find_last_of("/"));
     }
     return (NULL);
@@ -135,7 +145,7 @@ std::vector<std::string> const &HTTPServer::get_serverNames( void ) const
 
 std::map<std::string, Location> const &HTTPServer::getLocations( void ) const
 {
-    return (locations);
+    return (_locations);
 }
 
 
@@ -236,37 +246,56 @@ InnerFd *HTTPServer:: getInnerFd(int fd) {
 
 const Location* HTTPServer::findMatching(std::string const &realPath) const
 {
+    // std::map<std::string, Location>::const_iterator it = _locations.begin();
+    // std::cout << "_locations.size() = " << _locations.size() << std::endl;
+    // while (it != _locations.end()) {
+    //     std::cout << "_locations.end() = "  << it->first << "$ " << std::endl;
+    //     ++it;
+    // } 
+    // std::cout << "realPath = " << realPath << std::endl;
     std::map<std::string, Location>::const_iterator loc;
-    std::map<std::string, Location>::const_iterator match;
+    std::map<std::string, Location>::const_iterator match = _locations.cend();
     size_t longestMatchSize = 0;
     size_t currentMatch = 0;
-    for(loc = locations.begin(); loc != locations.end(); loc++)
+    for(loc = _locations.begin(); loc != _locations.end(); loc++)
     {
         currentMatch = longestMatch(loc->first, realPath);
-        if (longestMatchSize < currentMatch)
+        // std::cout << currentMatch << std::endl;
+        if (longestMatchSize < currentMatch && currentMatch != 0)
         {
             match = loc;
             longestMatchSize = currentMatch;
         }
-        else if (longestMatchSize == currentMatch)
+        else if (longestMatchSize == currentMatch && currentMatch != 0)
         {
             if (match->first < loc->first)
                 match = loc;
         }
     }
+    if (match == _locations.cend()) 
+    {
+        return (NULL);
+    }
+    // std::cout << "match->first = " << match->first << std::endl;
     return (&match->second);
 }
 
 size_t longestMatch(std::string const &s1, std::string const &s2)
 {
     size_t match = 0;
-    for(size_t i = 0; i < s1.size(); i++)
+    size_t i = 0;
+
+    for(; i < s1.size(); i++)
     {
         if (s1[i] != s2[i])
             break;
         match++;
     }
-    return (match);
+    if (match == 0 || ((s1[i] == '\0') && (s2[i - 1] == '/' || s2[i] == '\0' || s2[i] == '/')))
+    {
+        return (match);
+    }
+    return (0);
 }
 
 void HTTPServer::get(Client &client) {
@@ -347,11 +376,11 @@ void HTTPServer::processing(Client &client)
 {
     std::cout << client.getMethod() << " " << client.getPath() << std::endl;
     std::map<std::string, void (HTTPServer::*)(Client&)>::iterator function = methodsMap.find(client.getMethod());
-    if (function != methodsMap.end() && printf("barev\n") && client.getCurrentLoc().findMethod(client.getMethod()) != NULL)
+    if (function != methodsMap.end() && client.getCurrentLoc().findMethod(client.getMethod()) != NULL)
     {
        (this->*(function->second))(client);
     } else {
-        std::cout << "stex\n";
+        std::cout << "Method Not Allowed\n";
         throw ResponseError(405, "Method Not Allowed");
     }
 }

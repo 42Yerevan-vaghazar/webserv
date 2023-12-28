@@ -287,14 +287,14 @@ void Client::setCgiPID(int pid) {
 
 const ServerCore &Client::getCurrentLoc() const {
     if (_location) {
-        std::cout << "_location = " << _location->getLocation() << std::endl;;
+        // std::cout << "_location = " << _location->getLocation() << std::endl;;
         return (*_location);
     }
     if (_subSrv) {
-        std::cout << "_subSrv\n";
+        // std::cout << "_subSrv\n";
         return (*_subSrv);
     }
-        std::cout << "_defaultSrv\n";
+        // std::cout << "_defaultSrv\n";
     return (_defaultSrv);
 };
 

@@ -4,8 +4,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_FILES["filef"])) {
     $uploadFile = $uploadDir . basename($_FILES['filef']['name']);
 
         echo $uploadFile;
-        // echo $_FILES["filef"]["name"] . "    ";
-        // echo $_FILES["filef"]["tmp_name"] . "    ";
+        echo $_FILES["filef"]["name"] . "    ";
+        echo $_FILES["filef"]["tmp_name"] . "    ";
 
     if (move_uploaded_file($_FILES['filef']['tmp_name'], $uploadFile)) {
         echo "File successfully uploaded: " . htmlspecialchars(basename($_FILES['filef']['name']));

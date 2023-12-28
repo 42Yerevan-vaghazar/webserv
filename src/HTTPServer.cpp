@@ -433,6 +433,7 @@ std::string	HTTPServer::directory_listing(const std::string &path, std::string d
 		if (name != ".")
 		{
 			table += "<a href=\"";
+            // TODO check it
             if (displayPath.empty() == false && displayPath[displayPath.size() - 1] != '/')
             {
     			displayPath +=  "/";

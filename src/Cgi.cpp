@@ -82,7 +82,6 @@ char **Cgi::initEnv(Client const &client)
     _env["LC_CTYPE"] = "C.UTF-8";
     _env["REDIRECT_STATUS"] = "true";
 	free(pwd);
-    delete clientIp;
 
     char **envp = new char *[_env.size() + 1];
 

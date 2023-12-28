@@ -260,7 +260,7 @@ const Location* HTTPServer::findMatching(std::string const &realPath) const
     for(loc = _locations.begin(); loc != _locations.end(); loc++)
     {
         currentMatch = longestMatch(loc->first, realPath);
-        // std::cout << currentMatch << std::endl;
+        // std::cout << "currentMatch = " << currentMatch << std::endl;
         if (longestMatchSize < currentMatch && currentMatch != 0)
         {
             match = loc;
@@ -279,7 +279,7 @@ const Location* HTTPServer::findMatching(std::string const &realPath) const
     // std::cout << "match->first = " << match->first << std::endl;
     return (&match->second);
 }
-
+// http://127.0.0.1:3000/directory/images/test.png
 size_t longestMatch(std::string const &s1, std::string const &s2)
 {
     size_t match = 0;
@@ -291,7 +291,13 @@ size_t longestMatch(std::string const &s1, std::string const &s2)
             break;
         match++;
     }
-    if (match == 0 || ((s1[i] == '\0') && (s2[i - 1] == '/' || s2[i] == '\0' || s2[i] == '/')))
+    // std::cout << "match = " << match << std::endl;
+    // std::cout << "i = " << i << std::endl;
+    // std::cout << "s1.size() = " << s1.size() << std::endl;
+    // std::cout << "s2[i - 1] == '/' = " << s2[i - 1] << std::endl;
+    // std::cout << "s2[i - 1] == '/' = " << s2[i] << std::endl;
+    if (match == 0 || ((s1.size() == i) && (s2.size() == i || s2[i - 1] == '/' || s2[i] == '/'))
+        || ((s1.size() - 1 == i) && (s2.size() == i || s2[i - 1] == '/' || s2[i] == '/')))
     {
         return (match);
     }
@@ -319,6 +325,7 @@ void HTTPServer::get(Client &client) {
                     throw ResponseError(500, "Internal Server Error");
                 }
                 EvManager::addEvent(fd, EvManager::read);
+                EvManager::addEvent(fd, EvManager::write);
                 client.addInnerFd(new InnerFd(fd, client, client.getResponseBody(),  EvManager::read));
             }
 
@@ -328,8 +335,6 @@ void HTTPServer::get(Client &client) {
                 mimeType = mime->second;
             else
                 mimeType = "text/plain";
-            
-            
             client.addHeader(std::pair<std::string, std::string>("Content-Type", mimeType));
         }
     } else {
@@ -380,7 +385,7 @@ void HTTPServer::processing(Client &client)
     {
        (this->*(function->second))(client);
     } else {
-        std::cout << "Method Not Allowed\n";
+        std::cout << "Method Not Allowed\n\n\n\n\n\n\n\n";
         throw ResponseError(405, "Method Not Allowed");
     }
 }

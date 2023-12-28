@@ -263,7 +263,6 @@ void HTTPRequest::checkPath(const HTTPServer &srv)
             std::string path = _relativePath;
             path += "/";
             path += indexes[i];
-
             if (access(path.c_str(), R_OK) == 0) {
                 _relativePath = path;
                 break ;

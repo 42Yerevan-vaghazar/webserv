@@ -29,6 +29,7 @@ class HTTPRequest
         const std::string &getRequestBody() const;
         std::string &getRequestBody();
         bool isRequestReady() const;
+        bool isBodyReady() const;
         bool isCgi() const;
     public:
         static bool isDir(std::string const &filePath);

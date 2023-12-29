@@ -54,28 +54,35 @@ std::string Client::getServerPort( void ) const {
 
 void Client::readChunkedRequest() {
     char *ptr;
-    if (_isChunkNewLineCuted == false) {
-        size_t pos = _requestBuf.find("\r\n");
-        if (pos != std::string::npos && pos == 0) {
-            _requestBuf.erase(0, strlen("\r\n"));
-            _isChunkNewLineCuted = true;
-        }
-    }
-    if (_chunkSize == std::string::npos && _requestBuf.find("\r\n") != std::string::npos && _isChunkNewLineCuted == true) {
+    static bool started = false;
+    // if (_isChunkNewLineCuted == false) {
+    //     size_t pos = _requestBuf.find("\r\n");
+    //     if (pos != std::string::npos && pos == 0) {
+    //         _requestBuf.erase(0, strlen("\r\n"));
+    //         _isChunkNewLineCuted = true;
+    //     }
+    // }
+    // std::cout << "_requestBuf.find(\r\n) = " << _requestBuf.find("\r\n") << std::endl;
+    if ((_chunkSize == std::string::npos && _isChunkNewLineCuted == true)) {
         _chunkSize =  std::strtoul(_requestBuf.c_str(), &ptr, 16);
-        if (_chunkSize == 0) {
-            _isBodyReady = true;
-            _isRequestReady = true;
+        std::cout << "_chunkSize = " << _chunkSize << std::endl;
+        std::cout << "_requestBuf = " << _requestBuf << std::endl;
+        if (_chunkSize == 0 && started == true) {
+            // EvManager::delEvent(_fd, EvManager::read);
             return ;
         }
         size_t posEndl = _requestBuf.find("\r\n");
         _requestBuf.erase(0, posEndl + strlen("\r\n"));
     }
     size_t existChunkSize = _chunkSize < _requestBuf.size() ? _chunkSize : _requestBuf.size();
+    started = true;
     _body.append(_requestBuf.c_str(), existChunkSize);
-    if (existChunkSize == _chunkSize) {
-        _isChunkNewLineCuted = false;
+    // std::cout << "existChunkSize = " << existChunkSize << std::endl;
+    // std::cout << "_chunkSize = " << _chunkSize << std::endl;
+    if (existChunkSize >= _chunkSize) {
+        _isChunkNewLineCuted = true;
         _chunkSize = std::string::npos;
+
     }
 }
 
@@ -100,13 +107,14 @@ int Client::receiveRequest() {
             return 0;
         }
         _isHeaderReady = true;
-
+        // std::cout << "_requestBuf = " << _requestBuf << std::endl;
         httpRequest  = _requestBuf.substr(0, headerEndPos);
         _requestBuf.erase(0, headerEndPos + strlen("\r\n\r\n"));
         this->parseHeader();
         std::map<std::string, std::string>::const_iterator it = _httpHeaders.find("Content-Length");
         if (it != _httpHeaders.end()) {
             char *ptr;
+            // std::cout << "it->second.c_str() = " << it->second.c_str() << std::endl;
             _bodySize = std::strtoul(it->second.c_str(), &ptr, 10);
             if (_bodySize > this->getCurrentLoc().getClientBodySize()) {
                 throw ResponseError(413, "Content Too Large");
@@ -120,16 +128,26 @@ int Client::receiveRequest() {
                 throw ResponseError(400, "Bad Request");
             }
         }
+        _isRequestReady = true;
+        // std::cout << "_bodySize = " << _bodySize << std::endl;
+        // std::cout << "_isChunked = " << _isChunked << std::endl;
     }
-    if (_isHeaderReady == true) {
+    // if (_body.size() > 10000000) {
+    //     exit (1);
+    // }
+    if (_isRequestReady == true) {
+        // std::cout << "_isChunked = " << _isChunked << std::endl;
+        // std::cout << "_bodySize = " << _bodySize << std::endl;
         if (_isChunked ) {
             readChunkedRequest();
+            // if (this->getMethod() == "POST") {
+            //     exit(1);
+            // }
             return (0);
         } else {
             if (_bodySize == 0) {
                 // EvManager::delEvent(_fd, EvManager::read);
                 _isBodyReady = true;
-                _isRequestReady = true;
                 return (0);
             }
             _body.append(_requestBuf.c_str(), _requestBuf.size());
@@ -138,7 +156,6 @@ int Client::receiveRequest() {
                 _body.erase(_bodySize);
                 // EvManager::delEvent(_fd, EvManager::read);
                 _isBodyReady = true;
-                _isRequestReady = true;
             }
         }
     }
@@ -201,9 +218,10 @@ bool Client::sendResponse() {
         if (send(_fd, _responseLine.c_str(), sendSize, 0) == -1) {
             return (false);
         }
+        std::cout << "_responseLine = " << _responseLine << std::endl;
         _responseLine.erase(0, sendSize);
     }
-    else if (_header.empty() == false) {
+    if (_header.empty() == false) {
         size_t sendSize = WRITE_BUFFER < _header.size() ? WRITE_BUFFER : _header.size();
         if (send(_fd, _header.c_str(), sendSize, 0) == -1) {
             return (false);

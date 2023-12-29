@@ -353,17 +353,17 @@ void HTTPServer::post(Client &client) {
         for (; it != uploadedFiles.end(); ++it) {
             const std::string &fileName = it->first;
             std::string &fileContent = it->second;
-            std::cout << "client.getCurrentLoc().getUploadDir() + fileName).c_str() = " << (client.getCurrentLoc().getUploadDir() + fileName).c_str() << std::endl;
+            // std::cout << "client.getCurrentLoc().getUploadDir() + fileName).c_str() = " << (client.getCurrentLoc().getUploadDir() + fileName).c_str() << std::endl;
             int fd = open((client.getCurrentLoc().getUploadDir() + fileName).c_str(),  O_WRONLY | O_TRUNC | O_CREAT, S_IRWXU);
-            std::cout << "fd = " << fd << std::endl;
+            // std::cout << "fd = " << fd << std::endl;
             if (fd == -1) {
                 throw ResponseError(500 , "Internal Server Error");
             }
             EvManager::addEvent(fd, EvManager::write);
             client.addInnerFd(new InnerFd(fd, client, fileContent, EvManager::write));
         }
+        HTTPServer::get(client);
     }
-    HTTPServer::get(client);
 };
 
 void HTTPServer::del(Client &client) {
@@ -383,7 +383,7 @@ void HTTPServer::processing(Client &client)
 {
     std::cout << client.getMethod() << " " << client.getPath() << std::endl;
     std::map<std::string, void (HTTPServer::*)(Client&)>::iterator function = methodsMap.find(client.getMethod());
-    if (function != methodsMap.end() && client.getCurrentLoc().findMethod(client.getMethod()) != NULL)
+    if (function != methodsMap.end() && client.getCurrentLoc().findMethod(client.getMethod()) != NULL || client.isCgi())
     {
        (this->*(function->second))(client);
     } else {

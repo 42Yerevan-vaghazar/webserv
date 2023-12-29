@@ -81,6 +81,10 @@ bool HTTPRequest::isRequestReady() const {
     return (_isRequestReady);
 }
 
+bool HTTPRequest::isBodyReady() const {
+    return (_isBodyReady);
+}
+
 std::string HTTPRequest::rtrim(const std::string &str)
 {
     size_t end = str.find_last_not_of(" \r\n\t\f\v");

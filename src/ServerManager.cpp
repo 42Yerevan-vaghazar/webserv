@@ -79,7 +79,8 @@ bool checkInnerFd(HTTPServer &srv, int fd) {
                 };
             } else if (innerFd->_flag == EvManager::write) {
                 // std::cout << "writeInFd\n";
-                if (writeInFd(innerFd->_fd, innerFd->_str) == true) {
+                if (writeInFd(innerFd->_fd, innerFd->_str) == true && client.isBodyReady() == true) {
+                    // std::cout << "writeInFd\n";
                     client.addHeader(std::pair<std::string, std::string>("Content-Length", my_to_string(client.getResponseBody().size())));
                     client.buildHeader();
                     client.isResponseReady() = true;
@@ -154,11 +155,12 @@ void ServerManager::start() {
                 if (client->isRequestReady() && client->isStarted() == false) {
                     client->setStartStatus(true);
                     std::cout << "request received " << std::endl;
-                    client->parseBody();
+                    // client->parseBody();
                     generateResponse(*client);
                 }
             } else if (client->isResponseReady() && event.first == EvManager::write) {
                 // std::cout << "sendResponse" << std::endl;
+                std::cout << "client = " << client->getResponseBody() << std::endl;
                 if (client->sendResponse() == true) {
                     std::cout << "response sent" << std::endl;
                     closeConnetcion(*client);

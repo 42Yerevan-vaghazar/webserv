@@ -36,7 +36,7 @@ int Cgi::execute(Client &client) {
         close(pipe_from_child[1]);
 
         if (client.getMethod() == "POST") {
-            write(pipe_to_child[1], client.getRequestBody().c_str(), client.getRequestBody().size());
+            // write(pipe_to_child[1], client.getRequestBody().c_str(), client.getRequestBody().size());
             close(pipe_to_child[1]);
             dup2(pipe_to_child[0], 0);
             close(pipe_to_child[0]);
@@ -45,8 +45,10 @@ int Cgi::execute(Client &client) {
         perror("execve: ");
         exit(res);
     }
+    EvManager::addEvent(pipe_to_child[1], EvManager::write);
+    client.addInnerFd(new InnerFd(pipe_to_child[1], client, client.getRequestBody(), EvManager::write));
     close(pipe_from_child[1]);
-    close(pipe_to_child[1]);
+    // close(pipe_to_child[1]);
     close(pipe_to_child[0]);
     client.setCgiPID(pid);
     client.setCgiStartTime();
@@ -64,7 +66,8 @@ char **Cgi::initEnv(Client const &client)
     _env["CONTENT_LENGTH"] = my_to_string(client.getRequestBody().size());
     _env["CONTENT_TYPE"] = client.findInMap("Content-Type");
     _env["GATEWAY_INTERFACE"] = "CGI/1.1";
-    _env["PATH_INFO"] = pwd + client.getPath();
+    _env["PATH_INFO"] = client.getPath();
+    std::cout << "PATH_INFO = " << client.getPath() << std::endl;
     _env["PATH_TRANSLATED"] = pwd + client.getPath();
     _env["QUERY_STRING"] = client.getQueryString();
     _env["REMOTE_ADDR"] = clientIp;

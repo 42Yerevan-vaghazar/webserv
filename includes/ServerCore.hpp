@@ -54,7 +54,7 @@ struct ServerCore
         std::vector<std::string> _methods;                       // [allow_methods]      GET | POST | DELETE
         std::map<int, std::string> error_page;                  // [error_page]         404 [root]/error_pages/404.html 
         bool _autoindex;                                        // [_autoindex]          on (true) | off (false)
-        unsigned long int client_body_size;                     // [client_body_size]   200m -> 200.000.000byte -> 200mb
+        unsigned long int client_body_max_size;                     // [client_body_max_size]   200m -> 200.000.000byte -> 200mb
         bool _redirect;
         std::map<int, std::string> _redirections;
         std::map<std::string, std::string> _cgis;               // Example: cgi [php] [/usr/bin/php-cgi;]

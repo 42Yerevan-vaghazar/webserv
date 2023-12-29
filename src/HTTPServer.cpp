@@ -254,7 +254,7 @@ const Location* HTTPServer::findMatching(std::string const &realPath) const
     // } 
     // std::cout << "realPath = " << realPath << std::endl;
     std::map<std::string, Location>::const_iterator loc;
-    std::map<std::string, Location>::const_iterator match = _locations.cend();
+    std::map<std::string, Location>::const_iterator match = _locations.end();
     size_t longestMatchSize = 0;
     size_t currentMatch = 0;
     for(loc = _locations.begin(); loc != _locations.end(); loc++)
@@ -272,7 +272,7 @@ const Location* HTTPServer::findMatching(std::string const &realPath) const
                 match = loc;
         }
     }
-    if (match == _locations.cend()) 
+    if (match == _locations.end()) 
     {
         return (NULL);
     }
@@ -353,7 +353,9 @@ void HTTPServer::post(Client &client) {
         for (; it != uploadedFiles.end(); ++it) {
             const std::string &fileName = it->first;
             std::string &fileContent = it->second;
+            std::cout << "client.getCurrentLoc().getUploadDir() + fileName).c_str() = " << (client.getCurrentLoc().getUploadDir() + fileName).c_str() << std::endl;
             int fd = open((client.getCurrentLoc().getUploadDir() + fileName).c_str(),  O_WRONLY | O_TRUNC | O_CREAT, S_IRWXU);
+            std::cout << "fd = " << fd << std::endl;
             if (fd == -1) {
                 throw ResponseError(500 , "Internal Server Error");
             }

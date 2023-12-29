@@ -27,6 +27,8 @@ Location &Location::operator=(Location const &rhs) {
 	return (*this);
 };
 
+
+// for inheritence from server block
 Location &Location::operator=(ServerCore const &rhs) {
 	if (this != &rhs) {
 		ServerCore::operator=(rhs);

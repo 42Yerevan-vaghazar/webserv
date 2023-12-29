@@ -15,17 +15,18 @@
 ServerCore::ServerCore() {
 	_autoindex = false;
 	_redirect = false;
-	client_body_size = 0;
+	client_body_max_size = 100000000;
 	_methods.push_back("GET");
     _methods.push_back("POST");
     _methods.push_back("DEL");
+	index.push_back(".default/index.html");
     // _methods.push_back("HEAD");
 };
 
 
 unsigned long ServerCore::getClientBodySize( void ) const
 {
-	return (client_body_size);
+	return (client_body_max_size);
 }
 
 void ServerCore::pushIndex(std::string const &fileNameExample)
@@ -112,12 +113,12 @@ void ServerCore::setSize(std::string const &bodySize)
 	char *ptr;
 	unsigned long int toLong = std::strtoul(bodySize.c_str(), &ptr, 10);
 	if (*ptr != '\0') {
-		throw std::logic_error("client_body_size out of range unsigned long int max");
+		throw std::logic_error("client_body_max_size out of range unsigned long int max");
 	}
 	if (errno == ERANGE && toLong == ULLONG_MAX)
-		this->client_body_size = 200;
+		this->client_body_max_size = 200;
 	else
-		this->client_body_size = toLong;
+		this->client_body_max_size = toLong;
 }
 
 void ServerCore::setUploadDir(std::string const &upload_dir)

@@ -113,30 +113,30 @@ void HTTPServer::push__serverName(std::string const &srvName)
         _serverName.push_back(srvName);
 }
 
-const Location* HTTPServer::find(std::string const &prefix) const
-{
-    std::string path = prefix;
-    // std::cout << "\n\n\n--------\npath = " << path << std::endl;
-    size_t sl = HTTPRequest::slashes(path);
+// const Location* HTTPServer::find(std::string const &prefix) const
+// {
+//     std::string path = prefix;
+//     // std::cout << "\n\n\n--------\npath = " << path << std::endl;
+//     size_t sl = HTTPRequest::slashes(path);
 
-    std::map<std::string, Location>::const_iterator it = _locations.begin();
-    // std::cout << "_locations.size() = " << _locations.size() << std::endl;
-    // while (it != _locations.end()) {
-    //     std::cout << "_locations.end() = "  << it->first << " " << it->second.getLocation() << std::endl;
-    //     ++it;
-    // } 
+//     std::map<std::string, Location>::const_iterator it = _locations.begin();
+//     // std::cout << "_locations.size() = " << _locations.size() << std::endl;
+//     // while (it != _locations.end()) {
+//     //     std::cout << "_locations.end() = "  << it->first << " " << it->second.getLocation() << std::endl;
+//     //     ++it;
+//     // } 
 
-    for(size_t i = 0; i <= sl; i++)
-    {
-        std::map<std::string, Location>::const_iterator route = _locations.find(path);
-        if (route != _locations.end()) {
-            return (&route->second);
-        }
-        // std::cout << "path = " << path << std::endl;
-        path = path.substr(0, path.find_last_of("/"));
-    }
-    return (NULL);
-}
+//     for(size_t i = 0; i <= sl; i++)
+//     {
+//         std::map<std::string, Location>::const_iterator route = _locations.find(path);
+//         if (route != _locations.end()) {
+//             return (&route->second);
+//         }
+//         // std::cout << "path = " << path << std::endl;
+//         path = path.substr(0, path.find_last_of("/"));
+//     }
+//     return (NULL);
+// }
 
 std::vector<std::string> const &HTTPServer::get_serverNames( void ) const
 {
@@ -383,7 +383,7 @@ void HTTPServer::processing(Client &client)
 {
     std::cout << client.getMethod() << " " << client.getPath() << std::endl;
     std::map<std::string, void (HTTPServer::*)(Client&)>::iterator function = methodsMap.find(client.getMethod());
-    if (function != methodsMap.end() && client.getCurrentLoc().findMethod(client.getMethod()) != NULL || client.isCgi())
+    if (function != methodsMap.end() && (client.getCurrentLoc().findMethod(client.getMethod()) != NULL || client.isCgi())) // TODO remove it
     {
        (this->*(function->second))(client);
     } else {

@@ -5,7 +5,7 @@ InnerFd::InnerFd(int fd, Client  &client, std::string &str, int flag)
     _fd = fd;
     _flag = flag;
 };
-InnerFd::InnerFd(const InnerFd &obj) : _str(obj._str), _client(obj._client) {
+InnerFd::InnerFd(const InnerFd &obj) : _client(obj._client), _str(obj._str) {
     _fd = obj._fd;
     _flag = obj._flag;
 };

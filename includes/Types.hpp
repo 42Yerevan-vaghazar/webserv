@@ -17,7 +17,7 @@
 class Types
 {
     public:
-        static Types &GetInstance(const std::string& value);
+        static Types &GetInstance();
         static std::map<std::string, std::string> MimeTypes;
     private:
         Types( void );

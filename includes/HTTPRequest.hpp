@@ -42,6 +42,9 @@ class HTTPRequest
         static std::string ltrim(const std::string &str);
         static std::string rtrim(const std::string &str);
         static std::string trim(const std::string &str);
+        static std::string ltrim(const std::string &str, std::string const &set);
+        static std::string rtrim(const std::string &str, std::string const &set);
+        static std::string trim(const std::string &str, std::string const &set);
     protected:
         std::vector<std::string> pathChunking(std::string const &rPath);
         void checkPath(HTTPServer const &srv);

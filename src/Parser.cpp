@@ -361,7 +361,7 @@ void Parser::location(std::list<Token>::iterator& node, HTTPServer &srv)
         throw HTTPCoreException("Location: Syntax is not valid");
     comp.clear();
     Location loc(location_Components[1]);
-    loc.setRoot(srv.getRoot());
+    loc = srv;
     while (node->type != OPENBRACE)
         node++;    
     while (node->type != CLOSEBRACE)
@@ -569,6 +569,7 @@ void Parser::l_index(std::string &d_val, Location &loc)
 {
     std::stringstream loc_indexes(d_val);
     std::string index;
+    loc.dropIndexes();
     while (std::getline(loc_indexes, index, ' '))
         loc.pushIndex(index);
 }

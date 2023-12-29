@@ -133,6 +133,7 @@ void ServerManager::start() {
             if (client == NULL) {
                 continue ;
             }
+            // std::cout << "client fd = " << client->getFd() << std::endl;
             if (event.first == EvManager::eof) {
                 closeConnetcion(*client);
                 continue ;

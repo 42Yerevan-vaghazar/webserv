@@ -31,6 +31,7 @@ struct ServerCore
         const char* findMethod(std::string const &method) const;
     public:
         void pushIndex(std::string const &fileNameExample);
+        void dropIndexes(void);
         void pushMethods(std::string const &method);
         void pushErrPage(int, std::string const &errpage_filename);
         std::string getErrPage(int key) const;

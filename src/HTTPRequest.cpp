@@ -98,6 +98,23 @@ std::string HTTPRequest::trim(const std::string &str)
     return (ltrim(rtrim(str)));
 }
 
+std::string HTTPRequest::rtrim(const std::string &str, std::string const &set)
+{
+    size_t end = str.find_last_not_of(set);
+    return (end == std::string::npos ? "" : str.substr(0, end + 1));
+}
+
+std::string HTTPRequest::ltrim(const std::string &str, std::string const &set)
+{
+    size_t start = str.find_first_not_of(set);
+    return (start == std::string::npos ? str : str.substr(start));
+}
+
+std::string HTTPRequest::trim(const std::string &str, std::string const &set)
+{
+    return (ltrim(rtrim(str, set), set));
+}
+
 
 void HTTPRequest::charChange(std::string &str, char s, char d)
 {
@@ -239,6 +256,12 @@ void HTTPRequest::checkRedirect(const std::string &path, const std::string &redi
     throw ResponseError(301, "Moved Permanently");
 }
 
+void appendSlash(std::string &str) {
+    if (str.empty() == false && str[str.size() - 1] != '/') {
+        str.append("/");
+    }
+}
+
 void HTTPRequest::checkPath(const HTTPServer &srv)
 {
     size_t use = 0;
@@ -251,17 +274,19 @@ void HTTPRequest::checkPath(const HTTPServer &srv)
     _location = srv.findMatching(_path); // TODO dont find location
     if (_location)
     {
+        std::cout << "_location = " <<  _location->getLocation() << std::endl;
         if (_location->getRedirection().empty() == false) {
             checkRedirect(_location->getLocation(), _location->getRedirection().begin()->second);
         }
         pathChunks = pathChunking(_path);
-        _relativePath = _location->getRoot() + "./" + _path;
-        // _relativePath = "./" + middle_slash(_location->getRoot(), '/', _path); // TODO check it
+        _relativePath = _location->getRoot();
+        appendSlash(_relativePath);
+        _relativePath += _path;
         std::vector<std::string> indexes = _location->getIndexFiles();
 
         for (size_t i = 0; i < indexes.size(); i++) {
             std::string path = _relativePath;
-            path += "/";
+            appendSlash(path);
             path += indexes[i];
             if (access(path.c_str(), R_OK) == 0) {
                 _relativePath = path;
@@ -277,7 +302,8 @@ void HTTPRequest::checkPath(const HTTPServer &srv)
         if (srv.getRedirection().empty() == false && _path == "/") {
             checkRedirect("/", srv.getRedirection().begin()->second);
         }
-        _relativePath = srv.getRoot() + "./" + _path;
+        _relativePath = srv.getRoot();
+        _relativePath += _path;
         if (_path == "/") {
 
             std::vector<std::string> indexes = srv.getIndexFiles();
@@ -296,8 +322,6 @@ void HTTPRequest::checkPath(const HTTPServer &srv)
             _isCgi = true;
         }
     }
-    std::cout << "_extension = " << _extension << std::endl;
-    std::cout << "_isCgi = " << _isCgi << std::endl;
 }
 
 std::vector<std::string> HTTPRequest::pathChunking(std::string const &rPath)

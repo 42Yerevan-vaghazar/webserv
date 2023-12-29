@@ -33,6 +33,11 @@ void ServerCore::pushIndex(std::string const &fileNameExample)
 	index.push_back(fileNameExample);
 }
 
+void ServerCore::dropIndexes(void)
+{
+	index.clear();
+}
+
 void ServerCore::pushMethods(std::string const &method)
 {
 	std::string capitalized = method;

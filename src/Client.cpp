@@ -198,21 +198,20 @@ void Client::parseBody()
 bool Client::sendResponse() {
     if (_responseLine.empty() == false) {
         size_t sendSize = WRITE_BUFFER < _responseLine.size() ? WRITE_BUFFER : _responseLine.size();
-        if (send(_fd, _responseLine.c_str(), sendSize, 0) <= 0) {
+        if (send(_fd, _responseLine.c_str(), sendSize, 0) == -1) {
             return (false);
         }
         _responseLine.erase(0, sendSize);
-
     }
     else if (_header.empty() == false) {
         size_t sendSize = WRITE_BUFFER < _header.size() ? WRITE_BUFFER : _header.size();
-        if (send(_fd, _header.c_str(), sendSize, 0) <= 0) {
+        if (send(_fd, _header.c_str(), sendSize, 0) == -1) {
             return (false);
         }
         _header.erase(0, sendSize);
     } else if (_responseBody.empty() == false) {
         size_t sendSize = WRITE_BUFFER < _responseBody.size() ? WRITE_BUFFER : _responseBody.size();
-        if (send(_fd, _responseBody.c_str(), sendSize, 0) <= 0) {
+        if (send(_fd, _responseBody.c_str(), sendSize, 0) == -1) {
             return (false);
         }
         _responseBody.erase(0, sendSize);

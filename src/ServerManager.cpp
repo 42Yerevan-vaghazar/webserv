@@ -251,12 +251,12 @@ ServerManager::~ServerManager()
 }
 
 
-void ServerManager::clearInstances( void ) // TODO pop it
+void ServerManager::clearInstances( void )
 {
     for (size_t i = 0; i < this->size(); i++) {
         delete (*this)[i];
     }
-    
+    this->clear();
 }
 
 /*************************************************************

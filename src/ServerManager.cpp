@@ -140,12 +140,16 @@ void ServerManager::start() {
             } else if ((client->isRequestReady() == false)
                         && client->isResponseReady() == false) {
                 if (client->getHttpRequest().empty()) {
+                    // std::cout << "client->getFd() = " << client->getFd() << std::endl;
                     EvManager::addEvent(client->getFd(), EvManager::write);
                 }
                 // std::cout << "receiveRequest" << std::endl;
                 if (client->receiveRequest() == -1) {
                     closeConnetcion(*client);
                     continue ;
+                }
+                if (client->isRequestReady() == true) {
+                    EvManager::delEvent(client->getFd(), EvManager::read);
                 }
                 if (client->isRequestReady() && client->isStarted() == false) {
                     client->setStartStatus(true);

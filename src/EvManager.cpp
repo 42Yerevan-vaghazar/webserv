@@ -15,7 +15,7 @@ const int EvManager::CLIENT_LIMIT;
         std::set<int>         EvManager::_fdRSet;
         std::set<int>         EvManager::_fdWSet;
         std::set<int>         EvManager::_fdActiveSet;
-        std::set<int>::iterator EvManager::_itFds;
+        int EvManager::_curFd;
 #else
         int EvManager::_kq = 0;
         struct kevent EvManager::_evList[1000];
@@ -28,8 +28,7 @@ bool EvManager::start() {
     FD_ZERO(&_rfds);
     FD_ZERO(&_wfds);
     _nfds = 0;
-    _itFds = _fdActiveSet.end();
-
+    _curFd = 3;
     return (true);
 }
 
@@ -55,25 +54,25 @@ bool EvManager::delEvent(int fd, Flag flag) {
     if (flag == read) {
         FD_CLR(fd, &_rfds);
         _fdRSet.erase(fd);
-        if (fd == _nfds - 1 && _fdWSet.find(fd) == _fdWSet.end()) {
-            for (int maxFd = _nfds; maxFd >= 0; maxFd--) {
-                if (FD_ISSET(maxFd, &_rfds)) {
-                    _nfds = maxFd + 1;
-                    break;
-                }
-            }
-        }
+        // if (fd == _nfds - 1 && _fdWSet.find(fd) == _fdWSet.end()) {
+        //     for (int maxFd = _nfds; maxFd >= 0; maxFd--) {
+        //         if (FD_ISSET(maxFd, &_rfds)) {
+        //             _nfds = maxFd + 1;
+        //             break;
+        //         }
+        //     }
+        // }
     } else if (flag == write) {
         FD_CLR(fd, &_wfds);
         _fdWSet.erase(fd);
-        if (fd == _nfds - 1 && _fdRSet.find(fd) == _fdRSet.end()) {
-            for (int maxFd = _nfds; maxFd >= 0; maxFd--) {
-                if (FD_ISSET(maxFd, &_rfds)) {
-                    _nfds = maxFd + 1;
-                    break;
-                }
-            }
-        }
+        // if (fd == _nfds - 1 && _fdRSet.find(fd) == _fdRSet.end()) {
+        //     for (int maxFd = _nfds; maxFd >= 0; maxFd--) {
+        //         if (FD_ISSET(maxFd, &_rfds)) {
+        //             _nfds = maxFd + 1;
+        //             break;
+        //         }
+        //     }
+        // }
     }
 
     return (true);
@@ -81,35 +80,23 @@ bool EvManager::delEvent(int fd, Flag flag) {
 
 std::pair<EvManager::Flag, int> EvManager::listen() {
     while (true) {
-        if (_itFds == _fdActiveSet.end()) {
+        if (_curFd == 3) {
             _activeRfds = _rfds;
             _activeWfds = _wfds;
             _numEvents = select(_nfds, &_activeRfds, &_activeWfds, NULL, NULL);
             if (_numEvents == -1) {
                 throw std::runtime_error(std::string("kevent: ") + strerror(errno));
             }
-            for (std::set<int>::iterator it = _fdRSet.begin();
-                it != _fdRSet.end(); ++it) {
-                if (FD_ISSET(*it, &_activeRfds) || FD_ISSET(*it, &_activeWfds)) {
-                    _fdActiveSet.insert(*it);
-                }
-            }
-            for (std::set<int>::iterator it = _fdWSet.begin();
-                it != _fdWSet.end(); ++it) {
-                if (FD_ISSET(*it, &_activeRfds) || FD_ISSET(*it, &_activeWfds)) {
-                    _fdActiveSet.insert(*it);
-                }
-            }
-            _itFds = _fdActiveSet.begin();
         }
-        while (_itFds != _fdActiveSet.end()) {
-            if (FD_ISSET(*_itFds, &_activeRfds)) {
-                return (std::pair<EvManager::Flag, int>(EvManager::read, *(_itFds++)));
-            } else if (FD_ISSET(*_itFds, &_activeWfds)) {
-                return (std::pair<EvManager::Flag, int>(EvManager::write, *(_itFds++)));
+        while (_curFd < _nfds) {
+            if (FD_ISSET(_curFd, &_activeRfds)) {
+                return (std::pair<EvManager::Flag, int>(EvManager::read, _curFd++));
+            } else if (FD_ISSET(_curFd, &_activeWfds)) {
+                return (std::pair<EvManager::Flag, int>(EvManager::write, _curFd++));
             }
-            _itFds++;
+            _curFd++;
         }
+        _curFd = 3;
     }
     return (std::pair<EvManager::Flag, int>(EvManager::def, -1));
 }

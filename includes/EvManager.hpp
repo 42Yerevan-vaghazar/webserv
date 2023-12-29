@@ -52,7 +52,7 @@ class EvManager
         static std::set<int>         _fdRSet;
         static std::set<int>         _fdWSet;
         static std::set<int>         _fdActiveSet;
-        static std::set<int>::iterator _itFds;
+        static int _curFd;
 #else
         static int _kq;
         static struct kevent _evList[CLIENT_LIMIT];

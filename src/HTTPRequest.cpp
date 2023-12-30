@@ -142,7 +142,6 @@ std::string HTTPRequest::findInMap(std::string key) const
 void HTTPRequest::multipart(void)
 {
     std::map<std::string, std::string>::iterator it =  _httpHeaders.find("Content-Type");
-
     if(it == _httpHeaders.end())
     {
         throw ResponseError(411, "Length Required");
@@ -158,8 +157,9 @@ void HTTPRequest::multipart(void)
     size_t boundaryPos = _body.find(_boundary);
     size_t endPos = _body.find(_boundaryEnd);
     do {
+        // std::cout << "boundaryPos = " << boundaryPos << std::endl;
         size_t filenameStart = _body.find("filename", boundaryPos);
-
+        // std::cout << "_body = " << _body.substr(0, 200) << std::endl;
         if(filenameStart == std::string::npos) {
             throw ResponseError(428, "Precondition Required filenameStart == std::string::npos");
         }

@@ -155,12 +155,12 @@ void ServerManager::start() {
                 if (client->isRequestReady() && client->isStarted() == false) {
                     client->setStartStatus(true);
                     std::cout << "request received " << std::endl;
-                    // client->parseBody();
+                    client->parseBody();
                     generateResponse(*client);
                 }
             } else if (client->isResponseReady() && event.first == EvManager::write) {
                 // std::cout << "sendResponse" << std::endl;
-                std::cout << "client = " << client->getResponseBody() << std::endl;
+                    // std::cout << "client = " << client->getResponseBody() << std::endl;
                 if (client->sendResponse() == true) {
                     std::cout << "response sent" << std::endl;
                     closeConnetcion(*client);

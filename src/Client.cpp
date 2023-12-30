@@ -116,6 +116,8 @@ int Client::receiveRequest() {
             char *ptr;
             // std::cout << "it->second.c_str() = " << it->second.c_str() << std::endl;
             _bodySize = std::strtoul(it->second.c_str(), &ptr, 10);
+            std::cout << "_bodySize = " << _bodySize << std::endl;
+            std::cout << "this->getCurrentLoc().getClientBodySize() = " << this->getCurrentLoc().getClientBodySize() << std::endl;
             if (_bodySize > this->getCurrentLoc().getClientBodySize()) {
                 throw ResponseError(413, "Content Too Large");
             }
@@ -218,7 +220,6 @@ bool Client::sendResponse() {
         if (send(_fd, _responseLine.c_str(), sendSize, 0) == -1) {
             return (false);
         }
-        std::cout << "_responseLine = " << _responseLine << std::endl;
         _responseLine.erase(0, sendSize);
     }
     if (_header.empty() == false) {

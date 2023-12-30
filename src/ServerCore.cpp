@@ -19,7 +19,7 @@ ServerCore::ServerCore() {
 	_methods.push_back("GET");
     _methods.push_back("POST");
     _methods.push_back("DEL");
-	index.push_back(".default/index.html");
+	index.push_back("index.html");
     // _methods.push_back("HEAD");
 };
 
@@ -115,10 +115,10 @@ void ServerCore::setSize(std::string const &bodySize)
 	if (*ptr != '\0') {
 		throw std::logic_error("client_body_max_size out of range unsigned long int max");
 	}
-	if (errno == ERANGE && toLong == ULLONG_MAX)
-		this->client_body_max_size = 200;
-	else
-		this->client_body_max_size = toLong;
+	// if (errno == ERANGE && toLong == ULLONG_MAX)
+	// 	this->client_body_max_size = 200;
+	// else
+	this->client_body_max_size = toLong;
 }
 
 void ServerCore::setUploadDir(std::string const &upload_dir)

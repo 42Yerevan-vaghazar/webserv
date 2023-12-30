@@ -350,6 +350,7 @@ void HTTPServer::post(Client &client) {
     } else if (client.findInMap("Content-Type").find("multipart/form-data") != std::string::npos) {
         std::map<std::string, std::string> &uploadedFiles = client.getUploadedFiles();
         std::map<std::string, std::string>::iterator it = uploadedFiles.begin();
+        std::cout << "uploadedFiles = " << uploadedFiles.size() << std::endl;
         for (; it != uploadedFiles.end(); ++it) {
             const std::string &fileName = it->first;
             std::string &fileContent = it->second;
@@ -382,6 +383,8 @@ void HTTPServer::head(Client &client) {
 void HTTPServer::processing(Client &client)
 {
     std::cout << client.getMethod() << " " << client.getPath() << std::endl;
+    std::cout << "cgi status" << " " << client.isCgi() << std::endl;
+    // client.showHeaders();
     std::map<std::string, void (HTTPServer::*)(Client&)>::iterator function = methodsMap.find(client.getMethod());
     if (function != methodsMap.end() && (client.getCurrentLoc().findMethod(client.getMethod()) != NULL || client.isCgi())) // TODO remove it
     {

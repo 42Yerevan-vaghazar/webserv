@@ -11,7 +11,7 @@
 
 #define LAST_SENN_RIMEOUT 15 // sec
 
-class InnerFd;
+struct InnerFd;
 
 class HTTPServer;
 class Client : public HTTPRequest, public HTTPResponse

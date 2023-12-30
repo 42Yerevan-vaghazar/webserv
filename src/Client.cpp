@@ -6,7 +6,7 @@
 /*   By: maharuty <maharuty@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/24 10:29:55 by dmartiro          #+#    #+#             */
-/*   Updated: 2023/12/21 01:45:16 by maharuty         ###   ########.fr       */
+/*   Updated: 2023/12/30 14:39:02 by maharuty         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -128,15 +128,15 @@ int Client::receiveRequest() {
                 throw ResponseError(400, "Bad Request");
             }
         }
-        _isRequestReady = true;
+        // _isRequestReady = true;
         // std::cout << "_bodySize = " << _bodySize << std::endl;
         // std::cout << "_isChunked = " << _isChunked << std::endl;
     }
     // if (_body.size() > 10000000) {
     //     exit (1);
     // }
-    if (_isRequestReady == true) {
-        // std::cout << "_isChunked = " << _isChunked << std::endl;
+    if (_isHeaderReady == true) {
+        std::cout << "_isChunked = " << _isChunked << std::endl;
         // std::cout << "_bodySize = " << _bodySize << std::endl;
         if (_isChunked ) {
             readChunkedRequest();
@@ -148,13 +148,17 @@ int Client::receiveRequest() {
             if (_bodySize == 0) {
                 // EvManager::delEvent(_fd, EvManager::read);
                 _isBodyReady = true;
+                _isRequestReady = true;
                 return (0);
             }
             _body.append(_requestBuf.c_str(), _requestBuf.size());
             _requestBuf.clear();
+            std::cout << "_bodySize = " << _bodySize << std::endl;
+            std::cout << "_body.size() = " << _body.size() << std::endl;
             if (_bodySize <= _body.size()) {
                 _body.erase(_bodySize);
                 // EvManager::delEvent(_fd, EvManager::read);
+                _isRequestReady = true; 
                 _isBodyReady = true;
             }
         }
@@ -218,7 +222,7 @@ bool Client::sendResponse() {
         if (send(_fd, _responseLine.c_str(), sendSize, 0) == -1) {
             return (false);
         }
-        std::cout << "_responseLine = " << _responseLine << std::endl;
+        // std::cout << "_responseLine = " << _responseLine << std::endl;
         _responseLine.erase(0, sendSize);
     }
     if (_header.empty() == false) {
@@ -226,9 +230,11 @@ bool Client::sendResponse() {
         if (send(_fd, _header.c_str(), sendSize, 0) == -1) {
             return (false);
         }
+        // std::cout << "_header = " << _header << std::endl;
         _header.erase(0, sendSize);
     } else if (_responseBody.empty() == false) {
-        size_t sendSize = WRITE_BUFFER < _responseBody.size() ? WRITE_BUFFER : _responseBody.size();
+        // std::cout << "_responseBody = "  << _responseBody.size() << std::endl;
+        size_t sendSize = WRITE_BUFFER  < _responseBody.size() ? WRITE_BUFFER : _responseBody.size();
         if (send(_fd, _responseBody.c_str(), sendSize, 0) == -1) {
             return (false);
         }

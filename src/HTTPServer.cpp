@@ -6,7 +6,7 @@
 /*   By: maharuty <maharuty@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/13 23:57:39 by dmartiro          #+#    #+#             */
-/*   Updated: 2023/12/12 21:59:18 by maharuty         ###   ########.fr       */
+/*   Updated: 2023/12/30 13:14:52 by maharuty         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -383,7 +383,7 @@ void HTTPServer::processing(Client &client)
 {
     std::cout << client.getMethod() << " " << client.getPath() << std::endl;
     std::map<std::string, void (HTTPServer::*)(Client&)>::iterator function = methodsMap.find(client.getMethod());
-    if (function != methodsMap.end() && (client.getCurrentLoc().findMethod(client.getMethod()) != NULL || client.isCgi())) // TODO remove it
+    if (function != methodsMap.end() && (client.getCurrentLoc().findMethod(client.getMethod()) != NULL))
     {
        (this->*(function->second))(client);
     } else {

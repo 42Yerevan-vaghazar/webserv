@@ -28,7 +28,7 @@ int Cgi::execute(Client &client) {
     if (pid == -1) {
         throw ResponseError(500, "Internal Server Error");
     }
-
+std::cout << "client.getRequestBody().size() = " << client.getRequestBody().size() << std::endl;
     if (pid == 0) {
         char **envp = Cgi::initEnv(client);
         dup2(pipe_from_child[1], 1);
@@ -36,7 +36,7 @@ int Cgi::execute(Client &client) {
         close(pipe_from_child[1]);
 
         if (client.getMethod() == "POST") {
-            // write(pipe_to_child[1], client.getRequestBody().c_str(), client.getRequestBody().size());
+            write(pipe_to_child[1], client.getRequestBody().c_str(), client.getRequestBody().size());
             close(pipe_to_child[1]);
             dup2(pipe_to_child[0], 0);
             close(pipe_to_child[0]);
@@ -45,10 +45,8 @@ int Cgi::execute(Client &client) {
         perror("execve: ");
         exit(res);
     }
-    EvManager::addEvent(pipe_to_child[1], EvManager::write);
-    client.addInnerFd(new InnerFd(pipe_to_child[1], client, client.getRequestBody(), EvManager::write));
     close(pipe_from_child[1]);
-    // close(pipe_to_child[1]);
+    close(pipe_to_child[1]);
     close(pipe_to_child[0]);
     client.setCgiPID(pid);
     client.setCgiStartTime();

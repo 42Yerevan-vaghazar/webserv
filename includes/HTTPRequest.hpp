@@ -29,6 +29,7 @@ class HTTPRequest
         const std::string &getRequestBody() const;
         std::string &getRequestBody();
         bool isRequestReady() const;
+        bool isInProgress() const;
         bool isBodyReady() const;
         bool isCgi() const;
     public:
@@ -49,6 +50,7 @@ class HTTPRequest
     protected:
         std::vector<std::string> pathChunking(std::string const &rPath);
         void checkPath(HTTPServer const &srv);
+        void setBoundary(void);
         // int in(std::string const &method);
     protected:
         std::vector<std::string> pathChunks;
@@ -66,7 +68,7 @@ class HTTPRequest
         std::string actualPath;
         std::string _relativePath;
         std::string reqStatus;
-        std::string filename;
+        std::string _filename;
         std::string _extension;
         std::string queryString;
         std::string version;
@@ -81,7 +83,8 @@ class HTTPRequest
         std::string _boundary;
         std::string _boundaryEnd;
         std::string _contentType;
-        unsigned long int _bodySize;
+        size_t _bodySize;
+        size_t _acceptedBodySize;
     protected:
         const Location* _location;
     protected:
@@ -95,6 +98,7 @@ class HTTPRequest
         void setExtension(const std::string &path);
         void checkRedirect(const std::string &path, const std::string &redirectPath);
     protected:
+        bool _isInProgress;
         bool _isHeaderReady;
         bool _isBodyReady;
         bool _isRequestReady;

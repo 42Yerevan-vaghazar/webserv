@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+# !/usr/bin/env python
 
 import os
 import sys
@@ -15,7 +15,7 @@ for form_file in form.list or []:
 
 print("<h1>haha!</h1>")
 
-import time
+# import time
 
 # while True:
 #     time.sleep(1)

@@ -23,6 +23,7 @@ HTTPRequest::HTTPRequest(void)
     _isHeaderReady = false;
     _isBodyReady = false;
     _isRequestReady = false;
+    _isInProgress = false;
     _isOpenConnection = false;
     _isCgi = false;
     _isChunked = false;
@@ -85,6 +86,10 @@ bool HTTPRequest::isBodyReady() const {
     return (_isBodyReady);
 }
 
+bool HTTPRequest::isInProgress() const {
+    return (_isInProgress);
+}
+
 std::string HTTPRequest::rtrim(const std::string &str)
 {
     size_t end = str.find_last_not_of(" \r\n\t\f\v");
@@ -139,45 +144,65 @@ std::string HTTPRequest::findInMap(std::string key) const
     return (nill);
 }
 
-void HTTPRequest::multipart(void)
-{
+void HTTPRequest::setBoundary() {
     std::map<std::string, std::string>::iterator it =  _httpHeaders.find("Content-Type");
     if(it == _httpHeaders.end())
     {
-        throw ResponseError(411, "Length Required");
+        throw ResponseError(500, "Internal Server Error");
     }
     std::string contentType = it->second;
-    contentType.erase(0, contentType.find(";")+1);
+    contentType.erase(0, contentType.find(";") + 1);
     size_t posEqualsign = contentType.find("=");
     if (posEqualsign == std::string::npos) {
-        throw ResponseError(428, "Precondition Required posEqualsign");
+        return ;
     }
     _boundary = "--" + contentType.substr(posEqualsign + 1);
     _boundaryEnd = _boundary + "--";
+}
+
+void HTTPRequest::multipart(void)
+{
+    static bool isWriting = false;
+
+    if (isWriting == true) {
+        size_t boundaryPos = _body.find(_boundary);
+        if (boundaryPos == std::string::npos) {
+            boundaryPos = _body.size();
+        } else {
+            boundaryPos -= strlen("\r\n");
+            isWriting = false;
+        }
+        _uploadedFiles[_filename].append(_body.substr(0, boundaryPos));
+        _body.erase(0, boundaryPos + _boundary.size() + 1);
+    }
+
     size_t boundaryPos = _body.find(_boundary);
     size_t endPos = _body.find(_boundaryEnd);
-    do {
-        // std::cout << "boundaryPos = " << boundaryPos << std::endl;
+
+    if (boundaryPos != std::string::npos && boundaryPos != endPos) {
+        size_t secondBoundaryPos = _body.find(_boundary, boundaryPos + _boundary.size());
+        if (_body.find("\r\n\r\n", boundaryPos) == std::string::npos) {
+            return ;
+        }
         size_t filenameStart = _body.find("filename", boundaryPos);
-        // std::cout << "_body = " << _body.substr(0, 200) << std::endl;
-        if(filenameStart == std::string::npos) {
-            throw ResponseError(428, "Precondition Required filenameStart == std::string::npos");
+        if (filenameStart == std::string::npos) {
+            throw ResponseError(428, "Precondition Required posEqualsign");
         }
         filenameStart += strlen("filename") + 2;
-        std::string filename = _body.substr(filenameStart, _body.find("\"", filenameStart) - filenameStart);
-        boundaryPos = _body.find(_boundary, filenameStart);
         size_t contentStart = _body.find("\r\n\r\n", filenameStart) + strlen("\r\n\r\n");
-        std::string fileContent = _body.substr(contentStart, boundaryPos - contentStart - strlen("\r\n"));
-        _uploadedFiles[filename] = fileContent;
-    } while (boundaryPos < endPos);
+        size_t cutLen = secondBoundaryPos - contentStart - strlen("\r\n");
+        _uploadedFiles[_filename].append(_body.substr(contentStart, cutLen));
+        _body.erase(0, cutLen);
+    }
 }
 
 void HTTPRequest::showHeaders( void ) const
 {
+    std::ofstream osf("showHeaders.log");
     std::map<std::string, std::string>::const_iterator it;
     for(it = _httpHeaders.begin(); it != _httpHeaders.end(); it++)
     {
-        std::cout << it->first << " = " << it->second << std::endl;
+        osf << it->first << " = " << it->second << std::endl;
     }
 }
 
@@ -331,6 +356,7 @@ void HTTPRequest::checkPath(const HTTPServer &srv)
         setExtension(_relativePath);
         if (srv.getCgi(_extension).first.empty() == false) {
             _isCgi = true;
+            this->setCgiPath(srv.getCgi(_extension).second);
         }
     }
     // std::cout << "_relativePath = " << _relativePath << std::endl;

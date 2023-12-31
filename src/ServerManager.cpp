@@ -80,7 +80,8 @@ bool checkInnerFd(HTTPServer &srv, int fd) {
             } else if (innerFd->_flag == EvManager::write) {
                 // std::cout << "writeInFd\n";
                 if (writeInFd(innerFd->_fd, innerFd->_str) == true && client.isBodyReady() == true) {
-                    // std::cout << "writeInFd\n";
+                    std::cout << "writeInFd\n";
+                    client.getResponseBody() = "ok";
                     client.addHeader(std::pair<std::string, std::string>("Content-Length", my_to_string(client.getResponseBody().size())));
                     client.buildHeader();
                     client.isResponseReady() = true;
@@ -124,7 +125,6 @@ void ServerManager::start() {
             if (found == true) {
                 continue ;
             }
-
             for (size_t i = 0; i < this->size(); ++i) {
                 client = (*this)[i]->getClient(event.second);
                 if (client) {
@@ -138,13 +138,11 @@ void ServerManager::start() {
             if (event.first == EvManager::eof) {
                 closeConnetcion(*client);
                 continue ;
-            } else if ((client->isRequestReady() == false)
-                        && client->isResponseReady() == false) {
+            } else if ((client->isRequestReady() == false) && event.first == EvManager::read) {
                 if (client->getHttpRequest().empty()) {
                     // std::cout << "client->getFd() = " << client->getFd() << std::endl;
                     EvManager::addEvent(client->getFd(), EvManager::write);
                 }
-                // std::cout << "receiveRequest" << std::endl;
                 if (client->receiveRequest() == -1) {
                     closeConnetcion(*client);
                     continue ;
@@ -152,15 +150,13 @@ void ServerManager::start() {
                 if (client->isRequestReady() == true) {
                     EvManager::delEvent(client->getFd(), EvManager::read);
                 }
-                if (client->isRequestReady() && client->isStarted() == false) {
+                if (client->isInProgress() && client->isStarted() == false) {
                     client->setStartStatus(true);
                     std::cout << "request received " << std::endl;
-                    client->parseBody();
                     generateResponse(*client);
                 }
             } else if (client->isResponseReady() && event.first == EvManager::write) {
-                // std::cout << "sendResponse" << std::endl;
-                    // std::cout << "client = " << client->getResponseBody() << std::endl;
+                    std::cout << "client = " << client->getResponseBody().size() << std::endl;
                 if (client->sendResponse() == true) {
                     std::cout << "response sent" << std::endl;
                     closeConnetcion(*client);

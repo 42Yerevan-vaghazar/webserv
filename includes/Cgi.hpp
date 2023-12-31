@@ -15,7 +15,7 @@
 # define PYTHON_CGI_PATH "./CGI_Interpreters/python-cgi-mac"
 #endif
 
-#define CGI_TIMEOUT 10 // sec
+#define CGI_TIMEOUT 120 // sec
 
 
 class Cgi

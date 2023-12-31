@@ -57,7 +57,7 @@
 
     <p>If you click the "Submit" button, the form-data will be sent to a page called "/action_page.php".</p>
     <h1>File Upload</h1>
-    <form action="" id="fileInput" method="post" enctype="multipart/form-data">
+    <form action="/upload.py" id="fileInput" method="post" enctype="multipart/form-data">
         <input type="file" name="file" >
         <button type="button" onclick="fileUpload()">File upload</button>
     </form>
@@ -72,8 +72,14 @@
     </form>
     <img src="img/a.png">
 
-    <input type="file" id="fileInput1">
-  <button onclick="uploadFile2()">Upload File</button>
+    <!-- <input type="file" id="fileInput1">
+  <button onclick="uploadFile2()">Upload File</button> -->
+    <form enctype = "multipart/form-data"
+        action = "/upload.php" method = "post">
+        <p>File: <input type = "file" name = "file" /></p>
+        <p><input type = "submit" value = "Upload" /></p>
+    </form>
+
     <script src="./src/script.js"></script>
 </body>
 </html>

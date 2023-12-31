@@ -78,7 +78,7 @@ function uploadFile2() {
 
 function fileUpload() {
     const formData = new FormData(document.getElementById('fileInput'));
-    fetch('/uploader.py', {
+    fetch('/upload.py', {
         method: 'POST',
         body: formData
     })

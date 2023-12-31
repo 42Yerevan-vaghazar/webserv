@@ -347,24 +347,30 @@ void HTTPServer::post(Client &client) {
     if (client.isCgi() == true) {
         int fd = Cgi::execute(client);
         client.setCgiPipeFd(fd);
-    } else if (client.findInMap("Content-Type").find("multipart/form-data") != std::string::npos) {
-        std::map<std::string, std::string> &uploadedFiles = client.getUploadedFiles();
-        std::map<std::string, std::string>::iterator it = uploadedFiles.begin();
-        std::cout << "uploadedFiles = " << uploadedFiles.size() << std::endl;
-        for (; it != uploadedFiles.end(); ++it) {
-            const std::string &fileName = it->first;
-            std::string &fileContent = it->second;
-            // std::cout << "client.getCurrentLoc().getUploadDir() + fileName).c_str() = " << (client.getCurrentLoc().getUploadDir() + fileName).c_str() << std::endl;
-            int fd = open((client.getCurrentLoc().getUploadDir() + fileName).c_str(),  O_WRONLY | O_TRUNC | O_CREAT, S_IRWXU);
-            // std::cout << "fd = " << fd << std::endl;
-            if (fd == -1) {
-                throw ResponseError(500 , "Internal Server Error");
-            }
-            EvManager::addEvent(fd, EvManager::write);
-            client.addInnerFd(new InnerFd(fd, client, fileContent, EvManager::write));
-        }
-        HTTPServer::get(client);
+    } else {
+        client.getResponseBody() = "ok";
+        client.addHeader(std::pair<std::string, std::string>("Content-Length", my_to_string(client.getResponseBody().size())));
+        client.buildHeader();
+        client.isResponseReady() = true;
     }
+    // } else if (client.findInMap("Content-Type").find("multipart/form-data") != std::string::npos) {
+    //     std::map<std::string, std::string> &uploadedFiles = client.getUploadedFiles();
+    //     std::map<std::string, std::string>::iterator it = uploadedFiles.begin();
+    //     std::cout << "uploadedFiles = " << uploadedFiles.size() << std::endl;
+    //     for (; it != uploadedFiles.end(); ++it) {
+    //         const std::string &fileName = it->first;
+    //         std::string &fileContent = it->second;
+    //         // std::cout << "client.getCurrentLoc().getUploadDir() + fileName).c_str() = " << (client.getCurrentLoc().getUploadDir() + fileName).c_str() << std::endl;
+    //         int fd = open((client.getCurrentLoc().getUploadDir() + fileName).c_str(),  O_WRONLY | O_TRUNC | O_CREAT, S_IRWXU);
+    //         // std::cout << "fd = " << fd << std::endl;
+    //         if (fd == -1) {
+    //             throw ResponseError(500 , "Internal Server Error");
+    //         }
+    //         EvManager::addEvent(fd, EvManager::write);
+    //         client.addInnerFd(new InnerFd(fd, client, fileContent, EvManager::write));
+    //     }
+    //     HTTPServer::get(client);
+    // }
 };
 
 void HTTPServer::del(Client &client) {

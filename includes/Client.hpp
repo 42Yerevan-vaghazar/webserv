@@ -43,7 +43,7 @@ class Client : public HTTPRequest, public HTTPResponse
         void removeInnerFd(int fd);
         const ServerCore &getCurrentLoc() const;
     private:
-        void readChunkedRequest();
+        bool readChunkedRequest();
         std::map<int, InnerFd *> _innerFds;                   // [Clients inner fds]
         sock_t _fd;
         sock_t serverFd;

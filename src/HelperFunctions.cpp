@@ -40,11 +40,13 @@ bool readFromFd(int fd, std::string &str) {
 bool writeInFd(int fd, std::string &str) {
     size_t writeSize = str.size() < WRITE_BUFFER ?  str.size() : WRITE_BUFFER;
 
-    int readSize = write(fd, str.c_str(), writeSize);
-    if (readSize == -1) {
+    int res = write(fd, str.c_str(), writeSize);
+    // std::cout << "res = " << res << std::endl;;
+
+    if (res == -1) {
         return (false);
     }
-    str.erase(0, readSize);
+    str.erase(0, res);
     return (str.empty());
 };
 

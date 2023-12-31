@@ -24,6 +24,7 @@ Client::Client(sock_t clfd, sock_t srfd, HTTPServer &srv) : _defaultSrv(srv)
     _subSrv = NULL;
     _cgiPipeFd = -1;
     _cgiPID = -1;
+    _acceptedBodySize = 0;
     _lastSeen = time(NULL);
 }
 
@@ -52,7 +53,7 @@ std::string Client::getServerPort( void ) const {
     return (_defaultSrv.getPort());
 };
 
-void Client::readChunkedRequest() {
+bool Client::readChunkedRequest() {
     char *ptr;
     static bool started = false;
     // if (_isChunkNewLineCuted == false) {
@@ -65,11 +66,11 @@ void Client::readChunkedRequest() {
     // std::cout << "_requestBuf.find(\r\n) = " << _requestBuf.find("\r\n") << std::endl;
     if ((_chunkSize == std::string::npos && _isChunkNewLineCuted == true)) {
         _chunkSize =  std::strtoul(_requestBuf.c_str(), &ptr, 16);
-        std::cout << "_chunkSize = " << _chunkSize << std::endl;
-        std::cout << "_requestBuf = " << _requestBuf << std::endl;
+        // std::cout << "_chunkSize = " << _chunkSize << std::endl;
+        // std::cout << "_requestBuf = " << _requestBuf << std::endl;
         if (_chunkSize == 0 && started == true) {
             // EvManager::delEvent(_fd, EvManager::read);
-            return ;
+            return true;
         }
         size_t posEndl = _requestBuf.find("\r\n");
         _requestBuf.erase(0, posEndl + strlen("\r\n"));
@@ -84,12 +85,14 @@ void Client::readChunkedRequest() {
         _chunkSize = std::string::npos;
 
     }
+    return false;
 }
 
 int Client::receiveRequest() {
     char buf[READ_BUFFER];
     errno = 0;
     int rdSize = recv(_fd, buf, sizeof(buf), 0);
+    // std::cout << "rdSize = " << rdSize << std::endl;
     if (rdSize == -1) { 
         if (time(NULL) - _lastSeen == LAST_SENN_RIMEOUT) {
             return (-1);
@@ -117,10 +120,11 @@ int Client::receiveRequest() {
             // std::cout << "it->second.c_str() = " << it->second.c_str() << std::endl;
             _bodySize = std::strtoul(it->second.c_str(), &ptr, 10);
             std::cout << "_bodySize = " << _bodySize << std::endl;
-            std::cout << "this->getCurrentLoc().getClientBodySize() = " << this->getCurrentLoc().getClientBodySize() << std::endl;
+            // std::cout << "this->getCurrentLoc().getClientBodySize() = " << this->getCurrentLoc().getClientBodySize() << std::endl;
             if (_bodySize > this->getCurrentLoc().getClientBodySize()) {
                 throw ResponseError(413, "Content Too Large");
             }
+            // this->setBoundary();
         }
         it = _httpHeaders.find("Transfer-Encoding");
         if (it != _httpHeaders.end() && (it->second.find("Chunked") != std::string::npos ||  it->second.find("chunked") != std::string::npos)) {
@@ -130,35 +134,33 @@ int Client::receiveRequest() {
                 throw ResponseError(400, "Bad Request");
             }
         }
-        _isRequestReady = true;
-        // std::cout << "_bodySize = " << _bodySize << std::endl;
-        // std::cout << "_isChunked = " << _isChunked << std::endl;
     }
-    // if (_body.size() > 10000000) {
-    //     exit (1);
-    // }
-    if (_isRequestReady == true) {
-        // std::cout << "_isChunked = " << _isChunked << std::endl;
+    if (_isHeaderReady == true) {
+        _isInProgress = true;
         // std::cout << "_bodySize = " << _bodySize << std::endl;
+        // std::cout << "_isChunked = " << _isChunked << std::endl;
         if (_isChunked ) {
-            readChunkedRequest();
-            // if (this->getMethod() == "POST") {
-            //     exit(1);
-            // }
+            if (readChunkedRequest() == true) {
+                _isBodyReady = true;
+                _isRequestReady = true;
+            }
             return (0);
         } else {
             if (_bodySize == 0) {
-                // EvManager::delEvent(_fd, EvManager::read);
                 _isBodyReady = true;
+                _isRequestReady = true;
                 return (0);
             }
             _body.append(_requestBuf.c_str(), _requestBuf.size());
+            _acceptedBodySize += _requestBuf.size();
             _requestBuf.clear();
-            if (_bodySize <= _body.size()) {
-                _body.erase(_bodySize);
-                // EvManager::delEvent(_fd, EvManager::read);
+            if (_bodySize <= _acceptedBodySize) {
+                _body.erase(0, _acceptedBodySize - _bodySize);
+                std::cout << "_isRequestReady = true;\n";
                 _isBodyReady = true;
+                _isRequestReady = true;
             }
+            // this->parseBody();
         }
     }
     return 0;
@@ -203,16 +205,16 @@ void Client::parseHeader()
     HTTPRequest::checkPath(this->getSrv());
 }
 
-void Client::parseBody()
-{
-    if (method == "POST") {
-        if (_isCgi == false) {
-            if (this->findInMap("Content-Type").find("multipart/form-data") != std::string::npos) {
-                multipart();
-            }
-        }
-    }
-}
+// void Client::parseBody()
+// {
+//     if (method == "POST") {
+//         if (_isCgi == false) {
+//             if (this->findInMap("Content-Type").find("multipart/form-data") != std::string::npos) {
+//                 multipart();
+//             }
+//         }
+//     }
+// }
 
 bool Client::sendResponse() {
     if (_responseLine.empty() == false) {
@@ -283,6 +285,11 @@ bool Client::checkCgi() {
         if (waitRet != 0 && WIFEXITED(status)) {
             _cgiPID = -1;
             if (WEXITSTATUS(status) != 0) {
+                std::ofstream osf("cgi_output.log");
+                char buf[2000];
+                buf[read(_cgiPipeFd, buf, 1999)] = '\0';
+                osf << buf;
+                osf << this->getRequestBody();
                 std::cout << "WEXITSTATUS(status) = " << WEXITSTATUS(status) << std::endl;
                 throw ResponseError(500, "Internal Server Error");
             }

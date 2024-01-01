@@ -110,17 +110,14 @@ int Client::receiveRequest() {
             return 0;
         }
         _isHeaderReady = true;
-        // std::cout << "_requestBuf = " << _requestBuf << std::endl;
         httpRequest  = _requestBuf.substr(0, headerEndPos);
         _requestBuf.erase(0, headerEndPos + strlen("\r\n\r\n"));
         this->parseHeader();
         std::map<std::string, std::string>::const_iterator it = _httpHeaders.find("Content-Length");
         if (it != _httpHeaders.end()) {
             char *ptr;
-            // std::cout << "it->second.c_str() = " << it->second.c_str() << std::endl;
             _bodySize = std::strtoul(it->second.c_str(), &ptr, 10);
             std::cout << "_bodySize = " << _bodySize << std::endl;
-            // std::cout << "this->getCurrentLoc().getClientBodySize() = " << this->getCurrentLoc().getClientBodySize() << std::endl;
             if (_bodySize > this->getCurrentLoc().getClientBodySize()) {
                 throw ResponseError(413, "Content Too Large");
             }
@@ -155,7 +152,7 @@ int Client::receiveRequest() {
             _acceptedBodySize += _requestBuf.size();
             _requestBuf.clear();
             if (_bodySize <= _acceptedBodySize) {
-                _body.erase(0, _acceptedBodySize - _bodySize);
+                _body.erase(_body.size() - (_acceptedBodySize - _bodySize));
                 std::cout << "_isRequestReady = true;\n";
                 _isBodyReady = true;
                 _isRequestReady = true;

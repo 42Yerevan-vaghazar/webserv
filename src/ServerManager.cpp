@@ -160,8 +160,9 @@ void ServerManager::start() {
                     generateResponse(*client);
                 }
             } else if (client->isResponseReady() && event.first == EvManager::write) {
-                    std::cout << "client = " << client->getResponseBody().size() << std::endl;
-                if (client->sendResponse() == true) {
+                    // std::cout << "client = " << client->getResponseBody().size() << std::endl;
+                int res = client->sendResponse();
+                if (res == true || res == -1) {
                     std::cout << "response sent" << std::endl;
                     closeConnetcion(*client);
                     continue ;

@@ -30,7 +30,7 @@ class Client : public HTTPRequest, public HTTPResponse
         int receiveRequest();
         void parseHeader();
         void parseBody();
-        bool sendResponse();
+        int sendResponse();
         const HTTPServer &getSrv( void ) const;
         HTTPServer &getSrv( void );
         HTTPServer &getDefaultSrv( void );
@@ -57,6 +57,9 @@ class Client : public HTTPRequest, public HTTPResponse
     private:
         Client &operator=(const Client &);
         Client(const Client &);
+    private:
+        bool _isChunkStarted;
+        size_t _chunkSize;
 };
 
 #endif

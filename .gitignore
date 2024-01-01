@@ -8,3 +8,4 @@ Server_tmp.hpp
 pushToDavitRepo.sh
 data_base
 *.log
+test_files

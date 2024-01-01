@@ -26,6 +26,8 @@ Client::Client(sock_t clfd, sock_t srfd, HTTPServer &srv) : _defaultSrv(srv)
     _cgiPID = -1;
     _acceptedBodySize = 0;
     _lastSeen = time(NULL);
+    _isChunkStarted = false;
+    _chunkSize = 0;
 }
 
 Client::~Client()
@@ -55,35 +57,32 @@ std::string Client::getServerPort( void ) const {
 
 bool Client::readChunkedRequest() {
     char *ptr;
-    static bool started = false;
-    // if (_isChunkNewLineCuted == false) {
-    //     size_t pos = _requestBuf.find("\r\n");
-    //     if (pos != std::string::npos && pos == 0) {
-    //         _requestBuf.erase(0, strlen("\r\n"));
-    //         _isChunkNewLineCuted = true;
-    //     }
-    // }
-    // std::cout << "_requestBuf.find(\r\n) = " << _requestBuf.find("\r\n") << std::endl;
-    if ((_chunkSize == std::string::npos && _isChunkNewLineCuted == true)) {
-        _chunkSize =  std::strtoul(_requestBuf.c_str(), &ptr, 16);
-        // std::cout << "_chunkSize = " << _chunkSize << std::endl;
-        // std::cout << "_requestBuf = " << _requestBuf << std::endl;
-        if (_chunkSize == 0 && started == true) {
-            // EvManager::delEvent(_fd, EvManager::read);
-            return true;
-        }
-        size_t posEndl = _requestBuf.find("\r\n");
-        _requestBuf.erase(0, posEndl + strlen("\r\n"));
-    }
-    size_t existChunkSize = _chunkSize < _requestBuf.size() ? _chunkSize : _requestBuf.size();
-    started = true;
-    _body.append(_requestBuf.c_str(), existChunkSize);
-    // std::cout << "existChunkSize = " << existChunkSize << std::endl;
-    // std::cout << "_chunkSize = " << _chunkSize << std::endl;
-    if (existChunkSize >= _chunkSize) {
-        _isChunkNewLineCuted = true;
-        _chunkSize = std::string::npos;
 
+    while (size_t pos = _requestBuf.find("\r\n") != std::string::npos
+        || (_isChunkStarted == true && _requestBuf.empty() == false)) {
+        if (_isChunkStarted == false) {
+            if (pos != std::string::npos && pos == 0) {
+                _requestBuf.erase(0, strlen("\r\n"));
+            }
+            _chunkSize =  std::strtoul(_requestBuf.c_str(), &ptr, 16);
+            if (_chunkSize == 0) {
+                // std::ofstream ofs("chunk.log");
+                // ofs << _body;
+                return true;
+            }
+            size_t posEndl = _requestBuf.find("\r\n");
+            _requestBuf.erase(0, posEndl + strlen("\r\n"));
+            _isChunkStarted = true;
+        } 
+        if (_isChunkStarted == true) {
+            size_t existChunkSize = _chunkSize < _requestBuf.size() ? _chunkSize : _requestBuf.size();
+            _body.append(_requestBuf.c_str(), existChunkSize);
+            _requestBuf.erase(0, existChunkSize);
+            _chunkSize -= existChunkSize;
+            if (_chunkSize == 0) {
+                _isChunkStarted = false;
+            }
+        }
     }
     return false;
 }
@@ -113,6 +112,7 @@ int Client::receiveRequest() {
         httpRequest  = _requestBuf.substr(0, headerEndPos);
         _requestBuf.erase(0, headerEndPos + strlen("\r\n\r\n"));
         this->parseHeader();
+        this->showHeaders();
         std::map<std::string, std::string>::const_iterator it = _httpHeaders.find("Content-Length");
         if (it != _httpHeaders.end()) {
             char *ptr;
@@ -127,6 +127,7 @@ int Client::receiveRequest() {
         if (it != _httpHeaders.end() && (it->second.find("Chunked") != std::string::npos ||  it->second.find("chunked") != std::string::npos)) {
             if (it->second.find("Chunked") != std::string::npos ||  it->second.find("chunked") != std::string::npos) {
                 _isChunked = true;
+        std::cout << "_isChunked = true" << std::endl;
             } else {
                 throw ResponseError(400, "Bad Request");
             }
@@ -134,10 +135,11 @@ int Client::receiveRequest() {
     }
     if (_isHeaderReady == true) {
         _isInProgress = true;
-        // std::cout << "_bodySize = " << _bodySize << std::endl;
-        // std::cout << "_isChunked = " << _isChunked << std::endl;
         if (_isChunked ) {
+            // std::cout << "_bodySize = " << _bodySize << std::endl;
+            // std::cout << "_isChunked = " << _isChunked << std::endl;
             if (readChunkedRequest() == true) {
+                std::cout << "readChunkedRequest\n";
                 _isBodyReady = true;
                 _isRequestReady = true;
             }
@@ -214,24 +216,26 @@ void Client::parseHeader()
 //     }
 // }
 
-bool Client::sendResponse() {
+int Client::sendResponse() {
     if (_responseLine.empty() == false) {
         size_t sendSize = WRITE_BUFFER < _responseLine.size() ? WRITE_BUFFER : _responseLine.size();
-        if (send(_fd, _responseLine.c_str(), sendSize, 0) == -1) {
-            return (false);
+        int res = send(_fd, _responseLine.c_str(), sendSize, 0);
+        if (res == -1 || res == 0) {
+            return (-1);
         }
         _responseLine.erase(0, sendSize);
-    }
-    if (_header.empty() == false) {
+    } else if (_header.empty() == false) {
         size_t sendSize = WRITE_BUFFER < _header.size() ? WRITE_BUFFER : _header.size();
-        if (send(_fd, _header.c_str(), sendSize, 0) == -1) {
-            return (false);
+        int res = send(_fd, _header.c_str(), sendSize, 0);
+        if (res == -1 || res == 0) {
+            return (-1);
         }
         _header.erase(0, sendSize);
     } else if (_responseBody.empty() == false) {
         size_t sendSize = WRITE_BUFFER < _responseBody.size() ? WRITE_BUFFER : _responseBody.size();
-        if (send(_fd, _responseBody.c_str(), sendSize, 0) == -1) {
-            return (false);
+        int res = send(_fd, _responseBody.c_str(), sendSize, 0);
+        if (res == -1 || res == 0) {
+            return (-1);
         }
         _responseBody.erase(0, sendSize);
     }
@@ -263,6 +267,7 @@ void Client::setCgiStartTime() {
 
 bool Client::checkCgi() {
     if (_cgiPID != -1) {
+        // std::cout << ":checkCgi\n";
         int status;
         int waitRet;
         waitRet = waitpid(_cgiPID, &status, WNOHANG);
@@ -282,12 +287,12 @@ bool Client::checkCgi() {
         }
         if (waitRet != 0 && WIFEXITED(status)) {
             _cgiPID = -1;
+            // std::ofstream osf("cgi_output.log");
+            // char buf[2000];
+            // buf[read(_cgiPipeFd, buf, 1999)] = '\0';
+            // osf << buf;
             if (WEXITSTATUS(status) != 0) {
-                std::ofstream osf("cgi_output.log");
-                char buf[2000];
-                buf[read(_cgiPipeFd, buf, 1999)] = '\0';
-                osf << buf;
-                osf << this->getRequestBody();
+                // osf << this->getRequestBody();
                 std::cout << "WEXITSTATUS(status) = " << WEXITSTATUS(status) << std::endl;
                 throw ResponseError(500, "Internal Server Error");
             }

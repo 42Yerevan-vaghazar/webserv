@@ -28,7 +28,7 @@ HTTPRequest::HTTPRequest(void)
     _isCgi = false;
     _isChunked = false;
     _isChunkNewLineCuted = true;
-    _chunkSize = std::string::npos;
+    // _chunkSize = 0;
     _location = NULL;
 }
 

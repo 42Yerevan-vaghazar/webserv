@@ -64,11 +64,12 @@ bool checkInnerFd(HTTPServer &srv, int fd) {
                 if (client.getResponseBody().empty()) {
                     EvManager::addEvent(innerFd->_fd, EvManager::write);
                 }
-                // std::cout << "readFromFd\n";
                 if (readFromFd(innerFd->_fd, innerFd->_str) == true) {
+                    std::cout << "readFromFd\n";
                     if (client.isCgi() == true) {
                         manageHeader(innerFd->_str, client);                  
                     }
+                    client.getResponseBody() = innerFd->_str;
                     client.addHeader(std::pair<std::string, std::string>("Content-Length", my_to_string(client.getResponseBody().size())));
                     client.buildHeader();
                     client.isResponseReady() = true;
@@ -79,12 +80,15 @@ bool checkInnerFd(HTTPServer &srv, int fd) {
                 };
             } else if (innerFd->_flag == EvManager::write) {
                 // std::cout << "writeInFd\n";
-                if (writeInFd(innerFd->_fd, innerFd->_str) == true && client.isBodyReady() == true) {
+                if (writeInFd(innerFd->_fd, innerFd->_str) == true
+                        && client.isBodyReady() == true) {
+                    if (client.isCgi() == false) {
+                        client.getResponseBody() = "ok";
+                        client.addHeader(std::pair<std::string, std::string>("Content-Length", my_to_string(client.getResponseBody().size())));
+                        client.buildHeader();
+                        client.isResponseReady() = true;
+                    }
                     std::cout << "writeInFd\n";
-                    client.getResponseBody() = "ok";
-                    client.addHeader(std::pair<std::string, std::string>("Content-Length", my_to_string(client.getResponseBody().size())));
-                    client.buildHeader();
-                    client.isResponseReady() = true;
                     EvManager::delEvent(innerFd->_fd, EvManager::read);
                     EvManager::delEvent(innerFd->_fd, EvManager::write);
                     close(innerFd->_fd);

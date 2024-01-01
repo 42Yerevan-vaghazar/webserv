@@ -69,6 +69,7 @@ char **Cgi::initEnv(Client const &client)
     _env["AUTH_TYPE"] = "Basic";
     _env["CONTENT_LENGTH"] = my_to_string(client.getRequestBody().size());
     _env["CONTENT_TYPE"] = client.findInMap("Content-Type");
+    // _env["TRANSFER-ENCODING"] = client.findInMap("Transfer-Encoding");
     _env["GATEWAY_INTERFACE"] = "CGI/1.1";
     _env["PATH_INFO"] = client.getPath();
     _env["PATH_TRANSLATED"] = pwd + std::string("/") + client.getPath();
@@ -81,7 +82,7 @@ char **Cgi::initEnv(Client const &client)
     _env["SCRIPT_FILENAME"] = pwd + std::string("/") + client.getPath();
     _env["SERVER_NAME"] = "webserv";
     _env["SERVER_PORT"] = client.getServerPort();
-    _env["SERVER_PROTOCOL"] = "HTTP/0.1";
+    _env["SERVER_PROTOCOL"] = "HTTP/1.1";
     _env["SERVER_SOFTWARE"] = "Webserv";
     _env["SERVER_WRITE_PATH"] = srv.getUploadDir();
     _env["UPLOAD_DIR"] = srv.getUploadDir();
@@ -118,12 +119,13 @@ char **Cgi::initEnv(Client const &client)
     char **envp = new char *[_env.size() + 1];
 
 	int i = 0;
-
+    std::ofstream ofs("env.log");
 	for (std::map<std::string, std::string>::iterator it = _env.begin(); it != _env.end(); ++it)
 	{
         // std::cout << it->first << " = " << it->second << std::endl;
 		// envp[i++] = strdup((it->first + "=\"" + it->second + "\"").c_str());
 		envp[i++] = strdup((it->first + "=" + it->second).c_str());
+        ofs << envp[i - 1] << std::endl;;
 	}
 
 	envp[i] = NULL;

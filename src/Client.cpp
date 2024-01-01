@@ -146,6 +146,7 @@ int Client::receiveRequest() {
             if (_bodySize == 0) {
                 _isBodyReady = true;
                 _isRequestReady = true;
+                _requestBuf.clear();
                 return (0);
             }
             _body.append(_requestBuf.c_str(), _requestBuf.size());

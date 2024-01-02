@@ -159,7 +159,8 @@ void ServerManager::start() {
                     client->setStartStatus(true);
                     generateResponse(*client);
                 }
-            } else if (client->isResponseReady() && event.first == EvManager::write) {
+            } else if ((client->isRequestReady() == true || client->isErrorResponse() == true)
+                    && client->isResponseReady() && event.first == EvManager::write) {
                     // std::cout << "client = " << client->getResponseBody().size() << std::endl;
                 int res = client->sendResponse();
                 if (res == true || res == -1) {
@@ -214,6 +215,7 @@ void ServerManager::generateErrorResponse(const ResponseError& e, Client &client
     client.addHeader(std::pair<std::string, std::string>("Content-Length", my_to_string(resBody.size())));
     client.buildHeader();
     client.setBody(resBody);
+    client.setIsErrorResponse(true);
 }
 
 void ServerManager::generateResponse(Client &client) {

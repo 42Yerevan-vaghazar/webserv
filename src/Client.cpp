@@ -69,7 +69,7 @@ bool Client::readChunkedRequest() {
             continue ;
         }
         if (_isChunkStarted == false) {
-            _chunkSize =  std::strtoul(_requestBuf.c_str(), &ptr, 16);
+            _chunkSize =  std::strtoul(_requestBuf.c_str(), &ptr, 16); // TODO check with client body max size
             ofs << "_chunkSize = " << _chunkSize << std::endl;
             if (_chunkSize == 0) {
                 return true;
@@ -149,7 +149,7 @@ int Client::receiveRequest() {
                 _isRequestReady = true;
             }
             return (0);
-        } else {
+        } else if (_contentType.find("multipart/form-data") != std::string::npos) {
             if (_bodySize == 0) {
                 _isBodyReady = true;
                 _isRequestReady = true;
@@ -166,6 +166,8 @@ int Client::receiveRequest() {
                 _isRequestReady = true;
             }
             // this->parseBody();
+        } else {
+            throw ResponseError(501, "Not Implemented");
         }
     }
     return 0;
@@ -208,6 +210,7 @@ void Client::parseHeader()
         _subSrv = _defaultSrv.getSubServerByName(it->second);
     }
     HTTPRequest::checkPath(this->getSrv());
+    _contentType = _httpHeaders["Content-Type"];
 }
 
 // void Client::parseBody()

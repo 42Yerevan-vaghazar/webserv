@@ -19,7 +19,6 @@ HTTPRequest::HTTPRequest(void)
     reqLineEnd = 0;
     bodyEnd = 0;
     _bodySize = 0;
-    _maxSizeRequest = 0;
     _isHeaderReady = false;
     _isBodyReady = false;
     _isRequestReady = false;
@@ -27,8 +26,6 @@ HTTPRequest::HTTPRequest(void)
     _isOpenConnection = false;
     _isCgi = false;
     _isChunked = false;
-    _isChunkNewLineCuted = true;
-    // _chunkSize = 0;
     _location = NULL;
 }
 

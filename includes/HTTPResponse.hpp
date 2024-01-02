@@ -34,6 +34,8 @@ class HTTPResponse
         bool isStarted() const;
         void setStartStatus(bool);
         void setResponseLine(std::string const &line);
+        bool isErrorResponse() const;
+        void setIsErrorResponse(bool isErrorResponse);
     protected:
         std::string _header;
         std::string _responseLine;
@@ -41,6 +43,7 @@ class HTTPResponse
         std::map<std::string, std::string> _responseHeader;
         bool _isResponseReady;
         bool _isStarted;
+        bool _isErrorResponse;
     private:
         std::string reserve;
 };

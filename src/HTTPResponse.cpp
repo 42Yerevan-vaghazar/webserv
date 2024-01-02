@@ -18,11 +18,20 @@ HTTPResponse::HTTPResponse( void )
     _responseHeader["Accept-Ranges"] = "bytes";
     _isResponseReady = false;
     _isStarted = false;
+    _isErrorResponse = false;
 }
 
 HTTPResponse::~HTTPResponse()
 {
     
+}
+
+bool HTTPResponse::isErrorResponse() const {
+    return (_isErrorResponse);
+}
+
+void HTTPResponse::setIsErrorResponse(bool isErrorResponse) {
+    _isErrorResponse = isErrorResponse;
 }
 
 std::string const HTTPResponse::getResponse( void ) const

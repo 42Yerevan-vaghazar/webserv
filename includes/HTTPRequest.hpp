@@ -105,8 +105,6 @@ class HTTPRequest
         bool _isOpenConnection;
         bool _isCgi;
         bool _isChunked;
-        bool _isChunkNewLineCuted;
-        size_t _maxSizeRequest;
         std::map<std::string, std::string> _uploadedFiles;
     public:
         std::map<std::string, std::string> &getUploadedFiles();

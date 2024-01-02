@@ -149,13 +149,12 @@ int Client::receiveRequest() {
                 _isRequestReady = true;
             }
             return (0);
+        } else  if (_bodySize == 0 || this->getMethod() == "GET") {
+            _isBodyReady = true;
+            _isRequestReady = true;
+            _requestBuf.clear();
+            return (0);
         } else if (_contentType.find("multipart/form-data") != std::string::npos) {
-            if (_bodySize == 0) {
-                _isBodyReady = true;
-                _isRequestReady = true;
-                _requestBuf.clear();
-                return (0);
-            }
             _body.append(_requestBuf.c_str(), _requestBuf.size());
             _acceptedBodySize += _requestBuf.size();
             _requestBuf.clear();

@@ -55,19 +55,23 @@ std::string Client::getServerPort( void ) const {
     return (_defaultSrv.getPort());
 };
 
+std::ofstream ofs("_requestBuf.log");
+
 bool Client::readChunkedRequest() {
     char *ptr;
-
-    while (size_t pos = _requestBuf.find("\r\n") != std::string::npos
+    // std::cout << "readChunkedRequest\n";
+    size_t pos = _requestBuf.find("\r\n");
+    while ((pos != std::string::npos)
         || (_isChunkStarted == true && _requestBuf.empty() == false)) {
+        if (pos != std::string::npos && pos == 0) {
+            _requestBuf.erase(0, strlen("\r\n"));
+            pos = _requestBuf.find("\r\n");
+            continue ;
+        }
         if (_isChunkStarted == false) {
-            if (pos != std::string::npos && pos == 0) {
-                _requestBuf.erase(0, strlen("\r\n"));
-            }
             _chunkSize =  std::strtoul(_requestBuf.c_str(), &ptr, 16);
+            ofs << "_chunkSize = " << _chunkSize << std::endl;
             if (_chunkSize == 0) {
-                // std::ofstream ofs("chunk.log");
-                // ofs << _body;
                 return true;
             }
             size_t posEndl = _requestBuf.find("\r\n");
@@ -83,6 +87,7 @@ bool Client::readChunkedRequest() {
                 _isChunkStarted = false;
             }
         }
+        pos = _requestBuf.find("\r\n");
     }
     return false;
 }
@@ -127,19 +132,19 @@ int Client::receiveRequest() {
         if (it != _httpHeaders.end() && (it->second.find("Chunked") != std::string::npos ||  it->second.find("chunked") != std::string::npos)) {
             if (it->second.find("Chunked") != std::string::npos ||  it->second.find("chunked") != std::string::npos) {
                 _isChunked = true;
-        std::cout << "_isChunked = true" << std::endl;
+                std::cout << "_isChunked = true" << std::endl;
             } else {
                 throw ResponseError(400, "Bad Request");
             }
         }
     }
-    if (_isHeaderReady == true) {
+    if (_isHeaderReady == true ) {
         _isInProgress = true;
         if (_isChunked ) {
             // std::cout << "_bodySize = " << _bodySize << std::endl;
             // std::cout << "_isChunked = " << _isChunked << std::endl;
             if (readChunkedRequest() == true) {
-                std::cout << "readChunkedRequest\n";
+                // std::cout << "readChunkedRequest\n";
                 _isBodyReady = true;
                 _isRequestReady = true;
             }

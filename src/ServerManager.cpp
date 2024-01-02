@@ -152,11 +152,11 @@ void ServerManager::start() {
                     continue ;
                 }
                 if (client->isRequestReady() == true) {
+                    std::cout << "request received " << std::endl;
                     EvManager::delEvent(client->getFd(), EvManager::read);
                 }
-                if (client->isInProgress() && client->isStarted() == false) {
+                if (client->isInProgress() && client->isStarted() == false/*  && client->isRequestReady() == true */) {
                     client->setStartStatus(true);
-                    std::cout << "request received " << std::endl;
                     generateResponse(*client);
                 }
             } else if (client->isResponseReady() && event.first == EvManager::write) {

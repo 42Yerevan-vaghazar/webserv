@@ -322,10 +322,10 @@ void HTTPServer::post(Client &client) {
         int fd = Cgi::execute(client);
         client.setCgiPipeFd(fd);
     } else {
-        client.getResponseBody() = "ok";
-        client.addHeader(std::pair<std::string, std::string>("Content-Length", my_to_string(client.getResponseBody().size())));
-        client.buildHeader();
-        client.isResponseReady() = true;
+        // client.getResponseBody() = "ok";
+        // client.addHeader(std::pair<std::string, std::string>("Content-Length", my_to_string(client.getResponseBody().size())));
+        // client.buildHeader();
+        // client.isResponseReady() = true;
     }
     // } else if (client.findInMap("Content-Type").find("multipart/form-data") != std::string::npos) {
     //     std::map<std::string, std::string> &uploadedFiles = client.getUploadedFiles();

@@ -79,7 +79,6 @@ bool checkInnerFd(HTTPServer &srv, int fd) {
                     client.removeInnerFd(innerFd->_fd);
                 };
             } else if (innerFd->_flag == EvManager::write) {
-                // std::cout << "writeInFd\n";
                 if (writeInFd(innerFd->_fd, innerFd->_str) == true
                         && client.isBodyReady() == true) {
                     if (client.isCgi() == false) {
@@ -89,7 +88,6 @@ bool checkInnerFd(HTTPServer &srv, int fd) {
                         client.isResponseReady() = true;
                     }
                     std::cout << "writeInFd\n";
-                    // std::cout << " client.getResponseBody() = " <<  client.getResponseBody() << std::endl;
                     EvManager::delEvent(innerFd->_fd, EvManager::read);
                     EvManager::delEvent(innerFd->_fd, EvManager::write);
                     close(innerFd->_fd);

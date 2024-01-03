@@ -87,6 +87,7 @@ bool checkInnerFd(HTTPServer &srv, int fd) {
                         client.buildHeader();
                         client.isResponseReady() = true;
                     }
+                    client.setCgiStartTime();
                     std::cout << "writeInFd\n";
                     EvManager::delEvent(innerFd->_fd, EvManager::read);
                     EvManager::delEvent(innerFd->_fd, EvManager::write);
@@ -109,10 +110,10 @@ void ServerManager::start() {
     while(true) {
         std::pair<EvManager::Flag, int> event;
         Client *client = NULL;
-    
         event = EvManager::listen();
-        // std::cout << "event = " << event.first << std::endl;
-        // std::cout << "second = " << event.second << std::endl;
+        std::ofstream ofsFd("fd.log");
+        ofsFd << "event = " << event.first << std::endl;
+        ofsFd << "second = " << event.second << std::endl;
         if (newClient(event.second)) {
             continue ;
         }

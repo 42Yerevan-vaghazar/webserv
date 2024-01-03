@@ -218,10 +218,7 @@ int Client::receiveRequest() {
     if (_isHeaderReady == true ) {
         _isInProgress = true;
         if (_isChunked ) {
-            // std::cout << "_bodySize = " << _bodySize << std::endl;
-            // std::cout << "_isChunked = " << _isChunked << std::endl;
             if (readChunkedRequest() == true) {
-                // std::cout << "readChunkedRequest\n";
                 _isBodyReady = true;
                 _isRequestReady = true;
             }
@@ -241,8 +238,7 @@ int Client::receiveRequest() {
                 _isBodyReady = true;
                 _isRequestReady = true;
             }
-            // this->parseBody();
-            if (_isCgi == false && _contentType.find("multipart/form-data") != std::string::npos) {
+            if (_isCgi == false && this->getMethod() == "POST" && _contentType.find("multipart/form-data") != std::string::npos) {
                 this->multipart();
             }
         }
@@ -292,17 +288,6 @@ void Client::parseHeader()
     HTTPRequest::checkPath(this->getSrv());
     _contentType = _httpHeaders["Content-Type"];
 }
-
-// void Client::parseBody()
-// {
-//     if (method == "POST") {
-//         if (_isCgi == false) {
-//             if (this->findInMap("Content-Type").find("multipart/form-data") != std::string::npos) {
-//                 multipart();
-//             }
-//         }
-//     }
-// }
 
 int Client::sendResponse() {
     if (_responseLine.empty() == false) {

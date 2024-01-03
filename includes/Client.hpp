@@ -51,7 +51,7 @@ class Client : public HTTPRequest, public HTTPResponse
         HTTPServer &_defaultSrv;
         HTTPServer *_subSrv;
         std::time_t	 _lastSeen;
-        std::time_t	 _cgiStartTime;  // TODO start when all body sent to cgi.
+        std::time_t	 _cgiStartTime;
         int _cgiPipeFd;
         int _cgiPID;
         struct sockaddr_in clientInfo;

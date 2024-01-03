@@ -18,11 +18,12 @@ Tcp::Tcp( void ) : _fd(-1), backlog(-1)
 	memset(&this->Socket, 0, sizeof(Socket));
 	memset(&this->SocketAddress, 0, sizeof(SocketAddress));
 	memset(&this->clntAddr, 0, sizeof(clntAddr));
+    memset(&this->addrList, 0, sizeof(addrList));
 }
 
 Tcp::~Tcp()
 {
-	
+	freeaddrinfo(addrList);
 }
 
 const char* Tcp::pton(uint32_t ipv) const
@@ -46,10 +47,7 @@ void Tcp::setup(const char* ip, const char* port)
 	rules.ai_protocol = 0;
 	rules.ai_canonname = NULL;
 	if ((addrinfo = getaddrinfo(ip, port, &rules, &addrList)) < 0)
-    {
-        freeaddrinfo(addrList);
         throw HTTPCoreException(gai_strerror(addrinfo));
-    }
     SocketAddress = addrList->ai_addr;
 }
 

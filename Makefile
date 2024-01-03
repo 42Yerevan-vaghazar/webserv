@@ -10,7 +10,7 @@ else
 CXX = c++ -std=c++98
 endif
 
-CXXFLAGS = -I./includes -fsanitize=address -g -Wall -Wextra -Werror
+CXXFLAGS = -I./includes -Wall -Wextra -Werror #-fsanitize=address -g 
 
 SRCS = $(wildcard src/*.cpp)
 

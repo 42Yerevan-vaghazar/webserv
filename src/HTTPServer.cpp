@@ -138,7 +138,6 @@ void HTTPServer::up()
     Tcp::bindSocket();
     Tcp::listenSocket();
     std::cout << givenIp <<  ":" << givenPort << std::endl;
-    freeaddrinfo(addrList);
 }
 
 void HTTPServer::push(sock_t clFd, Client *clt)

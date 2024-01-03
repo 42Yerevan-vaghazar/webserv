@@ -451,6 +451,8 @@ void Parser::d_root(std::string &d_val, HTTPServer &srv)
     size_t spaceFound = d_val.find(" ");
     if (spaceFound != std::string::npos)
         throw HTTPCoreException("Root: directive should has one value");
+    if (d_val[d_val.size() - 1] != '/')
+        d_val.append("/");
     srv.setRoot(d_val);
 }
 
@@ -563,6 +565,8 @@ void Parser::l_root(std::string &d_val, Location &loc)
     size_t spaceFound = d_val.find(" ");
     if (spaceFound != std::string::npos)
         throw HTTPCoreException("Root: No Matching directive value syntax");
+    if (d_val[d_val.size() - 1] != '/')
+        d_val.append("/");
     loc.setRoot(d_val);
 }
 

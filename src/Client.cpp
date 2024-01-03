@@ -60,38 +60,40 @@ std::ofstream ofs("_requestBuf.log");
 void Client::multipart(void)
 {
     // std::cout << "multipart\n";
-
     size_t posHeaderEnd = _body.find("\r\n\r\n");
-    if (posHeaderEnd != std::string::npos) {
-        size_t filenameStart = _body.find("filename");
-        if (filenameStart != std::string::npos) {
-            filenameStart += strlen("filename") + 2;
-            _fileName = _body.substr(filenameStart, _body.find("\"", filenameStart) - filenameStart);
-            _body.erase(0, posHeaderEnd + strlen("\r\n\r\n"));
-            int fd = open((this->getCurrentLoc().getUploadDir() + _fileName).c_str(),  O_WRONLY | O_TRUNC | O_CREAT, S_IRWXU);
-            if (fd == -1) {
-                throw ResponseError(500, "Internal Server Error");
+    // while (size_t posHeaderEnd = _body.find("\r\n\r\n") != std::string::npos
+    //         || (_isChunkStarted == true && _requestBuf.empty() == false)) {
+        if (posHeaderEnd != std::string::npos && _isChunkStarted == false) {
+            size_t filenameStart = _body.find("filename");
+            if (filenameStart != std::string::npos) {
+                filenameStart += strlen("filename") + 2;
+                _fileName = _body.substr(filenameStart, _body.find("\"", filenameStart) - filenameStart);
+                _body.erase(0, posHeaderEnd + strlen("\r\n\r\n"));
+                int fd = open((this->getCurrentLoc().getUploadDir() + _fileName).c_str(),  O_WRONLY | O_TRUNC | O_CREAT, S_IRWXU);
+                if (fd == -1) {
+                    throw ResponseError(500, "Internal Server Error");
+                }
+                EvManager::addEvent(fd, EvManager::write);
+                this->addInnerFd(new InnerFd(fd, *this,  _uploadedFiles[_fileName], EvManager::write));
+                _isChunkStarted = true;
+            } else {
+                throw ResponseError(428, "Precondition Required posEqualsign");
             }
-            EvManager::addEvent(fd, EvManager::write);
-            this->addInnerFd(new InnerFd(fd, *this,  _uploadedFiles[_fileName], EvManager::write));
-            _isChunkStarted = true;
-        } else {
-            throw ResponseError(428, "Precondition Required posEqualsign");
         }
-    }
-    if (_isChunkStarted == true) {
+        if (_isChunkStarted == true) {
 
-        size_t secondBoundaryPos = _body.find(_boundary);
-        size_t cutLen;
-        if (secondBoundaryPos != std::string::npos) {
-            cutLen = secondBoundaryPos;
-            _isChunkStarted = false;
-        } else {
-            cutLen = _body.size();
+            size_t secondBoundaryPos = _body.find(_boundary);
+            size_t cutLen;
+            if (secondBoundaryPos != std::string::npos) {
+                cutLen = secondBoundaryPos;
+                _isChunkStarted = false;
+            } else {
+                cutLen = _body.size();
+            }
+            _uploadedFiles[_fileName].append(_body.substr(0, cutLen));
+            _body.erase(0, cutLen);
         }
-        _uploadedFiles[_fileName].append(_body.substr(0, cutLen));
-        _body.erase(0, cutLen);
-    }
+    // }
 
 
 
@@ -191,7 +193,16 @@ int Client::receiveRequest() {
         _requestBuf.erase(0, headerEndPos + strlen("\r\n\r\n"));
         this->parseHeader();
         this->showHeaders();
-        std::map<std::string, std::string>::const_iterator it = _httpHeaders.find("Content-Length");
+        std::map<std::string, std::string>::const_iterator it = _httpHeaders.find("Transfer-Encoding");
+        if (it != _httpHeaders.end() && (it->second.find("Chunked") != std::string::npos ||  it->second.find("chunked") != std::string::npos)) {
+            if (it->second.find("Chunked") != std::string::npos ||  it->second.find("chunked") != std::string::npos) {
+                _isChunked = true;
+                std::cout << "_isChunked = true" << std::endl;
+            } else {
+                throw ResponseError(400, "Bad Request");
+            }
+        }
+        it = _httpHeaders.find("Content-Length");
         if (it != _httpHeaders.end()) {
             char *ptr;
             _bodySize = std::strtoul(it->second.c_str(), &ptr, 10);
@@ -200,15 +211,8 @@ int Client::receiveRequest() {
                 throw ResponseError(413, "Content Too Large");
             }
             this->setBoundary();
-        }
-        it = _httpHeaders.find("Transfer-Encoding");
-        if (it != _httpHeaders.end() && (it->second.find("Chunked") != std::string::npos ||  it->second.find("chunked") != std::string::npos)) {
-            if (it->second.find("Chunked") != std::string::npos ||  it->second.find("chunked") != std::string::npos) {
-                _isChunked = true;
-                std::cout << "_isChunked = true" << std::endl;
-            } else {
-                throw ResponseError(400, "Bad Request");
-            }
+        } else if (_isChunked == false && this->getMethod() == "POST") {
+            throw ResponseError(411 , "Length Required");
         }
     }
     if (_isHeaderReady == true ) {
@@ -261,6 +265,9 @@ void Client::parseHeader()
         method = trim(request.substr(0, request.find_first_of(" ")));
         request.erase(0, request.find_first_of(" ") + 1);
         _path = trim(request.substr(0, request.find_first_of(" ")));
+        if (_path.size() > 2048) {
+            throw ResponseError(414, "URI Too Long");
+        }
         request.erase(0, request.find_first_of(" ") + 1);
         version = trim(request.substr(0, request.find("\r\n")));
     }

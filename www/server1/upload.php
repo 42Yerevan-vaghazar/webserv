@@ -33,7 +33,7 @@ catch (RuntimeException $e)
     echo "<html><head></head><body>";
     echo "<h1>Error</h1>";
     echo "<h2>";
-    echo $e->getMessage();
+    echo "$e->getMessage()";
     echo "</h2>";
     echo "</body>";
 }

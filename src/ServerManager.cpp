@@ -89,6 +89,7 @@ bool checkInnerFd(HTTPServer &srv, int fd) {
                         client.isResponseReady() = true;
                     }
                     std::cout << "writeInFd\n";
+                    // std::cout << " client.getResponseBody() = " <<  client.getResponseBody() << std::endl;
                     EvManager::delEvent(innerFd->_fd, EvManager::read);
                     EvManager::delEvent(innerFd->_fd, EvManager::write);
                     close(innerFd->_fd);

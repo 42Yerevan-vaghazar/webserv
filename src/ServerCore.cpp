@@ -15,7 +15,7 @@
 ServerCore::ServerCore() {
 	_autoindex = false;
 	_redirect = false;
-	client_body_max_size = 100000000;
+	client_body_max_size = CLIENT_BODY_MAX_SIZE;
 	_methods.push_back("GET");
     _methods.push_back("POST");
     _methods.push_back("DEL");

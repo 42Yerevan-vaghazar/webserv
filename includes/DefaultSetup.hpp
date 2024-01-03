@@ -15,6 +15,7 @@
 
 #define READ_BUFFER             15000  // TODO breakes with big sizes
 #define WRITE_BUFFER            15000
+#define CLIENT_BODY_MAX_SIZE    100000000
 #define DEFAULT_HTTP_PERM_PORT  "80"
 #define DEFAULT_HTTP_PORT       "8080"
 #define DEFAULT_MASK            "0.0.0.0"

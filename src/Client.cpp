@@ -57,6 +57,79 @@ std::string Client::getServerPort( void ) const {
 
 std::ofstream ofs("_requestBuf.log");
 
+void Client::multipart(void)
+{
+    // std::cout << "multipart\n";
+
+    size_t posHeaderEnd = _body.find("\r\n\r\n");
+    if (posHeaderEnd != std::string::npos) {
+        size_t filenameStart = _body.find("filename");
+        if (filenameStart != std::string::npos) {
+            filenameStart += strlen("filename") + 2;
+            _fileName = _body.substr(filenameStart, _body.find("\"", filenameStart) - filenameStart);
+            _body.erase(0, posHeaderEnd + strlen("\r\n\r\n"));
+            int fd = open((this->getCurrentLoc().getUploadDir() + _fileName).c_str(),  O_WRONLY | O_TRUNC | O_CREAT, S_IRWXU);
+            if (fd == -1) {
+                throw ResponseError(500, "Internal Server Error");
+            }
+            EvManager::addEvent(fd, EvManager::write);
+            this->addInnerFd(new InnerFd(fd, *this,  _uploadedFiles[_fileName], EvManager::write));
+            _isChunkStarted = true;
+        } else {
+            throw ResponseError(428, "Precondition Required posEqualsign");
+        }
+    }
+    if (_isChunkStarted == true) {
+
+        size_t secondBoundaryPos = _body.find(_boundary);
+        size_t cutLen;
+        if (secondBoundaryPos != std::string::npos) {
+            cutLen = secondBoundaryPos;
+            _isChunkStarted = false;
+        } else {
+            cutLen = _body.size();
+        }
+        _uploadedFiles[_fileName].append(_body.substr(0, cutLen));
+        _body.erase(0, cutLen);
+    }
+
+
+
+
+
+
+    // if (isWriting == true) {
+    //     size_t boundaryPos = _body.find(_boundary);
+    //     if (boundaryPos == std::string::npos) {
+    //         boundaryPos = _body.size();
+    //     } else {
+    //         boundaryPos -= strlen("\r\n");
+    //         isWriting = false;
+    //     }
+    //     _uploadedFiles[_fileName].append(_body.substr(0, boundaryPos));
+    //     _body.erase(0, boundaryPos + _boundary.size() + 1);
+    // }
+
+    // size_t boundaryPos = _body.find(_boundary);
+    // size_t endPos = _body.find(_boundaryEnd);
+
+    // if (boundaryPos != std::string::npos && boundaryPos != endPos) {
+    //     size_t secondBoundaryPos = _body.find(_boundary, boundaryPos + _boundary.size());
+    //     if (_body.find("\r\n\r\n", boundaryPos) == std::string::npos) {
+    //         return ;
+    //     }
+    //     size_t filenameStart = _body.find("filename", boundaryPos);
+    //     if (filenameStart == std::string::npos) {
+    //         throw ResponseError(428, "Precondition Required posEqualsign");
+    //     }
+    //     filenameStart += strlen("filename") + 2;
+    //     size_t contentStart = _body.find("\r\n\r\n", filenameStart) + strlen("\r\n\r\n");
+    //     size_t cutLen = secondBoundaryPos - contentStart - strlen("\r\n");
+    //     _uploadedFiles[_filename].append(_body.substr(contentStart, cutLen));
+    //     _body.erase(0, cutLen);
+    // }
+}
+
 bool Client::readChunkedRequest() {
     char *ptr;
     // std::cout << "readChunkedRequest\n";
@@ -126,7 +199,7 @@ int Client::receiveRequest() {
             if (_bodySize > this->getCurrentLoc().getClientBodySize()) {
                 throw ResponseError(413, "Content Too Large");
             }
-            // this->setBoundary();
+            this->setBoundary();
         }
         it = _httpHeaders.find("Transfer-Encoding");
         if (it != _httpHeaders.end() && (it->second.find("Chunked") != std::string::npos ||  it->second.find("chunked") != std::string::npos)) {
@@ -154,7 +227,7 @@ int Client::receiveRequest() {
             _isRequestReady = true;
             _requestBuf.clear();
             return (0);
-        } else if (_contentType.find("multipart/form-data") != std::string::npos) {
+        } else {
             _body.append(_requestBuf.c_str(), _requestBuf.size());
             _acceptedBodySize += _requestBuf.size();
             _requestBuf.clear();
@@ -165,8 +238,9 @@ int Client::receiveRequest() {
                 _isRequestReady = true;
             }
             // this->parseBody();
-        } else {
-            throw ResponseError(501, "Not Implemented");
+            if (_isCgi == false && _contentType.find("multipart/form-data") != std::string::npos) {
+                this->multipart();
+            }
         }
     }
     return 0;

@@ -147,49 +147,15 @@ void HTTPRequest::setBoundary() {
     {
         throw ResponseError(500, "Internal Server Error");
     }
-    std::string contentType = it->second;
-    contentType.erase(0, contentType.find(";") + 1);
-    size_t posEqualsign = contentType.find("=");
-    if (posEqualsign == std::string::npos) {
-        return ;
-    }
-    _boundary = "--" + contentType.substr(posEqualsign + 1);
-    _boundaryEnd = _boundary + "--";
-}
-
-void HTTPRequest::multipart(void)
-{
-    static bool isWriting = false;
-
-    if (isWriting == true) {
-        size_t boundaryPos = _body.find(_boundary);
-        if (boundaryPos == std::string::npos) {
-            boundaryPos = _body.size();
-        } else {
-            boundaryPos -= strlen("\r\n");
-            isWriting = false;
-        }
-        _uploadedFiles[_filename].append(_body.substr(0, boundaryPos));
-        _body.erase(0, boundaryPos + _boundary.size() + 1);
-    }
-
-    size_t boundaryPos = _body.find(_boundary);
-    size_t endPos = _body.find(_boundaryEnd);
-
-    if (boundaryPos != std::string::npos && boundaryPos != endPos) {
-        size_t secondBoundaryPos = _body.find(_boundary, boundaryPos + _boundary.size());
-        if (_body.find("\r\n\r\n", boundaryPos) == std::string::npos) {
+    if (it->second.find("multipart/form-data") != std::string::npos) {
+        std::string contentType = it->second;
+        contentType.erase(0, contentType.find(";") + 1);
+        size_t posEqualsign = contentType.find("=");
+        if (posEqualsign == std::string::npos) {
             return ;
         }
-        size_t filenameStart = _body.find("filename", boundaryPos);
-        if (filenameStart == std::string::npos) {
-            throw ResponseError(428, "Precondition Required posEqualsign");
-        }
-        filenameStart += strlen("filename") + 2;
-        size_t contentStart = _body.find("\r\n\r\n", filenameStart) + strlen("\r\n\r\n");
-        size_t cutLen = secondBoundaryPos - contentStart - strlen("\r\n");
-        _uploadedFiles[_filename].append(_body.substr(contentStart, cutLen));
-        _body.erase(0, cutLen);
+        _boundary = "--" + contentType.substr(posEqualsign + 1);
+        _boundaryEnd = _boundary + "--";
     }
 }
 

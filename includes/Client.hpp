@@ -44,6 +44,7 @@ class Client : public HTTPRequest, public HTTPResponse
         const ServerCore &getCurrentLoc() const;
     private:
         bool readChunkedRequest();
+        void multipart(void);
         std::map<int, InnerFd *> _innerFds;                   // [Clients inner fds]
         sock_t _fd;
         sock_t serverFd;

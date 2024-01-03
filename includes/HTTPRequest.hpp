@@ -68,7 +68,7 @@ class HTTPRequest
         std::string actualPath;
         std::string _relativePath;
         std::string reqStatus;
-        std::string _filename;
+        std::string _fileName;
         std::string _extension;
         std::string queryString;
         std::string version;
@@ -94,7 +94,6 @@ class HTTPRequest
         
     protected:
         std::string dir_content(std::string const &realPath);
-        void multipart(void);
         void setExtension(const std::string &path);
         void checkRedirect(const std::string &path, const std::string &redirectPath);
     protected:

@@ -59,12 +59,12 @@ std::ofstream ofs("_requestBuf.log");
 
 void Client::multipart(void)
 {
-    // std::cout << "multipart\n";
     size_t posHeaderEnd = _body.find("\r\n\r\n");
-    // while (size_t posHeaderEnd = _body.find("\r\n\r\n") != std::string::npos
-    //         || (_isChunkStarted == true && _requestBuf.empty() == false)) {
+    while (posHeaderEnd != std::string::npos
+            || (_isChunkStarted == true && _body.empty() == false)) {
         if (posHeaderEnd != std::string::npos && _isChunkStarted == false) {
             size_t filenameStart = _body.find("filename");
+
             if (filenameStart != std::string::npos) {
                 filenameStart += strlen("filename") + 2;
                 _fileName = _body.substr(filenameStart, _body.find("\"", filenameStart) - filenameStart);
@@ -81,9 +81,17 @@ void Client::multipart(void)
             }
         }
         if (_isChunkStarted == true) {
+            size_t secondBoundaryPos = std::string::npos;
 
-            size_t secondBoundaryPos = _body.find(_boundary);
-            size_t cutLen;
+            size_t pos = _body.find("\r\n");
+            if (pos != std::string::npos) {
+                if (((_body.size() - pos) < _boundary.size() + strlen("\r\n"))) {
+                    return ;
+                }
+                secondBoundaryPos = _body.find(_boundary);
+            }
+            size_t cutLen = 0;
+
             if (secondBoundaryPos != std::string::npos) {
                 cutLen = secondBoundaryPos;
                 _isChunkStarted = false;
@@ -93,7 +101,8 @@ void Client::multipart(void)
             _uploadedFiles[_fileName].append(_body.substr(0, cutLen));
             _body.erase(0, cutLen);
         }
-    // }
+        posHeaderEnd = _body.find("\r\n\r\n");
+    }
 
 
 

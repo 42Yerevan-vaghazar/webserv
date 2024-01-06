@@ -80,6 +80,10 @@ bool checkInnerFd(HTTPServer &srv, int fd) {
             };
         } else if (innerFd->_flag == EvManager::write) {
             int res = writeInFd(innerFd->_fd, innerFd->_str);
+            if (client.isCgi() == true) {
+                // std::cout << "innerFd->_fd = " << innerFd->_fd << std::endl;
+                // std::cout << "innerFd->_str = " << innerFd->_str.size() << std::endl;
+            }
             if ((client.isBodyReady() == true && innerFd->_str.empty() == true) || res == -1) {
                 if (client.isCgi() == true) {
                 }
@@ -113,6 +117,8 @@ void ServerManager::start() {
         std::ofstream ofsFd("fd.log");
         ofsFd << "event = " << event.first << std::endl;
         ofsFd << "second = " << event.second << std::endl;
+        // std::cout << "event = " << event.first << std::endl;
+        // std::cout << "second = " << event.second << std::endl;
         if (newClient(event.second)) {
             continue ;
         }
@@ -174,10 +180,10 @@ void ServerManager::start() {
         catch(ResponseError& e)
         {
             Client *tmpClient = e.getClient();
-            if (tmpClient)
+            if (tmpClient == NULL)
+               tmpClient = client;
+            if (tmpClient && tmpClient->isErrorResponse() == false)
                 generateErrorResponse(e, *tmpClient);
-            else if (client)
-                generateErrorResponse(e, *client);
         }
         catch(const std::exception& e)
         {
@@ -193,19 +199,20 @@ void ServerManager::generateErrorResponse(const ResponseError& e, Client &client
     // std::cout << "generateErrorResponse\n";
     if (e.getStatusCode() == 301) {
         client.addHeader(std::make_pair("Location", client.getRedirectPath()));
-    }
-    try
-    {
-        resBody = fileToString(client.getCurrentLoc().getErrPage(e.getStatusCode()));
-    }
-    catch(...)
-    {
-        resBody += "<html>";
-		resBody += "<head><title>" + my_to_string(e.getStatusCode()) + " " + e.what() + "</title></head>";
-		resBody += "<body>";
-		resBody += "<center><h1>" + my_to_string(e.getStatusCode()) + " " + e.what() + "</h1></center><hr>";
-		resBody += "</body>";
-		resBody += "</html>";
+    } else {
+        try
+        {
+            resBody = fileToString(client.getCurrentLoc().getErrPage(e.getStatusCode()));
+        }
+        catch(...)
+        {
+            resBody += "<html>";
+            resBody += "<head><title>" + my_to_string(e.getStatusCode()) + " " + e.what() + "</title></head>";
+            resBody += "<body>";
+            resBody += "<center><h1>" + my_to_string(e.getStatusCode()) + " " + e.what() + "</h1></center><hr>";
+            resBody += "</body>";
+            resBody += "</html>";
+        }
     }
 
     response = HTTP_VERSION;

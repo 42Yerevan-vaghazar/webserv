@@ -37,8 +37,10 @@ Client::~Client()
         delete it->second;
         EvManager::delEvent(it->first, EvManager::read);
         EvManager::delEvent(it->first, EvManager::write);
+        close(it->first);
         ++it;
     }
+    close(_fd);
 }
 
 sock_t Client::getFd( void ) const
@@ -103,42 +105,6 @@ void Client::multipart(void)
         }
         posHeaderEnd = _body.find("\r\n\r\n");
     }
-
-
-
-
-
-
-    // if (isWriting == true) {
-    //     size_t boundaryPos = _body.find(_boundary);
-    //     if (boundaryPos == std::string::npos) {
-    //         boundaryPos = _body.size();
-    //     } else {
-    //         boundaryPos -= strlen("\r\n");
-    //         isWriting = false;
-    //     }
-    //     _uploadedFiles[_fileName].append(_body.substr(0, boundaryPos));
-    //     _body.erase(0, boundaryPos + _boundary.size() + 1);
-    // }
-
-    // size_t boundaryPos = _body.find(_boundary);
-    // size_t endPos = _body.find(_boundaryEnd);
-
-    // if (boundaryPos != std::string::npos && boundaryPos != endPos) {
-    //     size_t secondBoundaryPos = _body.find(_boundary, boundaryPos + _boundary.size());
-    //     if (_body.find("\r\n\r\n", boundaryPos) == std::string::npos) {
-    //         return ;
-    //     }
-    //     size_t filenameStart = _body.find("filename", boundaryPos);
-    //     if (filenameStart == std::string::npos) {
-    //         throw ResponseError(428, "Precondition Required posEqualsign");
-    //     }
-    //     filenameStart += strlen("filename") + 2;
-    //     size_t contentStart = _body.find("\r\n\r\n", filenameStart) + strlen("\r\n\r\n");
-    //     size_t cutLen = secondBoundaryPos - contentStart - strlen("\r\n");
-    //     _uploadedFiles[_filename].append(_body.substr(contentStart, cutLen));
-    //     _body.erase(0, cutLen);
-    // }
 }
 
 bool Client::readChunkedRequest() {
@@ -249,7 +215,13 @@ int Client::receiveRequest() {
             }
             if (_isCgi == false && this->getMethod() == "POST" && _contentType.find("multipart/form-data") != std::string::npos) {
                 this->multipart();
-            }
+                if (_isBodyReady == true) {
+                    this->getResponseBody() = "ok";
+                    this->addHeader(std::pair<std::string, std::string>("Content-Length", my_to_string(this->getResponseBody().size())));
+                    this->buildHeader();
+                    this->isResponseReady() = true;
+                }
+            } // TODO else not implimented 
         }
     }
     return 0;

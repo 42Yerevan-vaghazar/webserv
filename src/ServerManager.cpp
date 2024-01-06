@@ -57,46 +57,45 @@ void manageHeader(std::string &str, Client &client) {
 }
 
 bool checkInnerFd(HTTPServer &srv, int fd) {
-        InnerFd *innerFd = srv.getInnerFd(fd);
-        if (innerFd) {
-            Client &client = innerFd->_client;
-            if (innerFd->_flag ==  EvManager::read) {
-                if (client.getResponseBody().empty()) {
-                    EvManager::addEvent(innerFd->_fd, EvManager::write);
-                }
-                if (readFromFd(innerFd->_fd, innerFd->_str) == true) {
-                    std::cout << "readFromFd\n";
-                    if (client.isCgi() == true) {
-                        manageHeader(innerFd->_str, client);                  
-                    }
-                    client.getResponseBody() = innerFd->_str;
-                    client.addHeader(std::pair<std::string, std::string>("Content-Length", my_to_string(client.getResponseBody().size())));
-                    client.buildHeader();
-                    client.isResponseReady() = true;
-                    EvManager::delEvent(innerFd->_fd, EvManager::read);
-                    EvManager::delEvent(innerFd->_fd, EvManager::write);
-                    close(innerFd->_fd);
-                    client.removeInnerFd(innerFd->_fd);
-                };
-            } else if (innerFd->_flag == EvManager::write) {
-                if (writeInFd(innerFd->_fd, innerFd->_str) == true
-                        && client.isBodyReady() == true) {
-                    if (client.isCgi() == false) {
-                        client.getResponseBody() = "ok";
-                        client.addHeader(std::pair<std::string, std::string>("Content-Length", my_to_string(client.getResponseBody().size())));
-                        client.buildHeader();
-                        client.isResponseReady() = true;
-                    }
-                    client.setCgiStartTime();
-                    std::cout << "writeInFd\n";
-                    EvManager::delEvent(innerFd->_fd, EvManager::read);
-                    EvManager::delEvent(innerFd->_fd, EvManager::write);
-                    close(innerFd->_fd);
-                    client.removeInnerFd(innerFd->_fd);
-                };
+    InnerFd *innerFd = srv.getInnerFd(fd);
+    if (innerFd) {
+        Client &client = innerFd->_client;
+        if (innerFd->_flag ==  EvManager::read) {
+            if (client.getResponseBody().empty()) {
+                EvManager::addEvent(innerFd->_fd, EvManager::write);
             }
-            return (true);
+            if (readFromFd(innerFd->_fd, innerFd->_str) == true) {
+                std::cout << "readFromFd\n";
+                if (client.isCgi() == true) {
+                    manageHeader(innerFd->_str, client);                  
+                }
+                client.getResponseBody() = innerFd->_str;
+                client.addHeader(std::pair<std::string, std::string>("Content-Length", my_to_string(client.getResponseBody().size())));
+                client.buildHeader();
+                client.isResponseReady() = true;
+                EvManager::delEvent(innerFd->_fd, EvManager::read);
+                EvManager::delEvent(innerFd->_fd, EvManager::write);
+                close(innerFd->_fd);
+                client.removeInnerFd(innerFd->_fd);
+            };
+        } else if (innerFd->_flag == EvManager::write) {
+            int res = writeInFd(innerFd->_fd, innerFd->_str);
+            if ((client.isBodyReady() == true && innerFd->_str.empty() == true) || res == -1) {
+                if (client.isCgi() == true) {
+                }
+                std::cout << "writeInFd\n";
+                EvManager::delEvent(innerFd->_fd, EvManager::read);
+                EvManager::delEvent(innerFd->_fd, EvManager::write);
+                close(innerFd->_fd);
+                client.removeInnerFd(innerFd->_fd);
+                if (res == -1) {
+                    throw ResponseError(500, "Internal Server Error", client);
+                }
+                // client.setCgiPipeFd(-1);
+            }
         }
+        return (true);
+    }
     return (false);
 }
 
@@ -120,6 +119,7 @@ void ServerManager::start() {
         try
         {
             bool found = false;
+            
             for (size_t i = 0; i < this->size(); ++i) {
                 found = checkInnerFd(*(*this)[i], event.second);
                 if (found == true) {
@@ -161,7 +161,6 @@ void ServerManager::start() {
                 }
             } else if ((client->isRequestReady() == true || client->isErrorResponse() == true)
                     && client->isResponseReady() && event.first == EvManager::write) {
-                    // std::cout << "client = " << client->getResponseBody().size() << std::endl;
                 int res = client->sendResponse();
                 if (res == true || res == -1) {
                     std::cout << "response sent" << std::endl;
@@ -172,9 +171,13 @@ void ServerManager::start() {
                 client->checkCgi();
             }
         }
-        catch(const ResponseError& e)
+        catch(ResponseError& e)
         {
-            generateErrorResponse(e, *client);
+            Client *tmpClient = e.getClient();
+            if (tmpClient)
+                generateErrorResponse(e, *tmpClient);
+            else if (client)
+                generateErrorResponse(e, *client);
         }
         catch(const std::exception& e)
         {

@@ -1,29 +1,27 @@
-    #pragma once
-    #include <iostream>
+#pragma once
+#include <iostream>
+#include "Client.hpp"
 
-    class ResponseError : public std::exception
-    {
-        public:
-            ResponseError(int statusCode, const std::string &errMessage)
-                : _statusCode(statusCode), _errMessage(errMessage) {};
-            ResponseError(const ResponseError& rhs) {
-                _statusCode = rhs._statusCode;
-                _errMessage = rhs._errMessage;
-            };
-            ~ResponseError() throw() {};
+class Client;
+class ResponseError : public std::exception
+{
+    public:
+        ResponseError(int statusCode, const std::string &errMessage);
+        ResponseError(int statusCode, const std::string &errMessage, Client &client);
+        ResponseError(const ResponseError& rhs);
+        ~ResponseError() throw();
 
-            const char * what() const throw() {
-                return _errMessage.c_str();
-            }
+        const char * what() const throw();
 
-            int getStatusCode() const {
-                return (_statusCode);
-            }
+        int getStatusCode() const;
 
-        private:
-            ResponseError() : _statusCode(0) {};
-            ResponseError& operator=(const ResponseError& rhs);
-        private:
-            int _statusCode;
-            std::string _errMessage;
-    };
+        Client *getClient();
+
+    private:
+        ResponseError();
+        ResponseError& operator=(const ResponseError& rhs);
+    private:
+        int _statusCode;
+        std::string _errMessage;
+        Client *_client;
+};

@@ -17,12 +17,13 @@
 #include "Location.hpp"
 #include "HTTPServer.hpp"
 #include "Client.hpp"
-#include <ResponseError.hpp>
+#include "ResponseError.hpp"
 #define SUCCSSES_STATUS "OK"
 
 class Client;
 class HTTPServer;
 class Error;
+class ResponseError;
 
 class ServerManager : public std::vector<HTTPServer *>
 {

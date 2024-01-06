@@ -370,7 +370,7 @@ void HTTPServer::processing(Client &client)
     std::cout << "cgi status" << " " << client.isCgi() << std::endl;
     // client.showHeaders();
     std::map<std::string, void (HTTPServer::*)(Client&)>::iterator function = methodsMap.find(client.getMethod());
-    if (function != methodsMap.end() && (client.getCurrentLoc().findMethod(client.getMethod()) != NULL || client.isCgi())) // TODO remove it
+    if (function != methodsMap.end() && (client.getCurrentLoc().findMethod(client.getMethod()) != NULL /* || client.isCgi() */)) // TODO remove it
     {
        (this->*(function->second))(client);
     } else {

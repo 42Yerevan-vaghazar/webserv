@@ -39,18 +39,14 @@ bool readFromFd(int fd, std::string &str) {
 
 std::ofstream wofs("writeInFd.log");
 
-bool writeInFd(int fd, std::string &str) {
-    if (str.size() != 0) {
-        size_t writeSize = str.size() < WRITE_BUFFER ?  str.size() : WRITE_BUFFER;
+int writeInFd(int fd, std::string &str) {
+    size_t writeSize = str.size() < WRITE_BUFFER ?  str.size() : WRITE_BUFFER;
 
-        int res = write(fd, str.c_str(), writeSize);
-        wofs << "res = " << res << std::endl;
-        if (res == -1) {
-            return (false);
-        }
+    int res = write(fd, str.c_str(), writeSize);
+    if (res > 0) {
         str.erase(0, res);
     }
-    return (str.empty());
+    return (res);
 };
 
 long double	get_current_time(void)

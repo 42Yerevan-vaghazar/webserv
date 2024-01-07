@@ -13,7 +13,7 @@
 #ifndef DEFAULT_SETUP_HPP
 #define DEFAULT_SETUP_HPP
 
-#define READ_BUFFER             15000  // TODO breakes with big sizes
+#define READ_BUFFER             15000
 #define WRITE_BUFFER            15000
 #define CLIENT_BODY_MAX_SIZE    100000000
 #define DEFAULT_HTTP_PERM_PORT  "80"

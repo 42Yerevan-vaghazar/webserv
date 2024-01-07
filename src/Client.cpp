@@ -121,6 +121,9 @@ bool Client::readChunkedRequest() {
         if (_isChunkStarted == false) {
             _chunkSize =  std::strtoul(_requestBuf.c_str(), &ptr, 16); // TODO check with client body max size
             ofs << "_chunkSize = " << _chunkSize << std::endl;
+            if ((_body.size() + _chunkSize) > this->getCurrentLoc().getClientBodySize()) {
+                throw ResponseError(413, "Content Too Large");
+            }
             if (_chunkSize == 0) {
                 return true;
             }
@@ -174,7 +177,7 @@ int Client::receiveRequest() {
             char *ptr;
             _bodySize = std::strtoul(it->second.c_str(), &ptr, 10);
             std::cout << "_bodySize = " << _bodySize << std::endl;
-            if (_bodySize > this->getCurrentLoc().getClientBodySize()) {
+            if (_bodySize > this->getCurrentLoc().getClientBodySize() || it->second.size() > 19) {
                 throw ResponseError(413, "Content Too Large");
             }
             this->setBoundary();
@@ -213,9 +216,9 @@ int Client::receiveRequest() {
                     this->buildHeader();
                     this->isResponseReady() = true;
                 }
-            } else {
+            } else if (_isCgi == false) {
                 throw ResponseError(501, "Not Implemented");
-            } // TODO else not implimented 
+            }
         }
     }
     return 0;

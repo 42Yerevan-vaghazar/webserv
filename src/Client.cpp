@@ -40,6 +40,9 @@ Client::~Client()
         close(it->first);
         ++it;
     }
+    for (size_t i = 0; i < _tmpFiles.size(); i++) {
+        std::remove(_tmpFiles[i].c_str());
+    }
     close(_fd);
 }
 
@@ -56,6 +59,10 @@ sock_t Client::getServerFd( void ) const
 std::string Client::getServerPort( void ) const {
     return (_defaultSrv.getPort());
 };
+
+const std::string &Client::getTmpToChild() const {
+   return(_tmpFiles[0]); 
+}
 
 std::ofstream ofs("_requestBuf.log");
 
@@ -183,6 +190,19 @@ int Client::receiveRequest() {
             this->setBoundary();
         } else if (_isChunked == false && this->getMethod() == "POST") {
             throw ResponseError(411 , "Length Required");
+        }
+        if (_isCgi == true && getMethod() == "POST") {
+            std::string tmpFile = "./.tmp/to_child" + my_to_string(_fd);
+            if (access("./.tmp", F_OK) != 0) {
+                if (mkdir("./.tmp", S_IRWXU) == -1) {
+                    throw std::runtime_error(std::string("mkdir: ") + strerror(errno));
+                };
+            }
+            _tmpFiles.push_back(tmpFile);
+            int fd = open(tmpFile.c_str(),  O_WRONLY | O_TRUNC | O_CREAT, S_IRWXU);
+            std::cout << tmpFile << " = " << fd << std::endl;
+            EvManager::addEvent(fd, EvManager::write);
+            this->addInnerFd(new InnerFd(fd, *this, _body, EvManager::write));
         }
     }
     if (_isHeaderReady == true ) {

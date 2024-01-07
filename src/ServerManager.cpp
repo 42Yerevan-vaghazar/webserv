@@ -18,12 +18,14 @@
 bool ServerManager::newClient(int fd) {
     for (size_t i = 0; i < this->size(); ++i) {
         if ((*this)[i]->getfd() == fd) {
-            sock_t clientFd = accept((*this)[i]->getfd(), 0, 0);
+            sock_t clientFd = (*this)[i]->accept();
             if (clientFd == -1) {
                 throw std::runtime_error(std::string("accept: ") + strerror(errno));
             }
             fcntl(clientFd, F_SETFL, O_NONBLOCK, FD_CLOEXEC);
             Client *client = new Client(clientFd, (*this)[i]->getfd(), *(*this)[i]);
+            // std::cout << "CLient Address: " << inet_ntoa((*this)[i]->getClientAddress()->sin_addr) << std::endl;
+            client->setSocketAddress((*this)[i]->getClientAddress());
             EvManager::addEvent(clientFd, EvManager::read);
             (*this)[i]->push(clientFd, client);
             return (true);

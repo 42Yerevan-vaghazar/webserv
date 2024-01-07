@@ -77,10 +77,15 @@ void Tcp::listenSocket( void )
 sock_t Tcp::accept( void )
 {
     socklen_t clntSize = sizeof(clntAddr);
-    sock_t client = ::accept(_fd, (struct sockaddr *)&clntAddr, &clntSize);
+    sock_t client = ::accept(_fd, &clntAddr, &clntSize);
+    // struct sockaddr_in* cl = (struct sockaddr_in*)&clntAddr;
+    // std::cout << inet_ntoa(cl->sin_addr) << std::endl;
     if (fcntl(client, F_SETFL, O_NONBLOCK, FD_CLOEXEC) < 0)
         throw HTTPCoreException(strerror(errno));
-    if (client < 0)
-        return (0);
     return (client);
+}
+
+struct sockaddr_in* Tcp::getClientAddress( void )
+{
+    return ((struct sockaddr_in*)&this->clntAddr);
 }

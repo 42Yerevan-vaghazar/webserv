@@ -213,6 +213,8 @@ int Client::receiveRequest() {
                     this->buildHeader();
                     this->isResponseReady() = true;
                 }
+            } else {
+                throw ResponseError(501, "Not Implemented");
             } // TODO else not implimented 
         }
     }

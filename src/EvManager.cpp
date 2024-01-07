@@ -54,25 +54,17 @@ bool EvManager::delEvent(int fd, Flag flag) {
     if (flag == read) {
         FD_CLR(fd, &_rfds);
         _fdRSet.erase(fd);
-        // if (fd == _nfds - 1 && _fdWSet.find(fd) == _fdWSet.end()) {
-        //     for (int maxFd = _nfds; maxFd >= 0; maxFd--) {
-        //         if (FD_ISSET(maxFd, &_rfds)) {
-        //             _nfds = maxFd + 1;
-        //             break;
-        //         }
-        //     }
-        // }
+        std::set<int>::iterator it = _fdRSet.rbegin();
+        if (it != _fdRSet.rend()) {
+            _nfds = *it;
+        }
     } else if (flag == write) {
         FD_CLR(fd, &_wfds);
         _fdWSet.erase(fd);
-        // if (fd == _nfds - 1 && _fdRSet.find(fd) == _fdRSet.end()) {
-        //     for (int maxFd = _nfds; maxFd >= 0; maxFd--) {
-        //         if (FD_ISSET(maxFd, &_rfds)) {
-        //             _nfds = maxFd + 1;
-        //             break;
-        //         }
-        //     }
-        // }
+         std::set<int>::iterator it = _fdWSet.rbegin();
+        if (it != _fdWSet.rend()) {
+            _nfds = *it;
+        }
     }
 
     return (true);

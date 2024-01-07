@@ -107,17 +107,13 @@ std::string ServerCore::getErrPage(int key) const
 		return (it->second);
 	return (nill);
 }
-
 void ServerCore::setSize(std::string const &bodySize)
 {
 	char *ptr;
 	unsigned long int toLong = std::strtoul(bodySize.c_str(), &ptr, 10);
-	if (*ptr != '\0') {
+	if (*ptr != '\0' || bodySize.size() > 19) {
 		throw std::logic_error("client_body_max_size out of range unsigned long int max");
 	}
-	// if (errno == ERANGE && toLong == ULLONG_MAX)
-	// 	this->client_body_max_size = 200;
-	// else
 	this->client_body_max_size = toLong;
 }
 

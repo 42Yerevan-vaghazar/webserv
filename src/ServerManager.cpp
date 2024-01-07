@@ -80,14 +80,7 @@ bool checkInnerFd(HTTPServer &srv, int fd) {
             };
         } else if (innerFd->_flag == EvManager::write) {
             int res = writeInFd(innerFd->_fd, innerFd->_str);
-            if (client.isCgi() == true) {
-                // std::cout << "innerFd->_fd = " << innerFd->_fd << std::endl;
-                // std::cout << "innerFd->_str = " << innerFd->_str.size() << std::endl;
-            }
-            if ((client.isBodyReady() == true && innerFd->_str.empty() == true) || res == -1) {
-                if (client.isCgi() == true) {
-                }
-                std::cout << "writeInFd\n";
+            if ((client.isBodyReady() == true && innerFd->_str.empty() == true) || res <= 0) {
                 EvManager::delEvent(innerFd->_fd, EvManager::read);
                 EvManager::delEvent(innerFd->_fd, EvManager::write);
                 close(innerFd->_fd);
@@ -95,7 +88,6 @@ bool checkInnerFd(HTTPServer &srv, int fd) {
                 if (res == -1) {
                     throw ResponseError(500, "Internal Server Error", client);
                 }
-                // client.setCgiPipeFd(-1);
             }
         }
         return (true);
@@ -161,7 +153,7 @@ void ServerManager::start() {
                     std::cout << "request received " << std::endl;
                     EvManager::delEvent(client->getFd(), EvManager::read);
                 }
-                if (client->isInProgress() && client->isStarted() == false/*  && client->isRequestReady() == true */) {
+                if (/* client->isInProgress() &&  */client->isStarted() == false && client->isRequestReady() == true) {
                     client->setStartStatus(true);
                     generateResponse(*client);
                 }

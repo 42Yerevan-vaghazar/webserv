@@ -144,17 +144,9 @@ bool Client::readChunkedRequest() {
 
 int Client::receiveRequest() {
     char buf[READ_BUFFER];
-    errno = 0;
     int rdSize = recv(_fd, buf, sizeof(buf), 0);
     // std::cout << "rdSize = " << rdSize << std::endl;
-    if (rdSize == -1) { 
-        if (time(NULL) - _lastSeen == LAST_SENN_RIMEOUT) {
-            return (-1);
-        }
-        return (0);
-    }
-    _lastSeen = time(NULL);
-    if (rdSize == 0) {
+    if (rdSize == 0 || rdSize == -1) {
         return (-1);
     }
     _requestBuf.append(buf, rdSize);
@@ -329,7 +321,7 @@ bool Client::checkCgi() {
             throw ResponseError(500, "Internal Server Error");
         }
         if (waitRet == 0 && time(NULL) - _cgiStartTime > CGI_TIMEOUT) {
-            if (kill(_cgiPID, SIGKILL) != 0) {
+            if (kill(_cgiPID, SIGKILL) == -1) {
                 throw std::runtime_error(std::string("kill: ") + strerror(errno));
             };
             waitpid(_cgiPID, &status, 0);

@@ -44,7 +44,7 @@ class HTTPServer : public Tcp, public IListener, public ServerCore
         void push(std::string const &prefix, Location const &locationDirective);
         void push(sock_t clFd, Client *clt);
         void removeClient(sock_t fd);
-        void push(HTTPServer &srv);
+        void push(HTTPServer *srv);
         void push__serverName(std::string const &srvName);
     public:
         const Location *find(std::string const &prefix) const;
@@ -54,9 +54,9 @@ class HTTPServer : public Tcp, public IListener, public ServerCore
         std::map<std::string, Location> const &getLocations( void ) const;
         HTTPServer *getSubServerByName(std::string const &_serverName);
     private:
-        std::vector<HTTPServer > _srvs;
+        std::vector<HTTPServer *> _srvs;
         std::vector<std::string> _serverName;
-        std::map<sock_t, Client *> clnt;                   // [Clients]
+        std::map<sock_t, Client *> _clnt;                   // [Clients]
         std::map<std::string, Location> _locations;      // <prefix, LocationDirective>  location / {Location}
     public: //ip port interface
 		virtual void setPort(std::string const &port);

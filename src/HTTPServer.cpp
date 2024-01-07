@@ -33,6 +33,15 @@ HTTPServer::HTTPServer( void )
 
 HTTPServer::~HTTPServer()
 {
+    for (size_t i = 0; i < _srvs.size(); i++)
+    {
+        delete _srvs[i];
+    }
+    std::map<sock_t, Client *>::iterator it = _clnt.begin();
+    while (it != _clnt.end()) {
+        delete it->second;
+        ++it;
+    }
     
 }
 
@@ -142,19 +151,21 @@ void HTTPServer::up()
 
 void HTTPServer::push(sock_t clFd, Client *clt)
 {
-    clnt.insert(std::make_pair(clFd, clt));
+    if (clt != NULL)
+        _clnt.insert(std::make_pair(clFd, clt));
 }
 
-void HTTPServer::push(HTTPServer &srv) {
-    _srvs.push_back(srv);
+void HTTPServer::push(HTTPServer *srv) {
+    if (srv != NULL)
+        _srvs.push_back(srv);
 };
 
 HTTPServer *HTTPServer::getSubServerByName(std::string const &serverName) {
     for (size_t i = 0; i < _srvs.size(); ++i) {
-        std::vector<std::string> &srvNames =  _srvs[i]._serverName;
+        std::vector<std::string> &srvNames =  _srvs[i]->_serverName;
         std::vector<std::string>::const_iterator it = std::find(srvNames.begin(),srvNames.end(), serverName);
         if (it != srvNames.end()) {
-            return (&_srvs[i]);
+            return (_srvs[i]);
         }
     }
     return (NULL);
@@ -162,7 +173,7 @@ HTTPServer *HTTPServer::getSubServerByName(std::string const &serverName) {
 
 bool HTTPServer::exist(sock_t fd)
 {
-    return (clnt.find(fd) != clnt.end());
+    return (_clnt.find(fd) != _clnt.end());
 }
 
 
@@ -176,7 +187,7 @@ bool HTTPServer::operator==(HTTPServer const &sibling) const
 
 bool HTTPServer::operator==(sock_t fd) const
 {
-    if (clnt.find(fd) != clnt.end()) {
+    if (_clnt.find(fd) != _clnt.end()) {
       return (true);
     } 
     return (false);
@@ -184,8 +195,8 @@ bool HTTPServer::operator==(sock_t fd) const
 
 Client* HTTPServer::getClient(sock_t fd)
 {
-    std::map<sock_t, Client*>::iterator it = clnt.find(fd);
-    if (it != clnt.end()) {
+    std::map<sock_t, Client*>::iterator it = _clnt.find(fd);
+    if (it != _clnt.end()) {
         return (it->second);
     }
     return (NULL);
@@ -193,11 +204,11 @@ Client* HTTPServer::getClient(sock_t fd)
 
 void HTTPServer::removeClient(sock_t fd)
 {
-    std::map<sock_t, Client*>::iterator it = clnt.find(fd);
+    std::map<sock_t, Client*>::iterator it = _clnt.find(fd);
 
-    if (it != clnt.end()) {
+    if (it != _clnt.end()) {
         delete it->second;
-        clnt.erase(it);
+        _clnt.erase(it);
         EvManager::delEvent(fd, EvManager::read);
         EvManager::delEvent(fd, EvManager::write);
     }
@@ -205,9 +216,9 @@ void HTTPServer::removeClient(sock_t fd)
 }
 
 InnerFd *HTTPServer:: getInnerFd(int fd) {
-    std::map<sock_t, Client *>::iterator it = clnt.begin();
+    std::map<sock_t, Client *>::iterator it = _clnt.begin();
     
-    while (it != clnt.end()) {
+    while (it != _clnt.end()) {
         InnerFd *innerFd = it->second->getInnerFd(fd);
 
         if (innerFd) {

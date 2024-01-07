@@ -339,7 +339,7 @@ void Parser::create_server(ServerManager &mgn, std::list<Token>::iterator& ch)
         if (srvIndex == -1) {
             mgn.push_back(srv);
         } else if (srv->get_serverNames().empty() == false) {
-            mgn[srvIndex]->push(*srv);
+            mgn[srvIndex]->push(srv);
         } else {
             throw HTTPCoreException("already used");
         }

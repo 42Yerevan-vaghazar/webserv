@@ -9,3 +9,4 @@ pushToDavitRepo.sh
 data_base
 *.log
 test_files
+uploads

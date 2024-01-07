@@ -12,8 +12,12 @@ form = FieldStorage(sys.stdin.buffer)
 i = 0
 for form_file in form.list or []:
     with open(f"{SERVER_WRITE_PATH}{form_file.filename}", 'wb') as fd:
-        fd.write(form.getvalue(form_file.name)[i])
-        i+=1
+        aaa = form.getvalue(form_file.name)
+        if isinstance(aaa, list):
+            fd.write(aaa[i])
+            i+=1
+        else:
+            fd.write(aaa)
 
 print("<h1>haha!</h1>")
 

@@ -209,8 +209,6 @@ void HTTPServer::removeClient(sock_t fd)
     if (it != _clnt.end()) {
         delete it->second;
         _clnt.erase(it);
-        EvManager::delEvent(fd, EvManager::read);
-        EvManager::delEvent(fd, EvManager::write);
     }
     return ;
 }
@@ -309,8 +307,8 @@ void HTTPServer::get(Client &client) {
                 if (fd == -1) {
                     throw ResponseError(500, "Internal Server Error");
                 }
-                EvManager::addEvent(fd, EvManager::read);
-                EvManager::addEvent(fd, EvManager::write);
+                EvManager::addEvent(fd, EvManager::read, EvManager::inner);
+                EvManager::addEvent(fd, EvManager::write, EvManager::inner);
                 client.addInnerFd(new InnerFd(fd, client, client.getResponseBody(),  EvManager::read));
             }
 
@@ -338,24 +336,6 @@ void HTTPServer::post(Client &client) {
         // client.buildHeader();
         // client.isResponseReady() = true;
     }
-    // } else if (client.findInMap("Content-Type").find("multipart/form-data") != std::string::npos) {
-    //     std::map<std::string, std::string> &uploadedFiles = client.getUploadedFiles();
-    //     std::map<std::string, std::string>::iterator it = uploadedFiles.begin();
-    //     std::cout << "uploadedFiles = " << uploadedFiles.size() << std::endl;
-    //     for (; it != uploadedFiles.end(); ++it) {
-    //         const std::string &fileName = it->first;
-    //         std::string &fileContent = it->second;
-    //         // std::cout << "client.getCurrentLoc().getUploadDir() + fileName).c_str() = " << (client.getCurrentLoc().getUploadDir() + fileName).c_str() << std::endl;
-    //         int fd = open((client.getCurrentLoc().getUploadDir() + fileName).c_str(),  O_WRONLY | O_TRUNC | O_CREAT, S_IRWXU);
-    //         // std::cout << "fd = " << fd << std::endl;
-    //         if (fd == -1) {
-    //             throw ResponseError(500 , "Internal Server Error");
-    //         }
-    //         EvManager::addEvent(fd, EvManager::write);
-    //         client.addInnerFd(new InnerFd(fd, client, fileContent, EvManager::write));
-    //     }
-    //     HTTPServer::get(client);
-    // }
 };
 
 void HTTPServer::del(Client &client) {

@@ -3,9 +3,9 @@
 #include <errno.h>
 #include <string.h>
 
-int EvManager::_i = 0;
 int EvManager::_numEvents = 0;
 const int EvManager::CLIENT_LIMIT;
+
 #ifdef __linux__
         fd_set          EvManager::_rfds;
         fd_set          EvManager::_wfds;
@@ -18,6 +18,7 @@ const int EvManager::CLIENT_LIMIT;
         int EvManager::_curFd;
 #else
         int EvManager::_kq = 0;
+        std::map<int, std::time_t>   EvManager::_fdActiveSet;
         struct kevent EvManager::_evList[1000];
 #endif
 
@@ -32,7 +33,8 @@ bool EvManager::start() {
     return (true);
 }
 
-bool EvManager::addEvent(int fd, Flag flag) {
+bool EvManager::addEvent(int fd, Flag flag, socketType type) {
+    (void)type;
     if (flag == read) {
         _fdRSet.insert(fd);
         FD_SET(fd, &_rfds);
@@ -118,13 +120,16 @@ bool EvManager::start() {
     return (true);
 }
 
-bool EvManager::addEvent(int fd, Flag flag) {
+bool EvManager::addEvent(int fd, Flag flag, socketType type) {
     if (_kq != 0) {
         int evFlag = getFlag(flag);
         struct kevent evSet;
 
         EV_SET(&evSet, fd, evFlag, EV_ADD, 0, 0, NULL);
         kevent(_kq, &evSet, 1, NULL, 0, NULL);
+        if (type == client) {
+            _fdActiveSet[fd] = std::time(NULL);
+        }
         return (true);
     }
     return (false);
@@ -137,6 +142,7 @@ bool EvManager::delEvent(int fd, Flag flag) {
 
         EV_SET(&evSet, fd, evFlag, EV_DELETE, 0, 0, NULL);
         kevent(_kq, &evSet, 1, NULL, 0, NULL);
+        _fdActiveSet.erase(fd);
         return (true);
     }
     return (false);
@@ -145,9 +151,23 @@ bool EvManager::delEvent(int fd, Flag flag) {
 #include <limits.h>
 
 std::pair<EvManager::Flag, int> EvManager::listen() {
+    struct timespec timeout;
+    static std::map<int, std::time_t>::iterator it = _fdActiveSet.end();
+
+    timeout.tv_sec = KEEP_ALIVE_TIMEOUT;
+    timeout.tv_nsec = 0;
     while (_numEvents == 0) {
-        _numEvents = kevent(_kq, NULL, 0, _evList, INT_MAX, NULL);
-        // std::cout << "_numEvents = " << _numEvents << std::endl;
+        if (it == _fdActiveSet.end()) {
+            _numEvents = kevent(_kq, NULL, 0, _evList, INT_MAX, &timeout);
+            it = _fdActiveSet.begin();
+        }
+        for (; it != _fdActiveSet.end(); ++it) {
+            if (it->second < std::time(NULL) - KEEP_ALIVE_TIMEOUT) {
+                std::cout << _fdActiveSet.size() << std::endl;
+                return (std::pair<EvManager::Flag, int>(EvManager::eof, (it++)->first));
+            }
+        }
+        std::cout << "_numEvents = " << _numEvents << std::endl;
     }
 
     if (_numEvents == -1) {

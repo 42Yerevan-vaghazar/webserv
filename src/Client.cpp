@@ -43,7 +43,6 @@ Client::~Client()
     for (size_t i = 0; i < _tmpFiles.size(); i++) {
         std::remove(_tmpFiles[i].c_str());
     }
-    close(_fd);
 }
 
 sock_t Client::getFd( void ) const
@@ -82,7 +81,7 @@ void Client::multipart(void)
                 if (fd == -1) {
                     throw ResponseError(500, "Internal Server Error");
                 }
-                EvManager::addEvent(fd, EvManager::write);
+                EvManager::addEvent(fd, EvManager::write, EvManager::inner);
                 this->addInnerFd(new InnerFd(fd, *this,  _uploadedFiles[_fileName], EvManager::write));
                 _isChunkStarted = true;
             } else {
@@ -201,7 +200,7 @@ int Client::receiveRequest() {
             _tmpFiles.push_back(tmpFile);
             int fd = open(tmpFile.c_str(),  O_WRONLY | O_TRUNC | O_CREAT, S_IRWXU);
             std::cout << tmpFile << " = " << fd << std::endl;
-            EvManager::addEvent(fd, EvManager::write);
+            EvManager::addEvent(fd, EvManager::write, EvManager::inner);
             this->addInnerFd(new InnerFd(fd, *this, _body, EvManager::write));
         }
     }
@@ -368,7 +367,7 @@ bool Client::checkCgi() {
                 throw ResponseError(500, "Internal Server Error");
             }
             std::cout << "WEXITSTATUS(status) = " << WEXITSTATUS(status) << std::endl;
-            EvManager::addEvent(_cgiPipeFd, EvManager::read);
+            EvManager::addEvent(_cgiPipeFd, EvManager::read, EvManager::inner);
             this->addInnerFd(new InnerFd(_cgiPipeFd, *this, this->getResponseBody(), EvManager::read));
         }
     }

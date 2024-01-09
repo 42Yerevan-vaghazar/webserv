@@ -81,7 +81,7 @@ sock_t Tcp::accept( void )
     // struct sockaddr_in* cl = (struct sockaddr_in*)&clntAddr;
     // std::cout << inet_ntoa(cl->sin_addr) << std::endl;
     if (fcntl(client, F_SETFL, O_NONBLOCK, FD_CLOEXEC) < 0)
-        throw HTTPCoreException(strerror(errno));
+        throw HTTPCoreException((std::string("fcntl: ") + strerror(errno)).c_str());
     return (client);
 }
 

@@ -54,18 +54,28 @@ bool EvManager::delEvent(int fd, Flag flag) {
     if (flag == read) {
         FD_CLR(fd, &_rfds);
         _fdRSet.erase(fd);
-        std::set<int>::iterator it = _fdRSet.rbegin();
-        if (it != _fdRSet.rend()) {
-            _nfds = *it;
-        }
+
     } else if (flag == write) {
         FD_CLR(fd, &_wfds);
         _fdWSet.erase(fd);
-         std::set<int>::iterator it = _fdWSet.rbegin();
-        if (it != _fdWSet.rend()) {
-            _nfds = *it;
+
+    }
+    if (_fdWSet.empty() == false) {
+        int a = *_fdWSet.rbegin() + 1;
+
+        if (a > _nfds) {
+            _nfds = a;
         }
     }
+
+    if (_fdRSet.empty() == false) {
+        int a = *_fdRSet.rbegin() + 1;
+
+        if (a > _nfds) {
+            _nfds = a;
+        }
+    }
+
 
     return (true);
 }
@@ -75,7 +85,9 @@ std::pair<EvManager::Flag, int> EvManager::listen() {
         if (_curFd == 3) {
             _activeRfds = _rfds;
             _activeWfds = _wfds;
+            std::cout << "_numEvents = " << _numEvents << std::endl;
             _numEvents = select(_nfds, &_activeRfds, &_activeWfds, NULL, NULL);
+            std::cout << "_numEvents = " << _numEvents << std::endl;
             if (_numEvents == -1) {
                 throw std::runtime_error(std::string("kevent: ") + strerror(errno));
             }

@@ -62,7 +62,9 @@ char **Cgi::initEnv(Client const &client)
     pwd = getcwd(NULL, 0);
     _env["AUTH_TYPE"] = "Basic";
     std::string length = client.findInMap("Content-Length");
-    _env["CONTENT_LENGTH"] = length.empty() ? "-1" : length;
+    if (length.empty() == false) {
+        _env["CONTENT_LENGTH"] = length;
+    }
     _env["CONTENT_TYPE"] = client.findInMap("Content-Type");
     // _env["TRANSFER-ENCODING"] = client.findInMap("Transfer-Encoding");
     _env["GATEWAY_INTERFACE"] = "CGI/1.1";

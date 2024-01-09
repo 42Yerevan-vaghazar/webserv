@@ -87,9 +87,9 @@ std::pair<EvManager::Flag, int> EvManager::listen() {
         if (_curFd == 3) {
             _activeRfds = _rfds;
             _activeWfds = _wfds;
-            std::cout << "_numEvents = " << _numEvents << std::endl;
+            // std::cout << "_numEvents = " << _numEvents << std::endl;
             _numEvents = select(_nfds, &_activeRfds, &_activeWfds, NULL, NULL);
-            std::cout << "_numEvents = " << _numEvents << std::endl;
+            // std::cout << "_numEvents = " << _numEvents << std::endl;
             if (_numEvents == -1) {
                 throw std::runtime_error(std::string("kevent: ") + strerror(errno));
             }
@@ -152,22 +152,24 @@ bool EvManager::delEvent(int fd, Flag flag) {
 
 std::pair<EvManager::Flag, int> EvManager::listen() {
     struct timespec timeout;
-    static std::map<int, std::time_t>::iterator it = _fdActiveSet.end();
+    static std::vector<int>             _fdToRemove;
 
     timeout.tv_sec = KEEP_ALIVE_TIMEOUT;
     timeout.tv_nsec = 0;
     while (_numEvents == 0) {
-        if (it == _fdActiveSet.end()) {
-            _numEvents = kevent(_kq, NULL, 0, _evList, INT_MAX, &timeout);
-            it = _fdActiveSet.begin();
+        if (_fdToRemove.empty() == false) {
+            int tmp = *--_fdToRemove.end();
+            _fdToRemove.pop_back();
+            return (std::pair<EvManager::Flag, int>(EvManager::eof, tmp));
         }
-        for (; it != _fdActiveSet.end(); ++it) {
-            if (it->second < std::time(NULL) - KEEP_ALIVE_TIMEOUT) {
-                std::cout << _fdActiveSet.size() << std::endl;
-                return (std::pair<EvManager::Flag, int>(EvManager::eof, (it++)->first));
+        _numEvents = kevent(_kq, NULL, 0, _evList, INT_MAX, &timeout);
+
+        for (std::pair<std::map<int, std::time_t>::iterator, std::map<int, std::time_t>::iterator> it = std::make_pair(_fdActiveSet.begin(), _fdActiveSet.end());
+                it.first != it.second; ++it.first) {
+            if (it.first->second < std::time(NULL) - KEEP_ALIVE_TIMEOUT) {
+                _fdToRemove.push_back(it.first->first);
             }
         }
-        std::cout << "_numEvents = " << _numEvents << std::endl;
     }
 
     if (_numEvents == -1) {
@@ -189,6 +191,11 @@ std::pair<EvManager::Flag, int> EvManager::listen() {
     }
 
     std::pair<EvManager::Flag, int> result(flag, _evList[_numEvents - 1].ident);
+    std::map<int, std::time_t>::iterator it = _fdActiveSet.find(_evList[_numEvents - 1].ident);
+
+    if (it != _fdActiveSet.end()) {
+        it->second = time(NULL);
+    }
     --_numEvents;
     return (result);
 }

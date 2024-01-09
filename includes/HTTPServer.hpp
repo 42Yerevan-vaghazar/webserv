@@ -73,7 +73,7 @@ class HTTPServer : public Tcp, public IListener, public ServerCore
         void get(Client &client);
         void post(Client &client);
         void del(Client &client);
-        void head(Client &client);
+        // void head(Client &client);
         void processing(Client &client);
 
         std::string executeCgi(Client &client);

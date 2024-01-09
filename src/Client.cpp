@@ -228,6 +228,7 @@ int Client::receiveRequest() {
                 _isRequestReady = true;
             }
             if (_isCgi == false && this->getMethod() == "POST" && _contentType.find("multipart/form-data") != std::string::npos) {
+                this->isStarted();
                 this->multipart();
                 if (_isBodyReady == true) {
                     this->getResponseBody() = "ok";
@@ -243,17 +244,23 @@ int Client::receiveRequest() {
     return 0;
 }
 
+std::ofstream ofsParseHeader("ofsParseHeader.log");
+
 void Client::parseHeader()
 {
+    // ofsParseHeader << "\n\n\n\n\n$httpRequest.size() = " << httpRequest.size() << "\n";
+    // ofsParseHeader << "$" << httpRequest << "$\n\n\n\n\n";
     size_t space = 0;
     size_t pos = httpRequest.find("\r\n");
+    // ofsParseHeader << "pos = " << pos << std::endl;
     request = httpRequest.substr(0, pos);
     httpRequest.erase(0, pos + 2);
 
     for (size_t i = 0; i < request.size(); i++)
         if (std::isspace(request[i]))
             space++;
-    if (space == 2)
+    ofsParseHeader << "space = " << space << std::endl;
+    if (space >= 2)
     {
         method = trim(request.substr(0, request.find_first_of(" ")));
         request.erase(0, request.find_first_of(" ") + 1);
@@ -293,21 +300,21 @@ int Client::sendResponse() {
         if (res == -1 || res == 0) {
             return (-1);
         }
-        _responseLine.erase(0, sendSize);
+        _responseLine.erase(0, res);
     } else if (_header.empty() == false) {
         size_t sendSize = WRITE_BUFFER < _header.size() ? WRITE_BUFFER : _header.size();
         int res = send(_fd, _header.c_str(), sendSize, 0);
         if (res == -1 || res == 0) {
             return (-1);
         }
-        _header.erase(0, sendSize);
+        _header.erase(0, res);
     } else if (_responseBody.empty() == false) {
         size_t sendSize = WRITE_BUFFER < _responseBody.size() ? WRITE_BUFFER : _responseBody.size();
         int res = send(_fd, _responseBody.c_str(), sendSize, 0);
         if (res == -1 || res == 0) {
             return (-1);
         }
-        _responseBody.erase(0, sendSize);
+        _responseBody.erase(0, res);
     }
     return (_responseBody.empty() && _header.empty() && _responseLine.empty());
 }

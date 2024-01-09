@@ -14,7 +14,7 @@
 
 HTTPResponse::HTTPResponse( void )
 {
-    _responseHeader["server"] = "webserv";
+    _responseHeader["Server"] = "webserv";
     _responseHeader["Accept-Ranges"] = "bytes";
     _isResponseReady = false;
     _isStarted = false;
@@ -60,7 +60,6 @@ void HTTPResponse::buildHeader() {
             _header += "\r\n";
     }
     _header += "\r\n";
-
 }
 
 std::string &HTTPResponse::getResponseBody() {

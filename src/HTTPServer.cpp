@@ -28,7 +28,7 @@ HTTPServer::HTTPServer( void )
     methodsMap["GET"] = &HTTPServer::get;
     methodsMap["POST"] = &HTTPServer::post;
     methodsMap["DELETE"] = &HTTPServer::del;
-    methodsMap["HEAD"] = &HTTPServer::head;
+    // methodsMap["HEAD"] = &HTTPServer::head;
 }
 
 HTTPServer::~HTTPServer()
@@ -331,10 +331,7 @@ void HTTPServer::post(Client &client) {
         int fd = Cgi::execute(client);
         client.setCgiPipeFd(fd);
     } else {
-        // client.getResponseBody() = "ok";
-        // client.addHeader(std::pair<std::string, std::string>("Content-Length", my_to_string(client.getResponseBody().size())));
-        // client.buildHeader();
-        // client.isResponseReady() = true;
+        throw ResponseError(501, "Not Implemented");
     }
 };
 
@@ -348,12 +345,12 @@ void HTTPServer::del(Client &client) {
     client.isResponseReady() = true;
 };
 
-void HTTPServer::head(Client &client) {
-    std::cout << client.getMethod() << " " <<  client.getPath() << std::endl;
-    HTTPServer::get(client);
-    client.setBody("");
-    std::cout << client.getResponseLine() << client.getResponseHeader() << client.getResponseBody();
-};
+// void HTTPServer::head(Client &client) {
+//     std::cout << client.getMethod() << " " <<  client.getPath() << std::endl;
+//     HTTPServer::get(client);
+//     client.setBody("");
+//     std::cout << client.getResponseLine() << client.getResponseHeader() << client.getResponseBody();
+// };
 
 void HTTPServer::processing(Client &client)
 {

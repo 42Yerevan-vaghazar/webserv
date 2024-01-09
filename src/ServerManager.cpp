@@ -111,8 +111,8 @@ void ServerManager::start() {
         {
             event = EvManager::listen();
             std::ofstream ofsFd("fd.log");
-            ofsFd << "event = " << event.first << std::endl;
-            ofsFd << "second = " << event.second << std::endl;
+            // ofsFd << "event = " << event.first << std::endl;
+            // ofsFd << "second = " << event.second << std::endl;
             // std::cout << "event = " << event.first << std::endl;
             // std::cout << "second = " << event.second << std::endl;
             if (newClient(event.second)) {
@@ -135,7 +135,7 @@ void ServerManager::start() {
             if (event.first == EvManager::eof) {
                 closeConnetcion(*client);
                 continue ;
-            } else if ((client->isRequestReady() == false) && event.first == EvManager::read) {
+            } else if (client->isRequestReady() == false && event.first == EvManager::read) {
                 if (client->getHttpRequest().empty()) {
                     EvManager::addEvent(client->getFd(), EvManager::write, EvManager::client);
                 }
